@@ -10,6 +10,11 @@ import java.util.Set;
 
 import org.bukkit.entity.Player;
 
+/**
+ * DeluxeTag object
+ * @author Ryan McCarthy
+ *
+ */
 public class DeluxeTag {
 	
 	private static Map<String, DeluxeTag> configTags;
@@ -176,10 +181,20 @@ public class DeluxeTag {
 		return "";
 	}
 	
+	/**
+	 * get a players current tag identifier
+	 * @param p Player to get the identifier for
+	 * @return null if player has no loaded tag
+	 */
 	public static String getPlayerTagIdentifier(Player p) {
 		return getPlayerTagIdentifier(p.getUniqueId().toString());
 	}
 	
+	/**
+	 * get a players current tag identifier
+	 * @param uuid Players uuid to get the identifier for
+	 * @return null if player has no loaded tag
+	 */
 	public static String getPlayerTagIdentifier(String uuid) {
 		
 		if (playerTags == null) {
@@ -215,6 +230,11 @@ public class DeluxeTag {
 		return null;
 	}
 	
+	/**
+	 * get a list of all available tag identifiers a player has permission for
+	 * @param p Player to get tag identifiers for
+	 * @return null if no tags are loaded, empty list if player doesn't have permission to any tags
+	 */
 	public static List<String> getAvailableTagIdentifiers(Player p) {
 		
 		if (getLoadedTags() == null || getLoadedTags().isEmpty()) {
@@ -234,6 +254,10 @@ public class DeluxeTag {
 		return identifiers;
 	}
 	
+	/**
+	 * get a list of all uuids that are currently loaded into the cache
+	 * @return null if no players are loaded
+	 */
 	public static Set<String> getLoadedPlayers() {
 		if (playerTags == null || playerTags.isEmpty()) {
 			return null;
@@ -242,6 +266,10 @@ public class DeluxeTag {
 		return playerTags.keySet();
 	}
 	
+	/**
+	 * remove a player from the cache
+	 * @param uuid Player uuid to remove
+	 */
 	public static void removePlayer(String uuid) {
 		if (hasTagLoaded(uuid)) {
 			playerTags.remove(uuid);
