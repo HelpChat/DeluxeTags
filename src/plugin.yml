@@ -3,6 +3,7 @@ main: me.clip.deluxetags.DeluxeTags
 version: 1.0
 author: extended_clip
 description: DeluxeChat addon to display a selectable prefix
+softdepend: [DeluxeChat]
 commands:
    tags:
      description: ChatReaction commands
