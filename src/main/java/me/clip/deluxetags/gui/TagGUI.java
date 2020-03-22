@@ -3,7 +3,9 @@ package me.clip.deluxetags.gui;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import me.clip.deluxetags.utils.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -24,15 +26,15 @@ public class TagGUI {
 	
 	private int page;
 	
-	private HashMap<Integer, String> tags;
+	private Map<Integer, String> tags;
 	
-	private HashMap<Integer, ItemStack> items;
+	private Map<Integer, ItemStack> items;
 	
 	public TagGUI(String displayName, int page){
 		this.displayName = displayName;
-		this.items = new HashMap<Integer, ItemStack>();
+		this.items = new HashMap<>();
 		this.page = page;
-		this.tags = new HashMap<Integer, String>();
+		this.tags = new HashMap<>();
 	}
 	
 	public int getInventorySize(){
@@ -50,10 +52,7 @@ public class TagGUI {
 	}
 	
 	public boolean contains(ItemStack item){
-		if(this.items.values().contains(item)) {
-			return true;
-		}	
-		return false;
+		return this.items.containsValue(item);
 	}
 	
 	public TagGUI setItem(int slot, ItemStack item){
@@ -68,7 +67,7 @@ public class TagGUI {
 	
 	public void openInventory(Player player){
 		
-		this.inventory = Bukkit.createInventory(null, slots, ChatColor.translateAlternateColorCodes('&', displayName));
+		this.inventory = Bukkit.createInventory(null, slots, StringUtils.color(displayName));
 		
 		for(Integer slot : this.items.keySet()){
 			inventory.setItem(slot, this.items.get(slot));
@@ -76,7 +75,7 @@ public class TagGUI {
 		player.openInventory(this.inventory);
 		
 		if (inGUI == null) {
-			inGUI = new HashMap<String, TagGUI>();
+			inGUI = new HashMap<>();
 		}
 		
 		inGUI.put(player.getName(), this);
@@ -92,12 +91,12 @@ public class TagGUI {
 		}
 		ItemMeta im = i.getItemMeta();
 		if (displayName != null) {
-			im.setDisplayName(ChatColor.translateAlternateColorCodes('&', displayName));
+			im.setDisplayName(StringUtils.color(displayName));
 		}
 		if (lore != null && !lore.isEmpty()) {
-			List<String> temp = new ArrayList<String>();
+			List<String> temp = new ArrayList<>();
 			for (String line : lore) {
-				temp.add(ChatColor.translateAlternateColorCodes('&', line));
+				temp.add(StringUtils.color(line));
 			}
 			im.setLore(temp);
 		}
@@ -145,11 +144,11 @@ public class TagGUI {
 		inGUI = null;
 	}
 
-	public HashMap<Integer, String> getTags() {
+	public Map<Integer, String> getTags() {
 		return tags;
 	}
 
-	public void setTags(HashMap<Integer, String> tags) {
+	public void setTags(Map<Integer, String> tags) {
 		this.tags = tags;
 	}
 	

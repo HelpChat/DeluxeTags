@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
+import me.clip.placeholderapi.PlaceholderAPI;
 import org.bukkit.entity.Player;
 
 /**
@@ -104,7 +105,7 @@ public class DeluxeTag {
 	 */
 	public void load() {
 		if (configTags == null) {
-			configTags = new TreeMap<Integer, DeluxeTag>();
+			configTags = new TreeMap<>();
 		}
 		
 		configTags.put(priority, this);
@@ -161,7 +162,7 @@ public class DeluxeTag {
 	public boolean setPlayerTag(String uuid) {
 		
 		if (playerTags == null) {
-			playerTags = new HashMap<String, DeluxeTag>();
+			playerTags = new HashMap<>();
 		}
 		
 		if (playerTags.isEmpty()) {
@@ -169,7 +170,7 @@ public class DeluxeTag {
 			return true;
 		}
 		
-		if (playerTags.keySet().contains(uuid) && playerTags.get(uuid) == this) {
+		if (playerTags.containsKey(uuid) && playerTags.get(uuid) == this) {
 			return false;
 		}
 		
@@ -187,7 +188,7 @@ public class DeluxeTag {
 			return null;
 		}
 		
-		List<String> remove = new ArrayList<String>();
+		List<String> remove = new ArrayList<>();
 		
 		for (String uuid : playerTags.keySet()) {
 			if (getPlayerDisplayTag(uuid).equals(this.displayTag)) {
@@ -223,7 +224,7 @@ public class DeluxeTag {
 		if (playerTags == null || playerTags.isEmpty()) {
 			return false;
 		}
-		return playerTags.keySet().contains(uuid);
+		return playerTags.containsKey(uuid);
 	}
 	
 	/**
@@ -252,14 +253,14 @@ public class DeluxeTag {
 	public static DeluxeTag getTag(String uuid) {
 		
 		if (playerTags == null) {
-			playerTags = new HashMap<String, DeluxeTag>();
+			playerTags = new HashMap<>();
 		}
 		
 		if (playerTags.isEmpty()) {
 			return null;
 		}
 		
-		if (playerTags.keySet().contains(uuid) && playerTags.get(uuid) != null) {
+		if (playerTags.containsKey(uuid) && playerTags.get(uuid) != null) {
 			return playerTags.get(uuid);
 		}
 		
@@ -274,14 +275,14 @@ public class DeluxeTag {
 	public static String getPlayerTagIdentifier(String uuid) {
 		
 		if (playerTags == null) {
-			playerTags = new HashMap<String, DeluxeTag>();
+			playerTags = new HashMap<>();
 		}
 		
 		if (playerTags.isEmpty()) {
 			return null;
 		}
 		
-		if (playerTags.keySet().contains(uuid) && playerTags.get(uuid) != null) {
+		if (playerTags.containsKey(uuid) && playerTags.get(uuid) != null) {
 			if (playerTags.get(uuid).getIdentifier() != null) {
 				return playerTags.get(uuid).getIdentifier();
 			}
@@ -298,7 +299,7 @@ public class DeluxeTag {
 	@SuppressWarnings("deprecation")
 	public static String getPlayerDisplayTag(Player player) {
 		String d = getPlayerDisplayTag(player.getUniqueId().toString());
-		return DeluxeTags.papi() ? me.clip.placeholderapi.PlaceholderAPI.setPlaceholders(player, d): d;
+		return DeluxeTags.papi() ? PlaceholderAPI.setPlaceholders(player, d): d;
 	}
 	
 	/**
@@ -309,14 +310,14 @@ public class DeluxeTag {
 	public static String getPlayerDisplayTag(String uuid) {
 		
 		if (playerTags == null) {
-			playerTags = new HashMap<String, DeluxeTag>();
+			playerTags = new HashMap<>();
 		}
 		
 		if (playerTags.isEmpty()) {
 			return "";
 		}
 		
-		if (playerTags.keySet().contains(uuid) && playerTags.get(uuid) != null) {
+		if (playerTags.containsKey(uuid) && playerTags.get(uuid) != null) {
 			if (playerTags.get(uuid).getDisplayTag() != null) {
 				return playerTags.get(uuid).getDisplayTag();
 			}
@@ -333,7 +334,7 @@ public class DeluxeTag {
 	@SuppressWarnings("deprecation")
 	public static String getPlayerTagDescription(Player p) {
 		String d = getPlayerTagDescription(p.getUniqueId().toString());
-		return DeluxeTags.papi() ? me.clip.placeholderapi.PlaceholderAPI.setPlaceholders(p, d): d;
+		return DeluxeTags.papi() ? PlaceholderAPI.setPlaceholders(p, d): d;
 	}
 	
 	/**
@@ -344,14 +345,14 @@ public class DeluxeTag {
 	public static String getPlayerTagDescription(String uuid) {
 		
 		if (playerTags == null) {
-			playerTags = new HashMap<String, DeluxeTag>();
+			playerTags = new HashMap<>();
 		}
 		
 		if (playerTags.isEmpty()) {
 			return "";
 		}
 		
-		if (playerTags.keySet().contains(uuid) && playerTags.get(uuid) != null) {
+		if (playerTags.containsKey(uuid) && playerTags.get(uuid) != null) {
 			if (playerTags.get(uuid).getDescription() != null) {
 				return playerTags.get(uuid).getDescription();
 			}
@@ -368,10 +369,7 @@ public class DeluxeTag {
 	public static DeluxeTag getLoadedTag(String identifier) {
 		if (configTags != null && !configTags.isEmpty()) {
 
-			Iterator<DeluxeTag> it = getLoadedTags().iterator();
-
-			while (it.hasNext()) {
-				DeluxeTag t = it.next();
+			for (DeluxeTag t : getLoadedTags()) {
 				if (t.getIdentifier().equals(identifier)) {
 					return t;
 				}
@@ -388,7 +386,7 @@ public class DeluxeTag {
 		}
 		Iterator<Integer> it = configTags.keySet().iterator();
 		
-		DeluxeTag t = null;
+		DeluxeTag t;
 		
 		while (it.hasNext()) {
 			
@@ -414,8 +412,8 @@ public class DeluxeTag {
 		
 		Iterator<Integer> it = configTags.keySet().iterator();
 		
-		List<String> identifiers = new ArrayList<String>();
-		DeluxeTag t = null;
+		List<String> identifiers = new ArrayList<>();
+		DeluxeTag t;
 		while (it.hasNext()) {
 			t = configTags.get(it.next());
 			if (t != null && t.hasTagPermission(p)) {

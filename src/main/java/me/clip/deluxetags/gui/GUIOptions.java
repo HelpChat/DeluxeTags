@@ -10,8 +10,7 @@ import org.bukkit.configuration.file.FileConfiguration;
 
 public class GUIOptions {
 	
-	final List<String> ITEM_TYPES = Arrays.asList(new String[] { 
-			"tag_select_item", "divider_item", "has_tag_item", "no_tag_item", "exit_item" });
+	final List<String> ITEM_TYPES = Arrays.asList("tag_select_item", "divider_item", "has_tag_item", "no_tag_item", "exit_item");
 	
 	private String menuName;
 	
@@ -46,16 +45,20 @@ public class GUIOptions {
 				mat = Material.getMaterial(c.getString(
 						"gui." + type + ".material").toUpperCase());
 			} catch (Exception e) {
-				if (type.equals("tag_select_item")) {
-					mat = Material.NAME_TAG;
-				} else if (type.equals("divider_item")) {
-					mat = Material.STAINED_GLASS_PANE;
-				} else if (type.equals("has_tag_item")) {
-					mat = Material.SKULL_ITEM;
-				} else if (type.equals("no_tag_item")) {
-					mat = Material.SKULL_ITEM;
-				} else if (type.equals("exit_item")) {
-					mat = Material.IRON_DOOR;
+				switch (type) {
+					case "tag_select_item":
+						mat = Material.NAME_TAG;
+						break;
+					case "divider_item":
+						mat = Material.STAINED_GLASS_PANE;
+						break;
+					case "has_tag_item":
+					case "no_tag_item":
+						mat = Material.SKULL_ITEM;
+						break;
+					case "exit_item":
+						mat = Material.IRON_DOOR;
+						break;
 				}
 			}
 
@@ -69,16 +72,22 @@ public class GUIOptions {
 
 			lore = c.getStringList("gui." + type + ".lore");
 
-			if (type.equals("tag_select_item")) {
-				this.tagSelectItem = new DisplayItem(mat, data, display, lore);
-			} else if (type.equals("divider_item")) {
-				this.dividerItem = new DisplayItem(mat, data, display, lore);
-			} else if (type.equals("has_tag_item")) {
-				this.hasTagItem = new DisplayItem(mat, data, display, lore);
-			} else if (type.equals("no_tag_item")) {
-				this.noTagItem = new DisplayItem(mat, data, display, lore);
-			} else if (type.equals("exit_item")) {
-				this.exitItem = new DisplayItem(mat, data, display, lore);
+			switch (type) {
+				case "tag_select_item":
+					this.tagSelectItem = new DisplayItem(mat, data, display, lore);
+					break;
+				case "divider_item":
+					this.dividerItem = new DisplayItem(mat, data, display, lore);
+					break;
+				case "has_tag_item":
+					this.hasTagItem = new DisplayItem(mat, data, display, lore);
+					break;
+				case "no_tag_item":
+					this.noTagItem = new DisplayItem(mat, data, display, lore);
+					break;
+				case "exit_item":
+					this.exitItem = new DisplayItem(mat, data, display, lore);
+					break;
 			}
 
 			mat = null;

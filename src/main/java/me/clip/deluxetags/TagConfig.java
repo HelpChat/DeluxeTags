@@ -1,6 +1,7 @@
 package me.clip.deluxetags;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.Set;
 
@@ -56,23 +57,23 @@ public class TagConfig {
 		config.addDefault("gui.tag_select_item.material", "NAME_TAG");
 		config.addDefault("gui.tag_select_item.data", 0);
 		config.addDefault("gui.tag_select_item.displayname", "&6Tag&f: &6%deluxetags_identifier%");
-		config.addDefault("gui.tag_select_item.lore", Arrays.asList(new String[] { "%deluxetags_tag%", "%deluxetags_description%" }));
+		config.addDefault("gui.tag_select_item.lore", Arrays.asList("%deluxetags_tag%", "%deluxetags_description%"));
 		config.addDefault("gui.divider_item.material", "STAINED_GLASS_PANE");
 		config.addDefault("gui.divider_item.data", 15);
 		config.addDefault("gui.divider_item.displayname", "");
-		config.addDefault("gui.divider_item.lore", Arrays.asList(new String[] {}));
+		config.addDefault("gui.divider_item.lore", Collections.emptyList());
 		config.addDefault("gui.has_tag_item.material", "SKULL_ITEM");
 		config.addDefault("gui.has_tag_item.data", 3);
 		config.addDefault("gui.has_tag_item.displayname", "&eCurrent tag&f: &6%deluxetags_identifier%");
-		config.addDefault("gui.has_tag_item.lore", Arrays.asList(new String[] { "%deluxetags_tag%", "Click to remove your current tag"}));
+		config.addDefault("gui.has_tag_item.lore", Arrays.asList("%deluxetags_tag%", "Click to remove your current tag"));
 		config.addDefault("gui.no_tag_item.material", "SKULL_ITEM");
 		config.addDefault("gui.no_tag_item.data", 3);
 		config.addDefault("gui.no_tag_item.displayname", "&cYou don't have a tag set!");
-		config.addDefault("gui.no_tag_item.lore", Arrays.asList(new String[] { "&7Click a tag above to select one!" }));
+		config.addDefault("gui.no_tag_item.lore", Collections.singletonList("&7Click a tag above to select one!"));
 		config.addDefault("gui.exit_item.material", "IRON_DOOR");
 		config.addDefault("gui.exit_item.data", 0);
 		config.addDefault("gui.exit_item.displayname", "&cClick to exit");
-		config.addDefault("gui.exit_item.lore", Arrays.asList(new String[] { "&7Exit the tags menu"}));
+		config.addDefault("gui.exit_item.lore", Collections.singletonList("&7Exit the tags menu"));
 
 		if (!config.contains("me/clip/deluxetags")) {
 			config.set("deluxetags.example.order", 1);

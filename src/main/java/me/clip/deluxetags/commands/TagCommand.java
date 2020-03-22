@@ -143,7 +143,7 @@ public class TagCommand implements CommandExecutor {
 				DeluxeTags.msg(p, Lang.CMD_TAG_LIST.getConfigValue(new String[] {
 					amount, tags
 				}));
-			} else if (args.length > 1 && args[1].equalsIgnoreCase("all")) {
+			} else if (args[1].equalsIgnoreCase("all")) {
 				
 				if (!p.hasPermission("deluxetags.list.all")) {
 					
@@ -164,7 +164,7 @@ public class TagCommand implements CommandExecutor {
 				StringBuilder sb = new StringBuilder();
 				
 				for (DeluxeTag d : t) {
-					sb.append("&f"+d.getIdentifier()+"&7:&f"+d.getDisplayTag()+"&a, ");
+					sb.append("&f").append(d.getIdentifier()).append("&7:&f").append(d.getDisplayTag()).append("&a, ");
 				}
 				
 				String tags = sb.toString().trim();
@@ -177,7 +177,7 @@ public class TagCommand implements CommandExecutor {
 				
 				return true;
 				
-			} else if (args.length > 1) {
+			} else {
 				
 				if (!p.hasPermission("deluxetags.list.player")) {
 					

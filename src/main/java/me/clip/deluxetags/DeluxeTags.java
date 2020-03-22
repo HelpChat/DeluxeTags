@@ -191,7 +191,6 @@ public class DeluxeTags extends JavaPlugin {
 		FileConfiguration c = playerFile.getConfig();
 		c.set(uuid, tagIdentifier);
 		playerFile.saveConfig();
-		return;
 	}
 	
 	public void removeSavedTag(String uuid) {
@@ -200,7 +199,6 @@ public class DeluxeTags extends JavaPlugin {
 			c.set(uuid, null);
 			playerFile.saveConfig();
 		}
-		return;
 	}
 	
 	public boolean removeSavedTags(List<String> uuids) {
