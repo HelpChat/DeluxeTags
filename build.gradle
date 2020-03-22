@@ -33,7 +33,7 @@ repositories {
 
 shadowJar {
     minimize()
-    archiveFileName = "DeluxeMenus-${project.version}.jar"
+    archiveFileName = "DeluxeTags-${project.version}.jar"
 }
 
 dependencies {
