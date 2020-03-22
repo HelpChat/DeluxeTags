@@ -7,17 +7,18 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 
 import org.bukkit.entity.Player;
 
 /**
- * DeluxeTag object
+ * DeluxeTag class
  * @author Ryan McCarthy
  *
  */
 public class DeluxeTag {
 	
-	private static Map<String, DeluxeTag> configTags;
+	private static TreeMap<Integer, DeluxeTag> configTags;
 	
 	private static Map<String, DeluxeTag> playerTags;
 	
@@ -25,24 +26,25 @@ public class DeluxeTag {
 	
 	private String displayTag;
 	
+	private String description;
+	
+	private int priority;
+	
 	/**
 	 * DeluxeTag object initializer
 	 * @param identifier String identifier of this DeluxeTag
 	 * @param displayTag String displayTag of this DeluxeTag
 	 */
-	public DeluxeTag(String identifier, String displayTag) {
+	public DeluxeTag(int priority, String identifier, String displayTag, String description) {
+		this.priority = priority;
 		this.identifier = identifier;
 		this.displayTag = displayTag;
+		this.description = description;
 	}
-	
-	public static void unload() {
-		configTags = null;
-		playerTags = null;
-	}
-	
+
 	/**
 	 * get the identifier of this tag
-	 * @return tag identifier
+	 * @return tag identifier String
 	 */
 	public String getIdentifier() {
 		return identifier;
@@ -57,6 +59,14 @@ public class DeluxeTag {
 	}
 	
 	/**
+	 * get the description of this DeluxeTag
+	 * @return description String
+	 */
+	public String getDescription() {
+		return description;
+	}
+	
+	/**
 	 * set the display tag for this DeluxeTag
 	 * @param newDisplayTag new display tag String
 	 */
@@ -65,25 +75,56 @@ public class DeluxeTag {
 	}
 	
 	/**
-	 * load this tag into the tag list
+	 * set the description for this DeluxeTag
+	 * @param newDescription new description String
 	 */
-	public void updateTag() {
-		if (configTags == null) {
-			configTags = new HashMap<String, DeluxeTag>();
-		}
-		
-		configTags.put(identifier, this);
+	public void setDescription(String newDescription) {
+		this.description = newDescription;
 	}
 	
 	/**
-	 * get list of DeluxeTag objects that have been loaded
-	 * @return null if no tags have been loaded
+	 * get the priority associated with this tag
+	 * @return integer representing this tags priority
 	 */
-	public static Collection<DeluxeTag> getLoadedTags() {
+	public int getPriority() {
+		return priority;
+	}
+
+	/**
+	 * set the priority of this tag
+	 * @param priority int value to set this tag to
+	 */
+	public void setPriority(int priority) {
+		this.priority = priority;
+	}
+	
+	
+	/**
+	 * load this tag into the tag list
+	 */
+	public void load() {
 		if (configTags == null) {
-			return null;
+			configTags = new TreeMap<Integer, DeluxeTag>();
 		}
-		return configTags.values();
+		
+		configTags.put(priority, this);
+	}
+	
+	/**
+	 * unload this tag from the tags list if it is loaded
+	 * @return true if it was loaded and removed, false otherwise
+	 */
+	public boolean unload() {
+		if (configTags == null || configTags.isEmpty()) {
+			return false;
+		}
+		
+		if (configTags.containsKey(priority)) {
+			configTags.remove(priority);
+			return true;
+		}
+		
+		return false;
 	}
 	
 	/**
@@ -96,24 +137,12 @@ public class DeluxeTag {
 	}
 	
 	/**
-	 * check if a player has a tag loaded in the playerTags map
-	 * @param player Player to check
-	 * @return true if player is loaded in the playerTags map
+	 * check if a player has permission for this tag to be forced
+	 * @param p Player to check permission for
+	 * @return true if player has permission
 	 */
-	public static boolean hasTagLoaded(Player player) {
-		return hasTagLoaded(player.getUniqueId().toString());
-	}
-	
-	/**
-	 * check if a player has a tag loaded in the playerTags map
-	 * @param uuid Player uuid to check
-	 * @return true if uuid is loaded in the playerTags map
-	 */
-	public static boolean hasTagLoaded(String uuid) {
-		if (playerTags == null || playerTags.isEmpty()) {
-			return false;
-		}
-		return playerTags.keySet().contains(uuid);
+	public boolean hasForceTagPermission(Player p) {
+		return p.hasPermission("deluxetags.forcetag."+identifier);
 	}
 	
 	/**
@@ -149,36 +178,61 @@ public class DeluxeTag {
 	}
 	
 	/**
-	 * get a players current display tag if they have one set, an empty string if not
-	 * @param player Player to get display tag for
-	 * @return players current active display tag if they have one set
+	 * remove this tag from any player who has it set as the active tag
+	 * @return list of uuids that were removed from this tag
 	 */
-	public static String getPlayerDisplayTag(Player player) {
-		return getPlayerDisplayTag(player.getUniqueId().toString());
-	}
-	
-	/**
-	 * get a players current display tag if they have one set, an empty string if not
-	 * @param uuid Player uuid to get display tag for
-	 * @return players current active display tag if they have one set
-	 */
-	public static String getPlayerDisplayTag(String uuid) {
+	public List<String> removeActivePlayers() {
 		
-		if (playerTags == null) {
-			playerTags = new HashMap<String, DeluxeTag>();
+		if (playerTags == null || playerTags.isEmpty()) {
+			return null;
 		}
 		
-		if (playerTags.isEmpty()) {
-			return "";
-		}
+		List<String> remove = new ArrayList<String>();
 		
-		if (playerTags.keySet().contains(uuid) && playerTags.get(uuid) != null) {
-			if (playerTags.get(uuid).getDisplayTag() != null) {
-				return playerTags.get(uuid).getDisplayTag();
+		for (String uuid : playerTags.keySet()) {
+			if (getPlayerDisplayTag(uuid).equals(this.displayTag)) {
+				remove.add(uuid);
+			}
+		}
+		if (!remove.isEmpty()) {
+			for (String uuid : remove) {
+				removePlayer(uuid);
 			}
 		}
 		
-		return "";
+		return remove;
+	}
+	
+	/**
+	 * get list of DeluxeTag objects that have been loaded
+	 * @return null if no tags have been loaded
+	 */
+	public static Collection<DeluxeTag> getLoadedTags() {
+		if (configTags == null) {
+			return null;
+		}
+		return configTags.values();
+	}
+	
+	/**
+	 * check if a player has an active tag
+	 * @param uuid Player uuid to check
+	 * @return true if uuid is loaded in the playerTags map
+	 */
+	public static boolean hasTagLoaded(String uuid) {
+		if (playerTags == null || playerTags.isEmpty()) {
+			return false;
+		}
+		return playerTags.keySet().contains(uuid);
+	}
+	
+	/**
+	 * check if a player has a tag loaded in the playerTags map
+	 * @param player Player to check
+	 * @return true if player is loaded in the playerTags map
+	 */
+	public static boolean hasTagLoaded(Player player) {
+		return hasTagLoaded(player.getUniqueId().toString());
 	}
 	
 	/**
@@ -188,6 +242,28 @@ public class DeluxeTag {
 	 */
 	public static String getPlayerTagIdentifier(Player p) {
 		return getPlayerTagIdentifier(p.getUniqueId().toString());
+	}
+	
+	/**
+	 * get a players current tag identifier
+	 * @param uuid Players uuid to get the identifier for
+	 * @return null if player has no loaded tag
+	 */
+	public static DeluxeTag getTag(String uuid) {
+		
+		if (playerTags == null) {
+			playerTags = new HashMap<String, DeluxeTag>();
+		}
+		
+		if (playerTags.isEmpty()) {
+			return null;
+		}
+		
+		if (playerTags.keySet().contains(uuid) && playerTags.get(uuid) != null) {
+			return playerTags.get(uuid);
+		}
+		
+		return null;
 	}
 	
 	/**
@@ -215,18 +291,113 @@ public class DeluxeTag {
 	}
 	
 	/**
+	 * get a players current display tag if they have one set, an empty string if not
+	 * @param player Player to get display tag for
+	 * @return players current active display tag if they have one set
+	 */
+	@SuppressWarnings("deprecation")
+	public static String getPlayerDisplayTag(Player player) {
+		String d = getPlayerDisplayTag(player.getUniqueId().toString());
+		return DeluxeTags.papi() ? me.clip.placeholderapi.PlaceholderAPI.setPlaceholders(player, d): d;
+	}
+	
+	/**
+	 * get a players current display tag if they have one set, an empty string if not
+	 * @param uuid Player uuid to get display tag for
+	 * @return players current active display tag if they have one set
+	 */
+	public static String getPlayerDisplayTag(String uuid) {
+		
+		if (playerTags == null) {
+			playerTags = new HashMap<String, DeluxeTag>();
+		}
+		
+		if (playerTags.isEmpty()) {
+			return "";
+		}
+		
+		if (playerTags.keySet().contains(uuid) && playerTags.get(uuid) != null) {
+			if (playerTags.get(uuid).getDisplayTag() != null) {
+				return playerTags.get(uuid).getDisplayTag();
+			}
+		}
+		
+		return "";
+	}
+	
+	/**
+	 * get a players current tag description if they have a tag set, an empty string if not
+	 * @param uuid Player uuid to get tag description for
+	 * @return players current tag description if they have a tag set, empty string otherwise
+	 */
+	@SuppressWarnings("deprecation")
+	public static String getPlayerTagDescription(Player p) {
+		String d = getPlayerTagDescription(p.getUniqueId().toString());
+		return DeluxeTags.papi() ? me.clip.placeholderapi.PlaceholderAPI.setPlaceholders(p, d): d;
+	}
+	
+	/**
+	 * get a players current tag description if they have a tag set, an empty string if not
+	 * @param uuid Player uuid to get tag description for
+	 * @return players current tag description if they have a tag set, empty string otherwise
+	 */
+	public static String getPlayerTagDescription(String uuid) {
+		
+		if (playerTags == null) {
+			playerTags = new HashMap<String, DeluxeTag>();
+		}
+		
+		if (playerTags.isEmpty()) {
+			return "";
+		}
+		
+		if (playerTags.keySet().contains(uuid) && playerTags.get(uuid) != null) {
+			if (playerTags.get(uuid).getDescription() != null) {
+				return playerTags.get(uuid).getDescription();
+			}
+		}
+		
+		return "";
+	}
+	
+	/**
 	 * get the DeluxeChat tag object loaded by its identifier String
 	 * @param identifier String identifier of the tag object to get
 	 * @return null if there is no DeluxeTag object loaded for the identifier provided
 	 */
 	public static DeluxeTag getLoadedTag(String identifier) {
 		if (configTags != null && !configTags.isEmpty()) {
-		
-			if (configTags.keySet().contains(identifier)) {
-				return configTags.get(identifier);
+
+			Iterator<DeluxeTag> it = getLoadedTags().iterator();
+
+			while (it.hasNext()) {
+				DeluxeTag t = it.next();
+				if (t.getIdentifier().equals(identifier)) {
+					return t;
+				}
 			}
 		}
 		
+		return null;
+	}
+	
+	public static DeluxeTag getForcedTag(Player p) {
+		
+		if (getLoadedTags() == null || getLoadedTags().isEmpty()) {
+			return null;
+		}
+		Iterator<Integer> it = configTags.keySet().iterator();
+		
+		DeluxeTag t = null;
+		
+		while (it.hasNext()) {
+			
+			t = configTags.get(it.next());
+			
+			if (t != null && t.hasForceTagPermission(p)) {
+				return t;
+			}
+		}
 		return null;
 	}
 	
@@ -241,17 +412,24 @@ public class DeluxeTag {
 			return null;
 		}
 		
-		Iterator<DeluxeTag> it = getLoadedTags().iterator();
+		Iterator<Integer> it = configTags.keySet().iterator();
 		
 		List<String> identifiers = new ArrayList<String>();
 		DeluxeTag t = null;
 		while (it.hasNext()) {
-			t = it.next();
-			if (t.hasTagPermission(p)) {
+			t = configTags.get(it.next());
+			if (t != null && t.hasTagPermission(p)) {
 				identifiers.add(t.getIdentifier());
 			}
 		}
 		return identifiers;
+	}
+	
+	public static int getLoadedTagsAmount() {
+		if (configTags == null || configTags.isEmpty()) {
+			return 0;
+		}
+		return configTags.size();
 	}
 	
 	/**
@@ -276,4 +454,9 @@ public class DeluxeTag {
 		}
 	}
 	
+	public static void unloadData() {
+		configTags = null;
+		playerTags = null;
+	}
+
 }

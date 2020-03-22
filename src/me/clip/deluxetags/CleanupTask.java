@@ -1,6 +1,8 @@
 package me.clip.deluxetags;
 
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
@@ -28,19 +30,28 @@ public class CleanupTask implements Runnable {
 				
 				Iterator<String> it = DeluxeTag.getLoadedPlayers().iterator();
 				
+				List<String> remove = new ArrayList<String>();
+				
 				while (it.hasNext()) {
+					
 					String uuid = it.next();
 					
 					Player p = Bukkit.getServer().getPlayer(UUID.fromString(uuid));
 					
 					if (p == null) {
-						DeluxeTag.removePlayer(uuid);
+						
+						remove.add(uuid);
 					}
 				}
+				
+				if (remove.isEmpty()) {
+					return;
+				}
+				
+				for (String id : remove) {
+					DeluxeTag.removePlayer(id);
+				}
 			}
-		});
-		
-		
-		
+		});	
 	}
 }
