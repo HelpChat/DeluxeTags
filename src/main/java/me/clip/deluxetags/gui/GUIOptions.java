@@ -3,10 +3,9 @@ package me.clip.deluxetags.gui;
 import java.util.Arrays;
 import java.util.List;
 
+import me.clip.deluxetags.DeluxeTags;
 import org.bukkit.Material;
 import org.bukkit.configuration.file.FileConfiguration;
-
-import me.clip.deluxetags.DeluxeTags;
 
 
 public class GUIOptions {
