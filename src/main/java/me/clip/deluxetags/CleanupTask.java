@@ -23,35 +23,31 @@ public class CleanupTask implements Runnable {
 			return;
 		}
 		
-		Bukkit.getScheduler().runTask(plugin, new Runnable() {
+		Bukkit.getScheduler().runTask(plugin, () -> {
 
-			@Override
-			public void run() {
-				
-				Iterator<String> it = DeluxeTag.getLoadedPlayers().iterator();
-				
-				List<String> remove = new ArrayList<String>();
-				
-				while (it.hasNext()) {
-					
-					String uuid = it.next();
-					
-					Player p = Bukkit.getServer().getPlayer(UUID.fromString(uuid));
-					
-					if (p == null) {
-						
-						remove.add(uuid);
-					}
-				}
-				
-				if (remove.isEmpty()) {
-					return;
-				}
-				
-				for (String id : remove) {
-					DeluxeTag.removePlayer(id);
+			Iterator<String> it = DeluxeTag.getLoadedPlayers().iterator();
+
+			List<String> remove = new ArrayList<>();
+
+			while (it.hasNext()) {
+
+				String uuid = it.next();
+
+				Player p = Bukkit.getServer().getPlayer(UUID.fromString(uuid));
+
+				if (p == null) {
+
+					remove.add(uuid);
 				}
 			}
-		});	
+
+			if (remove.isEmpty()) {
+				return;
+			}
+
+			for (String id : remove) {
+				DeluxeTag.removePlayer(id);
+			}
+		});
 	}
 }

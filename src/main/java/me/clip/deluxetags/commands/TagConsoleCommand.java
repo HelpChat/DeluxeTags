@@ -68,7 +68,7 @@ public class TagConsoleCommand implements CommandExecutor {
 			
 		} else if (args[0].equalsIgnoreCase("list")) {
 			
-			if (args.length == 1 || args.length > 1 && args[1].equalsIgnoreCase("all")) {
+			if (args.length == 1 || args[1].equalsIgnoreCase("all")) {
 				
 
 				
@@ -83,7 +83,7 @@ public class TagConsoleCommand implements CommandExecutor {
 				StringBuilder sb = new StringBuilder();
 				
 				for (DeluxeTag d : t) {
-					sb.append("&f"+d.getIdentifier()+"&7:&f"+d.getDisplayTag()+"&a, ");
+					sb.append("&f").append(d.getIdentifier()).append("&7:&f").append(d.getDisplayTag()).append("&a, ");
 				}
 				
 				String tags = sb.toString().trim();
@@ -94,7 +94,7 @@ public class TagConsoleCommand implements CommandExecutor {
 					amount, tags
 				}));
 				
-			} else if (args.length > 1) {
+			} else {
 				
 				if (DeluxeTag.getLoadedTags() == null || DeluxeTag.getLoadedTags().isEmpty()) {
 					
