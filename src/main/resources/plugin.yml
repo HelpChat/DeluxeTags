@@ -1,5 +1,5 @@
 name: DeluxeTags
-main: deluxetags.DeluxeTags
+main: me.clip.deluxetags.DeluxeTags
 version: 1.8.1
 author: extended_clip
 description: DeluxeChat add on to allow players to select a custom tag
