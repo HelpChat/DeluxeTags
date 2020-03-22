@@ -278,9 +278,10 @@ public class DeluxeTags extends JavaPlugin {
 		
 		if (tag == null) {
 			tag = DeluxeTag.getTag(p.getUniqueId().toString());
-			if (tag == null) {
-				tag = new DeluxeTag(1, "", "", "");
-			}
+		}
+		
+		if (tag == null) {
+			tag = new DeluxeTag(1, "", "", "");
 		}
 
 		String uuid = p.getUniqueId().toString();
