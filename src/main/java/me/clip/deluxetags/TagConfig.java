@@ -141,7 +141,13 @@ public class TagConfig {
 
         String tag = c.getString("deluxetags." + identifier + ".tag");
 
-        String desc = c.getString("deluxetags." + identifier + ".description");
+        String desc;
+
+        if (c.isList("deluxetags." + identifier + ".description")) {
+           desc = String.join("\n", c.getStringList("deluxetags." + identifier + ".description"));
+        } else {
+          desc = c.getString("deluxetags." + identifier + ".description", "&f");
+        }
 
         int priority = count;
 
