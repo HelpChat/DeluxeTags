@@ -244,9 +244,7 @@ public class DeluxeTags extends JavaPlugin {
 		messages.saveConfig();
 	}
 	
-	public static void msg(CommandSender s, String msg) {
-		s.sendMessage(ChatColor.translateAlternateColorCodes('&', msg));
-	}
+
 	
 	public boolean isDeluxeMode() {
 		return deluxeMode;
@@ -270,8 +268,7 @@ public class DeluxeTags extends JavaPlugin {
 	public static void setForceTags(boolean b) {
 		forceTags = b;
 	}
-	
-	@SuppressWarnings("deprecation")
+
 	public static String setPlaceholders(Player p, String s, DeluxeTag tag) {
 		
 		if (tag == null) {
