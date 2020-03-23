@@ -5,9 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import me.clip.deluxetags.utils.StringUtils;
+import me.clip.deluxetags.utils.MsgUtils;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
@@ -67,7 +66,7 @@ public class TagGUI {
 	
 	public void openInventory(Player player){
 		
-		this.inventory = Bukkit.createInventory(null, slots, StringUtils.color(displayName));
+		this.inventory = Bukkit.createInventory(null, slots, MsgUtils.color(displayName));
 		
 		for(Integer slot : this.items.keySet()){
 			inventory.setItem(slot, this.items.get(slot));
@@ -91,12 +90,12 @@ public class TagGUI {
 		}
 		ItemMeta im = i.getItemMeta();
 		if (displayName != null) {
-			im.setDisplayName(StringUtils.color(displayName));
+			im.setDisplayName(MsgUtils.color(displayName));
 		}
 		if (lore != null && !lore.isEmpty()) {
 			List<String> temp = new ArrayList<>();
 			for (String line : lore) {
-				temp.add(StringUtils.color(line));
+				temp.add(MsgUtils.color(line));
 			}
 			im.setLore(temp);
 		}

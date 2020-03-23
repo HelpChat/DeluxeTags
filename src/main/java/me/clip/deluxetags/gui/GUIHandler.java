@@ -4,7 +4,7 @@ import java.util.Arrays;
 import me.clip.deluxetags.DeluxeTag;
 import me.clip.deluxetags.DeluxeTags;
 import me.clip.deluxetags.Lang;
-import me.clip.deluxetags.utils.StringUtils;
+import me.clip.deluxetags.utils.MsgUtils;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -28,7 +28,7 @@ public class GUIHandler implements Listener {
     }
 
     private void sms(Player p, String msg) {
-        p.sendMessage(StringUtils.color(msg));
+        p.sendMessage(MsgUtils.color(msg));
     }
 
     @EventHandler
@@ -250,7 +250,7 @@ public class GUIHandler implements Listener {
         //divider
 
         String display = options.getDividerItem().getName();
-        display = StringUtils.color(DeluxeTags.setPlaceholders(p, display, null));
+        display = MsgUtils.color(DeluxeTags.setPlaceholders(p, display, null));
         List<String> tmp = null;
 
         List<String> orig = options.getDividerItem().getLore();
