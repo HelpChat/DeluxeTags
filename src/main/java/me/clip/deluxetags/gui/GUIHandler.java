@@ -1,9 +1,10 @@
 package me.clip.deluxetags.gui;
 
+import java.util.Arrays;
 import me.clip.deluxetags.DeluxeTag;
 import me.clip.deluxetags.DeluxeTags;
 import me.clip.deluxetags.Lang;
-import org.bukkit.ChatColor;
+import me.clip.deluxetags.utils.StringUtils;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -20,15 +21,14 @@ import java.util.Map;
 
 public class GUIHandler implements Listener {
 
-    DeluxeTags plugin;
-
+    private DeluxeTags plugin;
 
     public GUIHandler(DeluxeTags i) {
         plugin = i;
     }
 
     private void sms(Player p, String msg) {
-        p.sendMessage(ChatColor.translateAlternateColorCodes('&', msg));
+        p.sendMessage(StringUtils.color(msg));
     }
 
     @EventHandler
@@ -56,9 +56,17 @@ public class GUIHandler implements Listener {
 
             if (clicked.getType() != null && !clicked.getType().equals(Material.AIR)) {
 
-                Map<Integer, String> tags = gui.getTags();
+                Map<Integer, String> tags;
+                try {
+                    tags = gui.getTags();
+                } catch (NullPointerException ex) {
+                    TagGUI.close(p);
+                    p.closeInventory();
+                    return;
+                }
 
-                if (tags == null || tags.isEmpty()) {
+
+                if (tags.isEmpty()) {
                     TagGUI.close(p);
 
                     p.closeInventory();
@@ -74,10 +82,10 @@ public class GUIHandler implements Listener {
                     return;
                 }
 
-                if (DeluxeTag.getLoadedTag(id).setPlayerTag(p)) {
 
+
+                if (DeluxeTag.getLoadedTag(id) != null && DeluxeTag.getLoadedTag(id).setPlayerTag(p)) {
                     TagGUI.close(p);
-
                     p.closeInventory();
 
                     sms(p, Lang.GUI_TAG_SELECTED.getConfigValue(new String[]{
@@ -85,14 +93,12 @@ public class GUIHandler implements Listener {
                     }));
 
                     plugin.saveTagIdentifier(p.getUniqueId().toString(), id);
-                    return;
                 }
             }
 
         } else if (slot == 48 || slot == 50) {
 
             TagGUI.close(p);
-
             p.closeInventory();
 
         } else if (slot == 49) {
@@ -124,7 +130,7 @@ public class GUIHandler implements Listener {
                     name = clicked.getItemMeta().getDisplayName().replace("Forward to page ", "");
                 }
 
-                int page = 1;
+                int page;
 
                 try {
 
@@ -159,9 +165,6 @@ public class GUIHandler implements Listener {
         }
     }
 
-    private String clr(String s) {
-        return ChatColor.translateAlternateColorCodes('&', s);
-    }
 
     public boolean openMenu(Player p, int page) {
 
@@ -230,7 +233,11 @@ public class GUIHandler implements Listener {
                 tmp = new ArrayList<>();
                 for (String line : orig) {
                     line = DeluxeTags.setPlaceholders(p, line, tag);
-                    tmp.add(line);
+                    if (line.contains("\n")) {
+                        tmp.addAll(Arrays.asList(line.split("\n")));
+                    } else {
+                        tmp.add(line);
+                    }
                 }
             }
             gui.setItem(count, TagGUI.createItem(options.getTagSelectItem().getMaterial(), options.getTagSelectItem().getData(), 1, display, tmp));
@@ -243,9 +250,7 @@ public class GUIHandler implements Listener {
         //divider
 
         String display = options.getDividerItem().getName();
-
-        display = clr(DeluxeTags.setPlaceholders(p, display, null));
-
+        display = StringUtils.color(DeluxeTags.setPlaceholders(p, display, null));
         List<String> tmp = null;
 
         List<String> orig = options.getDividerItem().getLore();
@@ -253,6 +258,11 @@ public class GUIHandler implements Listener {
             tmp = new ArrayList<>();
             for (String line : orig) {
                 line = DeluxeTags.setPlaceholders(p, line, null);
+                if (line.contains("\n")) {
+                    tmp.addAll(Arrays.asList(line.split("\n")));
+                } else {
+                    tmp.add(line);
+                }
                 tmp.add(line);
             }
         }
@@ -271,11 +281,8 @@ public class GUIHandler implements Listener {
         DisplayItem item;
 
         if (current == null || current.isEmpty()) {
-
             item = options.getNoTagItem();
-
         } else {
-
             item = options.getHasTagItem();
         }
 
@@ -296,8 +303,12 @@ public class GUIHandler implements Listener {
                 infoTmp = new ArrayList<>();
 
                 for (String line : infoLore) {
-
                     line = DeluxeTags.setPlaceholders(p, line, null);
+                    if (line.contains("\n")) {
+                        tmp.addAll(Arrays.asList(line.split("\n")));
+                    } else {
+                        tmp.add(line);
+                    }
                     infoTmp.add(line);
                 }
 
