@@ -9,8 +9,18 @@ plugins {
     id 'com.github.johnrengelman.shadow' version '5.1.0'
 }
 
+class VersionDetails {
+    String version = "1.8.1";
+    String dev = "DEV-" + System.getenv("BUILD_NUMBER").toString();
+    String release = "Release";
+}
+
+ext {
+    details = new VersionDetails()
+}
+
 group = 'me.clip'
-version = '1.8.1'
+version = "${details.version}-${details.dev}".toString()
 sourceCompatibility = JavaVersion.VERSION_1_8
 
 repositories {
@@ -24,11 +34,9 @@ repositories {
         name = 'sonatype'
         url = 'https://oss.sonatype.org/content/groups/public/'
     }
-
     maven {
-        url = 'https://repo.extendedclip.com/content/repositories/placeholderapi/'
+        url = 'http://repo.extendedclip.com/content/repositories/placeholderapi'
     }
-
 }
 
 shadowJar {
@@ -38,7 +46,7 @@ shadowJar {
 
 dependencies {
     compileOnly 'org.spigotmc:spigot-api:1.12.2-R0.1-SNAPSHOT'
-    compileOnly 'me.clip:placeholderapi:+'
+    compileOnly 'me.clip:placeholderapi:2.10.4'
 }
 
 sourceSets {
