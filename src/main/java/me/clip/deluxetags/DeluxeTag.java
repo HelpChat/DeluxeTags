@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
+import java.util.stream.Collectors;
 import me.clip.placeholderapi.PlaceholderAPI;
 import org.bukkit.entity.Player;
 
@@ -419,18 +420,17 @@ public class DeluxeTag {
 		if (getLoadedTags() == null || getLoadedTags().isEmpty()) {
 			return null;
 		}
-		
-		Iterator<Integer> it = configTags.keySet().iterator();
-		
-		List<String> identifiers = new ArrayList<>();
-		DeluxeTag t;
-		while (it.hasNext()) {
-			t = configTags.get(it.next());
-			if (t != null && t.hasTagPermission(p)) {
-				identifiers.add(t.getIdentifier());
-			}
+
+		return getLoadedTags().stream().filter(t -> t.hasTagPermission(p)).map(DeluxeTag::getIdentifier).collect(Collectors.toList());
+	}
+
+	public static List<String> getAllTagIdentifiers() {
+
+		if (getLoadedTags() == null || getLoadedTags().isEmpty()) {
+			return null;
 		}
-		return identifiers;
+
+		return getLoadedTags().stream().map(DeluxeTag::getIdentifier).collect(Collectors.toList());
 	}
 	
 	public static int getLoadedTagsAmount() {
