@@ -13,7 +13,6 @@ import me.clip.deluxetags.listeners.JoinListener;
 import me.clip.deluxetags.listeners.PlayerListener;
 import me.clip.deluxetags.updater.UpdateChecker;
 
-import me.clip.placeholderapi.PlaceholderAPI;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
@@ -378,7 +377,7 @@ public class DeluxeTags extends JavaPlugin {
 		}
 		
 		if (papi) {
-			s = PlaceholderAPI.setPlaceholders(p, s);
+			s = me.clip.placeholderapi.PlaceholderAPI.setPlaceholders(p, s);
 		}
 		
 		return ChatColor.translateAlternateColorCodes('&', s);
