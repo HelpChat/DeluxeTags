@@ -23,12 +23,7 @@ public class DeluxeTag {
 	
 	private static Map<String, DeluxeTag> playerTags;
 	
-	private String identifier;
-	
-	private String displayTag;
-	
-	private String description;
-	
+	private String identifier, displayTag, description, permission;
 	private int priority;
 	
 	/**
@@ -98,8 +93,23 @@ public class DeluxeTag {
 	public void setPriority(int priority) {
 		this.priority = priority;
 	}
-	
-	
+
+	/**
+	 * get the permission of this tag
+	 * @return string permission node associated with this tag
+	 */
+	public String getPermission() {
+		return permission == null ? "deluxetags.tag." + identifier : permission;
+	}
+
+	/**
+	 * set the permission node associated with this tag
+	 * @param permission to set for this tag
+	 */
+	public void setPermission(String permission) {
+		this.permission = permission;
+	}
+
 	/**
 	 * load this tag into the tag list
 	 */
@@ -134,7 +144,7 @@ public class DeluxeTag {
 	 * @return true if player has permission
 	 */
 	public boolean hasTagPermission(Player p) {
-		return p.hasPermission("deluxetags.tag."+identifier);
+		return p.hasPermission(getPermission());
 	}
 	
 	/**
@@ -328,7 +338,7 @@ public class DeluxeTag {
 	
 	/**
 	 * get a players current tag description if they have a tag set, an empty string if not
-	 * @param uuid Player uuid to get tag description for
+	 * @param p Player to get tag description for
 	 * @return players current tag description if they have a tag set, empty string otherwise
 	 */
 	@SuppressWarnings("deprecation")
@@ -456,5 +466,4 @@ public class DeluxeTag {
 		configTags = null;
 		playerTags = null;
 	}
-
 }
