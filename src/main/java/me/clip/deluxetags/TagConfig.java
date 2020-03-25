@@ -121,7 +121,7 @@ public class TagConfig {
 
     int loaded = 0;
 
-    if (c.contains("deluxetags")) {
+    if (!c.contains("deluxetags")) {
       return loaded;
     }
 
