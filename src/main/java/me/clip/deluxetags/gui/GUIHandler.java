@@ -1,6 +1,5 @@
 package me.clip.deluxetags.gui;
 
-import java.util.Arrays;
 import me.clip.deluxetags.DeluxeTag;
 import me.clip.deluxetags.DeluxeTags;
 import me.clip.deluxetags.Lang;
@@ -15,6 +14,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -299,17 +299,15 @@ public class GUIHandler implements Listener {
             List<String> infoLore = item.getLore();
 
             if (infoLore != null && !infoLore.isEmpty()) {
-
                 infoTmp = new ArrayList<>();
 
                 for (String line : infoLore) {
                     line = DeluxeTags.setPlaceholders(p, line, null);
                     if (line.contains("\n")) {
-                        tmp.addAll(Arrays.asList(line.split("\n")));
+                        infoTmp.addAll(Arrays.asList(line.split("\n")));
                     } else {
-                        tmp.add(line);
+                        infoTmp.add(line);
                     }
-                    infoTmp.add(line);
                 }
 
                 meta.setLore(infoTmp);
