@@ -343,7 +343,7 @@ public class DeluxeTags extends JavaPlugin {
 
 			if (s.contains("{deluxetags_identifier}")) {
 
-				String tagId = DeluxeTag.getPlayerTagIdentifier(uuid);
+				String tagId = tag.getIdentifier();
 
 				if (tagId == null) {
 					tagId = "";
@@ -354,7 +354,7 @@ public class DeluxeTags extends JavaPlugin {
 
 			if (s.contains("{deluxetags_description}")) {
 
-				String description = DeluxeTag.getPlayerTagDescription(uuid);
+				String description = tag.getDescription();
 
 				s = s.replace("{deluxetags_description}", description);
 			}
