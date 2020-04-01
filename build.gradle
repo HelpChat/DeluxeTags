@@ -20,7 +20,7 @@ ext {
 }
 
 group = 'me.clip'
-version = "${details.version}-${details.dev}".toString()
+version = "${details.version}-${details.release}".toString()
 sourceCompatibility = JavaVersion.VERSION_1_8
 
 repositories {
