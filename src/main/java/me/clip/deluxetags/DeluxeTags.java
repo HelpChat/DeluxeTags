@@ -279,8 +279,6 @@ public class DeluxeTags extends JavaPlugin {
 			tag = new DeluxeTag(1, "", "", "");
 		}
 
-		String uuid = p.getUniqueId().toString();
-		
 		if (deluxeMode) {
 
 			if (s.contains("%player%")) {
