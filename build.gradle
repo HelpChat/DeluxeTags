@@ -10,7 +10,7 @@ plugins {
 }
 
 class VersionDetails {
-    String version = "1.8.1";
+    String version = "1.8.2";
     String dev = "DEV-" + System.getenv("BUILD_NUMBER").toString();
     String release = "Release";
 }
@@ -20,7 +20,7 @@ ext {
 }
 
 group = 'me.clip'
-version = "${details.version}-${details.release}".toString()
+version = "${details.version}-${details.dev}".toString()
 sourceCompatibility = JavaVersion.VERSION_1_8
 
 repositories {
@@ -45,8 +45,10 @@ shadowJar {
 }
 
 dependencies {
-    compileOnly 'org.spigotmc:spigot-api:1.12.2-R0.1-SNAPSHOT'
-    compileOnly 'me.clip:placeholderapi:2.10.4'
+    compileOnly 'org.spigotmc:spigot-api:1.16.3-R0.1-SNAPSHOT'
+    compileOnly 'me.clip:placeholderapi:2.10.9'
+
+    implementation 'com.github.cryptomorin:XSeries:7.5.2.1'
 }
 
 sourceSets {

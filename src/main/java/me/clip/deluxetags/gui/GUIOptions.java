@@ -3,6 +3,7 @@ package me.clip.deluxetags.gui;
 import java.util.Arrays;
 import java.util.List;
 
+import com.cryptomorin.xseries.XMaterial;
 import me.clip.deluxetags.DeluxeTags;
 import org.bukkit.Material;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -50,11 +51,11 @@ public class GUIOptions {
 						mat = Material.NAME_TAG;
 						break;
 					case "divider_item":
-						mat = Material.STAINED_GLASS_PANE;
+						mat = XMaterial.WHITE_STAINED_GLASS_PANE.parseMaterial();
 						break;
 					case "has_tag_item":
 					case "no_tag_item":
-						mat = Material.SKULL_ITEM;
+						mat = XMaterial.PLAYER_HEAD.parseMaterial();
 						break;
 					case "exit_item":
 						mat = Material.IRON_DOOR;
