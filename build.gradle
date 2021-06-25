@@ -35,7 +35,7 @@ repositories {
         url = 'https://oss.sonatype.org/content/groups/public/'
     }
     maven {
-        url = 'http://repo.extendedclip.com/content/repositories/placeholderapi'
+        url = 'https://repo.extendedclip.com/content/repositories/placeholderapi'
     }
 }
 
