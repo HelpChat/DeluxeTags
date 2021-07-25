@@ -11,12 +11,12 @@ public class ChatFormatListener implements Listener {
 	
 	DeluxeTags plugin;
 	
-	public ChatFormatListener(DeluxeTags i) {
-		plugin = i;
+	public ChatFormatListener(DeluxeTags instance) {
+		plugin = instance;
 	}
 	
 	@EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
-	public void onChat(AsyncPlayerChatEvent e) {
-		e.setFormat(plugin.getCfg().chatFormat());
+	public void onChat(AsyncPlayerChatEvent event) {
+		event.setFormat(plugin.getCfg().chatFormat());
 	}
 }
