@@ -1,19 +1,15 @@
 package me.clip.deluxetags.gui;
 
 import java.util.List;
-
 import org.bukkit.Material;
 
 public class DisplayItem {
 
 	private Material material;
-	
 	private short data;
-	
 	private String name;
-	
 	private List<String> lore;
-	
+
 	public DisplayItem(Material material, short data, String name, List<String> lore) {
 		this.setMaterial(material);
 		this.setData(data);

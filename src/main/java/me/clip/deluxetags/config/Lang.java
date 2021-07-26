@@ -1,4 +1,4 @@
-package me.clip.deluxetags;
+package me.clip.deluxetags.config;
 
 import org.bukkit.configuration.file.FileConfiguration;
 
@@ -8,6 +8,8 @@ public enum Lang {
 	CMD_NO_TAGS_LOADED("cmd.no_tags_loaded", "&cThere are no tags loaded!"),
 	CMD_NO_TAGS_AVAILABLE("cmd.no_tags_available", "&cYou don't have any tags available!"),
 	CMD_NO_TAGS_AVAILABLE_TARGET("cmd.no_tags_available_target", "&f{0} &cdon't have any tags available!"),
+	CMD_TAG_LIST_FAIL("cmd.tag_list_fail", "&cYou don't have any tags loaded."),
+	CMD_TAG_LIST_FAIL_TARGET("cmd.tag_list_fail_target", "&c{0} has no tags loaded."),
 	CMD_TAG_LIST("cmd.tags_list", "&f{0} &aavailable tags: &f{1}"),
 	CMD_TAG_LIST_ALL("cmd.tags_list_all", "&f{0} &atotal tags loaded: &f{1}"),
 	CMD_TAG_LIST_TARGET("cmd.tags_list_others", "&f{0} &ahas &f{1} &atotal tags loaded: &f{2}"),
@@ -25,6 +27,7 @@ public enum Lang {
 	CMD_HELP_ADMIN_CREATE("cmd.help_admin_create", "&f&oCreate a new tag"),
 	CMD_HELP_ADMIN_DELETE("cmd.help_admin_delete", "&f&oDelete an existing tag"),
 	CMD_HELP_ADMIN_SET_DESC("cmd.help_admin_setdesc", "&f&oSet a description for a tag"),
+	CMD_HELP_ADMIN_SET_DISPLAY("cmd.help_admin_setdisplay", "&f&oChange a tag's display"),
 	CMD_HELP_VERSION("cmd.help_version", "&f&oView DeluxeTags version and author information"),
 	CMD_HELP_RELOAD("cmd.help_reload", "&f&oReload the tags config"),
 	CMD_ADMIN_SET_INCORRECT_ARGS("cmd.admin_set_incorrect_usage", "&cIncorrect usage! &7/tags set <player> <tag>"),
@@ -46,6 +49,9 @@ public enum Lang {
 	CMD_ADMIN_SET_DESCRIPTION_INCORRECT("cmd.admin_set_description_incorrect_usage", "&cIncorrect usage! &7/tags setdesc <identifier> <description>"),
 	CMD_ADMIN_SET_DESCRIPTION_SUCCESS("cmd.admin_set_description_success", "{0} &adescription set to &7: &f{2}"),
 	CMD_ADMIN_SET_DESCRIPTION_FAIL("cmd.admin_set_description_fail", "&f{0} &cis not a loaded tag name!"),
+	CMD_ADMIN_SET_DISPLAY_INCORRECT("cmd.admin_set_display_incorrect_usage", "&cIncorrect usage! &7/tags setdisplay <identifier> <display>"),
+	CMD_ADMIN_SET_DISPLAY_SUCCESS("cmd.admin_set_display_success", "{0} &adisplay set to &7: &f{1}"),
+	CMD_ADMIN_SET_DISPLAY_FAIL("cmd.admin_set_display_fail", "&f{0} &cis not a loaded tag name!"),
 	CMD_ADMIN_RELOAD("cmd.admin_reload", "&aConfiguration successfully reloaded! &f{0} &atags loaded!"),
 	CMD_INCORRECT_USAGE("cmd.incorrect_usage", "&cIncorrect usage! Use &7/tags help"),
 	GUI_TAG_SELECTED("gui.tag_selected", "&aYour tag has been set to &f{0} &7({1}&7)"),
@@ -54,7 +60,7 @@ public enum Lang {
 	;
 	
 
-	private String path, def;
+	private final String path, def;
 	private static FileConfiguration LANG;
 
 	Lang(final String path, final String start) {
@@ -75,22 +81,16 @@ public enum Lang {
 	}
 	
 	public String getConfigValue(final String[] args) {
-		
 		String value = this.def;
 		
 		if (LANG != null) {
 			value = LANG.getString(this.path, this.def);
-		} 
-			
-		if (args == null) {
-			
-			return value;
-		
-		} else if (args.length == 0) {
-			
+		}
+
+		if (args == null || args.length == 0) {
 			return value;
 		}
-		
+
 		for (int i = 0; i < args.length; i++) {
 			value = value.replace("{" + i + "}", args[i]);
 		}

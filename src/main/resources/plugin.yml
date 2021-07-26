@@ -1,6 +1,6 @@
 name: DeluxeTags
 main: me.clip.deluxetags.DeluxeTags
-version: 1.8.1
+version: @version@
 api-version: "1.13"
 author: extended_clip
 description: DeluxeChat add on to allow players to select a custom tag
@@ -38,6 +38,12 @@ permissions:
         default: op
     deluxetags.setdescription:
         description: ability to set a tags description by command
+        default: op
+    deluxetags.setdisplay:
+        description: ability to change a tag's display
+        default: op
+    deluxetags.see.all:
+        description: ability to see all tags without being able to use them
         default: op
     deluxetags.reload:
         description: ability to reload the plugin

@@ -1,6 +1,5 @@
 package me.clip.deluxetags.gui;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,18 +15,15 @@ import org.bukkit.inventory.meta.ItemMeta;
 public class TagGUI {
 	
 	private static HashMap<String, TagGUI> inGUI;
-	
-	private Inventory inventory;
-	
-	private String displayName;
-	
-	private int slots;
-	
-	private int page;
-	
 	private Map<Integer, String> tags;
-	
-	private Map<Integer, ItemStack> items;
+
+	private Inventory inventory;
+	private final Map<Integer, ItemStack> items;
+	private final String displayName;
+	private int slots;
+
+	private int page;
+
 	
 	public TagGUI(String displayName, int page){
 		this.displayName = displayName;
@@ -58,14 +54,13 @@ public class TagGUI {
 		items.put(slot, item);
 		return this;
 	}
-	
+
 	public TagGUI setSlots(int slots){
 		this.slots = slots;
 		return this;
 	}
-	
+
 	public void openInventory(Player player){
-		
 		this.inventory = Bukkit.createInventory(null, slots, MsgUtils.color(displayName));
 		
 		for(Integer slot : this.items.keySet()){
@@ -79,31 +74,28 @@ public class TagGUI {
 		
 		inGUI.put(player.getName(), this);
 	}
-	
+
 	public static ItemStack createItem(Material mat, short data, int amount, String displayName, List<String> lore) {
 		if (mat == null) {
 			return null;
 		}
-		ItemStack i = new ItemStack(mat, amount);
+		ItemStack item = new ItemStack(mat, amount);
 		if (data > 0) {
-			i.setDurability(data);
+			item.setDurability(data);
 		}
-		ItemMeta im = i.getItemMeta();
+		ItemMeta itemMeta = item.getItemMeta();
+		if (itemMeta == null) {
+			return null;
+		}
 		if (displayName != null) {
-			im.setDisplayName(MsgUtils.color(displayName));
+			itemMeta.setDisplayName(displayName);
 		}
 		if (lore != null && !lore.isEmpty()) {
-			List<String> temp = new ArrayList<>();
-			for (String line : lore) {
-				temp.add(MsgUtils.color(line));
-			}
-			im.setLore(temp);
+			itemMeta.setLore(lore);
 		}
-		i.setItemMeta(im);
-		return i;
+		item.setItemMeta(itemMeta);
+		return item;
 	}
-	
-
 	
 	public static boolean hasGUI(Player p) {
 		if (inGUI == null) {
@@ -112,12 +104,12 @@ public class TagGUI {
 		
 		return inGUI.containsKey(p.getName()) && inGUI.get(p.getName()) != null;
 	}
-	
+
 	public static TagGUI getGUI(Player p) {
-		
 		if (!hasGUI(p)) {
 			return null;
 		}
+
 		return inGUI.get(p.getName());
 	}
 	
@@ -150,5 +142,4 @@ public class TagGUI {
 	public void setTags(Map<Integer, String> tags) {
 		this.tags = tags;
 	}
-	
 }

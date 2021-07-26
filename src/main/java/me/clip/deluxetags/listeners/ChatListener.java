@@ -12,17 +12,14 @@ public class ChatListener implements Listener {
 	/**
 	 * Add chat compatibility for other plugins
 	 */
-	public ChatListener(DeluxeTags i) {
-		plugin = i;
+	public ChatListener(DeluxeTags instance) {
+		plugin = instance;
 	}
 	
 	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-	public void onChat(AsyncPlayerChatEvent e) {
-		
-		String format = e.getFormat();
-		
-		format = DeluxeTags.setPlaceholders(e.getPlayer(), format, null);
-		
-		e.setFormat(format);
+	public void onChat(AsyncPlayerChatEvent event) {
+		String format = event.getFormat();
+		format = DeluxeTags.setPlaceholders(event.getPlayer(), format, null);
+		event.setFormat(format);
 	}
 }

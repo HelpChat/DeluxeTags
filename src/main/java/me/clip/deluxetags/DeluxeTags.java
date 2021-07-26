@@ -4,6 +4,8 @@ import java.util.List;
 
 import me.clip.deluxetags.commands.TagCommand;
 import me.clip.deluxetags.config.ConfigWrapper;
+import me.clip.deluxetags.config.Lang;
+import me.clip.deluxetags.config.TagConfig;
 import me.clip.deluxetags.gui.GUIHandler;
 import me.clip.deluxetags.gui.GUIOptions;
 import me.clip.deluxetags.gui.TagGUI;
@@ -11,11 +13,14 @@ import me.clip.deluxetags.listeners.ChatFormatListener;
 import me.clip.deluxetags.listeners.ChatListener;
 import me.clip.deluxetags.listeners.JoinListener;
 import me.clip.deluxetags.listeners.PlayerListener;
+import me.clip.deluxetags.placeholders.TagPlaceholders;
+import me.clip.deluxetags.tags.DeluxeTag;
+import me.clip.deluxetags.tasks.CleanupTask;
 import me.clip.deluxetags.updater.UpdateChecker;
-
+import me.clip.deluxetags.utils.MsgUtils;
+import me.clip.placeholderapi.PlaceholderAPI;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.command.CommandSender;
+import org.bukkit.command.PluginCommand;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -41,15 +46,17 @@ public class DeluxeTags extends JavaPlugin {
 	private DeluxeTag dummy;
 	
 	private BukkitTask cleanupTask = null;
-	
-	private UpdateChecker updater = null;
-	
-	private static boolean deluxeMode;
-	
+
+	private static String availableMessage;
+
+	private static String unavailableMessage;
+
+	private static boolean legacyHex;
+
 	private static boolean forceTags;
 	
 	private static boolean papi;
-	
+
 	@Override
 	public void onEnable() {
 		
@@ -57,13 +64,22 @@ public class DeluxeTags extends JavaPlugin {
 		
 		cfg = new TagConfig(this);
 		
-		getCfg().loadDefConfig();
+		cfg.loadDefConfig();
+
+		availableMessage = cfg.availability(true);
+
+		unavailableMessage = cfg.availability(false);
 		
-		deluxeMode = cfg.deluxeChat();
+		legacyHex = cfg.legacyHex();
 		
-		forceTags = getCfg().forceTags();
-		
-		getLogger().info(getCfg().loadTags()+" tags loaded");
+		forceTags = cfg.forceTags();
+
+		int loaded = cfg.loadTags();
+		if (loaded == 1) {
+			getLogger().info("1 tag loaded");
+		} else {
+			getLogger().info(loaded + " tags loaded");
+		}
 
 		playerFile = new ConfigWrapper(this, "userdata", "player_tags.yml");
 		
@@ -76,12 +92,13 @@ public class DeluxeTags extends JavaPlugin {
 		guiHandler = new GUIHandler(this);
 		
 		Bukkit.getPluginManager().registerEvents(guiHandler, this);
-		
-		getCommand("tags").setExecutor(new TagCommand(this));
+
+		PluginCommand command = getCommand("tags");
+		if (command != null) command.setExecutor(new TagCommand(this));
 		
 		Bukkit.getPluginManager().registerEvents(new PlayerListener(this), this);
 		
-		if (this.cfg.loadTagOnJoin()) {
+		if (cfg.loadTagOnJoin()) {
 			Bukkit.getPluginManager().registerEvents(new JoinListener(this), this);
 		}
 		
@@ -93,13 +110,16 @@ public class DeluxeTags extends JavaPlugin {
 		loadMessages();
 		
 		papi = Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null;
-		
-		if (deluxeMode) {
-			
-			getLogger().info("DeluxeChat will handle fetching placeholders for tags!");
-			
+
+		if (legacyHex) {
+			getLogger().info("Using legacy hex colors format: &#aaFF00");
 		} else {
-			
+			getLogger().info("Using standard hex colors format: #aaFF00");
+		}
+		
+		if (cfg.deluxeChat()) {
+			getLogger().info("DeluxeChat will handle fetching placeholders for tags!");
+		} else {
 			if (cfg.formatChat()) {
 				Bukkit.getPluginManager().registerEvents(new ChatFormatListener(this), this);
 			}
@@ -108,17 +128,17 @@ public class DeluxeTags extends JavaPlugin {
 			
 			getLogger().info("You are not using DeluxeChat!");
 			getLogger().info("DeluxeTags will listen to the AsyncPlayerChatEvent to provide compatibility for some chat plugins.");
+		}
 
+		if (papi) {
+			new TagPlaceholders(this).register();
 		}
 		
-		if (getCfg().checkUpdates()) {
-			
-			updater = new UpdateChecker(this);
-			
+		if (cfg.checkUpdates()) {
+			UpdateChecker updater = new UpdateChecker(this);
 			updater.fetch();
 		
 			if (updater.hasUpdateAvailable()) {
-			
 				System.out.println("----------------------------");
 				System.out.println("     DeluxeTags Updater");
 				System.out.println(" ");
@@ -128,9 +148,8 @@ public class DeluxeTags extends JavaPlugin {
 				System.out.println(" ");
 				System.out.println("Download at http://www.spigotmc.org/resources/deluxetags.4390/");
 				System.out.println("----------------------------");
-			
+
 			} else {
-			
 				System.out.println("----------------------------");
 				System.out.println("     DeluxeTags Updater");
 				System.out.println(" ");
@@ -145,39 +164,70 @@ public class DeluxeTags extends JavaPlugin {
 	
 	@Override
 	public void onDisable() {
-		
 		if (cleanupTask != null) {
-			
 			cleanupTask.cancel();
-			
 			cleanupTask = null;	
 		}
 		
 		DeluxeTag.unloadData();
-		
 		TagGUI.unload();
 		
 		guiOptions = null;
-		
 		dummy = null;
+	}
+
+	public TagConfig getCfg() {
+		return cfg;
 	}
 
 	public DeluxeTag getDummy() {
 		return dummy;
 	}
 
-	public TagConfig getCfg() {
-		return cfg;
-	}
-	
 	public GUIHandler getGUIHandler() {
 		return guiHandler;
 	}
-	
-	public UpdateChecker getUpdateChecker() {
-		return updater;
+
+	public GUIOptions getGuiOptions() {
+		return guiOptions;
 	}
-	
+
+	public ConfigWrapper getPlayerFile() {
+		return playerFile;
+	}
+
+	public ConfigWrapper getLangFile() {
+		return messages;
+	}
+
+	public static boolean isLegacyHex() {
+		return legacyHex;
+	}
+
+	public static boolean forceTags() {
+		return forceTags;
+	}
+
+	public static boolean papi() {
+		return papi;
+	}
+
+	public static void setLegacyHex(boolean value) {
+		legacyHex = value;
+	}
+
+	public static void setForceTags(boolean value) {
+		forceTags = value;
+	}
+
+	public static void setAvailableMessage(String value) {
+		availableMessage = value;
+	}
+
+	public static void setUnavailableMessage(String value) {
+		unavailableMessage = value;
+	}
+
 	public String getSavedTagIdentifier(String uuid) {
 		FileConfiguration c = playerFile.getConfig();
 		if (c.contains(uuid) && c.isString(uuid) && c.getString(uuid) != null) {
@@ -200,40 +250,27 @@ public class DeluxeTags extends JavaPlugin {
 		}
 	}
 	
-	public boolean removeSavedTags(List<String> uuids) {
-		
-		boolean s = false;
-		
-		FileConfiguration c = playerFile.getConfig();
-		
-		if (uuids != null && !uuids.isEmpty()) {
-			
-			for (String uuid : uuids) {
-				
-				if (c.contains(uuid)) {
-					c.set(uuid, null);
-					s = true;
-				}
-			}
-			
-			if (s) {
-				playerFile.saveConfig(); 
+	public void removeSavedTags(List<String> uuids) {
+		boolean requiresSave = false;
+		FileConfiguration config = playerFile.getConfig();
+
+		if (uuids == null || uuids.isEmpty()) {
+			return;
+		}
+
+		for (String uuid : uuids) {
+			if (config.contains(uuid)) {
+				config.set(uuid, null);
+				requiresSave = true;
 			}
 		}
 
-		return s;
-	}
-	
-	public ConfigWrapper getPlayerFile() {
-		return playerFile;
-	}
-	
-	public ConfigWrapper getLangFile() {
-		return messages;
+		if (requiresSave) {
+			playerFile.saveConfig();
+		}
 	}
 	
 	public void loadMessages() {
-		
 		Lang.setFile(messages.getConfig());
 
 		for (final Lang value : Lang.values()) {
@@ -243,34 +280,12 @@ public class DeluxeTags extends JavaPlugin {
 		messages.getConfig().options().copyDefaults(true);
 		messages.saveConfig();
 	}
-	
 
-	
-	public boolean isDeluxeMode() {
-		return deluxeMode;
-	}
-
-	public GUIOptions getGuiOptions() {
-		if (guiOptions == null) {
-			guiOptions = new GUIOptions(this);
-		}
-		return guiOptions;
-	}
-	
 	public void reloadGUIOptions() {
 		guiOptions = new GUIOptions(this);
 	}
-	
-	public static boolean forceTags() {
-		return forceTags;
-	}
-	
-	public static void setForceTags(boolean b) {
-		forceTags = b;
-	}
 
 	public static String setPlaceholders(Player p, String s, DeluxeTag tag) {
-		
 		if (tag == null) {
 			tag = DeluxeTag.getTag(p.getUniqueId().toString());
 		}
@@ -279,106 +294,31 @@ public class DeluxeTags extends JavaPlugin {
 			tag = new DeluxeTag(1, "", "", "");
 		}
 
-		if (deluxeMode) {
+		List<String> tags = DeluxeTag.getAvailableTagIdentifiers(p);
+		String tagId = tag.getIdentifier() != null ? tag.getIdentifier() : "";
+		String amount = tags != null ? String.valueOf(tags.size()) : "0";
+		String availability = tag.hasTagPermission(p) ? availableMessage : unavailableMessage;
 
-			if (s.contains("%player%")) {
-				s = s.replace("%player%", p.getName());
-			}
-
-			if (s.contains("%displayname%")) {
-				s = s.replace("%displayname%", p.getDisplayName());
-			}
-
-			if (s.contains("%deluxetags_tag%")) {
-				s = s.replace("%deluxetags_tag%", tag.getDisplayTag());
-			}
-
-			if (s.contains("%deluxetags_identifier%")) {
-
-				String tagId = tag.getIdentifier();
-
-				if (tagId == null) {
-					tagId = "";
-				}
-
-				s = s.replace("%deluxetags_identifier%", tagId);
-			}
-
-			if (s.contains("%deluxetags_description%")) {
-
-				String description = tag.getDescription();
-
-				s = s.replace("%deluxetags_description%", description);
-			}
-
-			if (s.contains("%deluxetags_amount%")) {
-
-				List<String> tmp = DeluxeTag.getAvailableTagIdentifiers(p);
-
-				String amt = "0";
-
-				if (tmp != null) {
-					amt = String.valueOf(tmp.size());
-				}
-
-				s = s.replace("%deluxetags_amount%", amt);
-			}
-		} else {
-			
-
-
-			if (s.contains("{player}")) {
-				s = s.replace("{player}", p.getName());
-			}
-
-			if (s.contains("{displayname}")) {
-				s = s.replace("{displayname}", p.getDisplayName());
-			}
-
-			if (s.contains("{deluxetags_tag}")) {
-				s = s.replace("{deluxetags_tag}", tag.getDisplayTag());
-			}
-
-			if (s.contains("{deluxetags_identifier}")) {
-
-				String tagId = tag.getIdentifier();
-
-				if (tagId == null) {
-					tagId = "";
-				}
-
-				s = s.replace("{deluxetags_identifier}", tagId);
-			}
-
-			if (s.contains("{deluxetags_description}")) {
-
-				String description = tag.getDescription();
-
-				s = s.replace("{deluxetags_description}", description);
-			}
-
-			if (s.contains("{deluxetags_amount}")) {
-
-				List<String> tmp = DeluxeTag.getAvailableTagIdentifiers(p);
-
-				String amt = "0";
-
-				if (tmp != null) {
-					amt = String.valueOf(tmp.size());
-				}
-
-				s = s.replace("{deluxetags_amount}", amt);
-			}	
-		}
+		s = s
+			.replace("%player%", p.getName())
+			.replace("{player}", p.getName())
+			.replace("%displayname%", p.getDisplayName())
+			.replace("{displayname}", p.getDisplayName())
+			.replace("%deluxetags_tag%", tag.getDisplayTag())
+			.replace("{deluxetags_tag}", tag.getDisplayTag())
+			.replace("%deluxetags_identifier%", tagId)
+			.replace("{deluxetags_identifier}", tagId)
+			.replace("%deluxetags_description%", tag.getDescription())
+			.replace("{deluxetags_description}", tag.getDescription())
+			.replace("%deluxetags_amount%", amount)
+			.replace("{deluxetags_amount}", amount)
+			.replace("%deluxetags_available%", availability)
+			.replace("{deluxetags_available}", availability);
 		
 		if (papi) {
-			s = me.clip.placeholderapi.PlaceholderAPI.setPlaceholders(p, s);
+			s = PlaceholderAPI.setPlaceholders(p, s);
 		}
-		
-		return ChatColor.translateAlternateColorCodes('&', s);
-	}
-	
-	public static boolean papi() {
-		return papi;
+
+		return MsgUtils.color(s);
 	}
 }
