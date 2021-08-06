@@ -139,25 +139,25 @@ public class DeluxeTags extends JavaPlugin {
 			updater.fetch();
 		
 			if (updater.hasUpdateAvailable()) {
-				System.out.println("----------------------------");
-				System.out.println("     DeluxeTags Updater");
-				System.out.println(" ");
-				System.out.println("An update for DeluxeChat has been found!");
-				System.out.println("DeluxeTags " + updater.getSpigotVersion());
-				System.out.println("You are running " + getDescription().getVersion());
-				System.out.println(" ");
-				System.out.println("Download at http://www.spigotmc.org/resources/deluxetags.4390/");
-				System.out.println("----------------------------");
+				getLogger().info("----------------------------");
+				getLogger().info("     DeluxeTags Updater");
+				getLogger().info(" ");
+				getLogger().info("An update for DeluxeChat has been found!");
+				getLogger().info("DeluxeTags " + updater.getSpigotVersion());
+				getLogger().info("You are running " + getDescription().getVersion());
+				getLogger().info(" ");
+				getLogger().info("Download at http://www.spigotmc.org/resources/deluxetags.4390/");
+				getLogger().info("----------------------------");
 
 			} else {
-				System.out.println("----------------------------");
-				System.out.println("     DeluxeTags Updater");
-				System.out.println(" ");
-				System.out.println("You are running " + getDescription().getVersion());
-				System.out.println("The latest version");
-				System.out.println("of DeluxeTags!");
-				System.out.println(" ");
-				System.out.println("----------------------------");
+				getLogger().info("----------------------------");
+				getLogger().info("     DeluxeTags Updater");
+				getLogger().info(" ");
+				getLogger().info("You are running " + getDescription().getVersion());
+				getLogger().info("The latest version");
+				getLogger().info("of DeluxeTags!");
+				getLogger().info(" ");
+				getLogger().info("----------------------------");
 			}				
 		}
 	}
