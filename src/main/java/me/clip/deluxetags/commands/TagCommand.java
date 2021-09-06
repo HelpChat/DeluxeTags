@@ -18,8 +18,6 @@ import org.bukkit.entity.Player;
 
 public class TagCommand implements CommandExecutor {
 
-  // todo: add a new command: /tags setPriority <tagID> <priority>
-
   private final DeluxeTags plugin;
 
   public TagCommand(DeluxeTags instance) {
@@ -94,6 +92,10 @@ public class TagCommand implements CommandExecutor {
       if (sender.hasPermission("deluxetags.setdescription")) {
         MsgUtils.msg(sender, color + "/tags setdesc <identifier> <tag description>");
         MsgUtils.msg(sender, Lang.CMD_HELP_ADMIN_SET_DESC.getConfigValue(null));
+      }
+      if (sender.hasPermission("deluxetags.setpriority")) {
+        MsgUtils.msg(sender, color + "/tags setpriority <identifier> <priority>");
+        MsgUtils.msg(sender, Lang.CMD_HELP_ADMIN_SET_PRIORITY.getConfigValue(null));
       }
       if (sender.hasPermission("deluxetags.setdisplay")) {
         MsgUtils.msg(sender, color + "/tags setdisplay <identifier> <tag display>");
@@ -411,6 +413,53 @@ public class TagCommand implements CommandExecutor {
       }));
       return true;
 
+    } else if (args[0].equalsIgnoreCase("setpriority")) {
+      if (!sender.hasPermission("deluxetags.setpriority")) {
+        MsgUtils.msg(sender, Lang.CMD_NO_PERMS.getConfigValue(new String[]{
+            "deluxetags.setpriority"
+        }));
+        return true;
+      }
+
+      if (args.length < 3) {
+        MsgUtils.msg(sender, Lang.CMD_ADMIN_SET_PRIORITY_INCORRECT.getConfigValue(null));
+        return true;
+      }
+
+      DeluxeTag tag = DeluxeTag.getLoadedTag(args[1]);
+      if (tag == null) {
+        MsgUtils.msg(sender, Lang.CMD_ADMIN_SET_PRIORITY_FAIL.getConfigValue(new String[]{
+            args[1]
+        }));
+        return true;
+      }
+
+      int priority;
+      try {
+        priority = Integer.parseInt(args[2]);
+      } catch (NumberFormatException ex) {
+        MsgUtils.msg(sender, Lang.CMD_ADMIN_SET_PRIORITY_NOT_A_NUMBER.getConfigValue(new String[]{
+            args[2]
+        }));
+        return true;
+      }
+
+      if (DeluxeTag.getLoadedPriorities().contains(priority)) {
+        MsgUtils.msg(sender, Lang.CMD_ADMIN_SET_PRIORITY_ALREADY_EXISTS.getConfigValue(new String[]{
+            args[2]
+        }));
+        return true;
+      }
+
+      tag.unload();
+      tag.setPriority(priority);
+      plugin.getCfg().saveTag(tag.getPriority(), tag.getIdentifier(), tag.getDisplayTag(),
+          tag.getDescription(), tag.getPermission());
+      tag.load();
+      MsgUtils.msg(sender, Lang.CMD_ADMIN_SET_PRIORITY_SUCCESS.getConfigValue(new String[]{
+          args[2], args[1]
+      }));
+      return true;
     } else if (args[0].equalsIgnoreCase("setdisplay")) {
       if (!sender.hasPermission("deluxetags.setdisplay")) {
         MsgUtils.msg(sender, Lang.CMD_NO_PERMS.getConfigValue(new String[]{
