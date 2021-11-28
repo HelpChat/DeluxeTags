@@ -333,6 +333,32 @@ public class DeluxeTag {
 
 		return playerTags.get(uuid).getDescription();
 	}
+
+	/**
+	 * get a players current tag description if they have a tag set, an empty string if not
+	 * @param p Player to get tag description for
+	 * @return players current tag description if they have a tag set, empty string otherwise
+	 */
+	public static int getPlayerTagPriority(Player p) {
+		return getPlayerTagPriority(p.getUniqueId().toString());
+	}
+
+	/**
+	 * get a players current tag description if they have a tag set, an empty string if not
+	 * @param uuid Player uuid to get tag description for
+	 * @return players current tag description if they have a tag set, empty string otherwise
+	 */
+	public static int getPlayerTagPriority(String uuid) {
+		if (playerTags == null) {
+			playerTags = new HashMap<>();
+		}
+
+		if (playerTags.isEmpty() || !playerTags.containsKey(uuid) || playerTags.get(uuid) == null || playerTags.get(uuid).getDescription() == null) {
+			return -1;
+		}
+
+		return playerTags.get(uuid).getPriority();
+	}
 	
 	/**
 	 * get the DeluxeChat tag object loaded by its identifier String
