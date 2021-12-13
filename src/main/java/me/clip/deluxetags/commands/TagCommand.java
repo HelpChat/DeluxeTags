@@ -93,9 +93,9 @@ public class TagCommand implements CommandExecutor {
         MsgUtils.msg(sender, color + "/tags setdesc <identifier> <tag description>");
         MsgUtils.msg(sender, Lang.CMD_HELP_ADMIN_SET_DESC.getConfigValue(null));
       }
-      if (sender.hasPermission("deluxetags.setpriority")) {
-        MsgUtils.msg(sender, color + "/tags setpriority <identifier> <priority>");
-        MsgUtils.msg(sender, Lang.CMD_HELP_ADMIN_SET_PRIORITY.getConfigValue(null));
+      if (sender.hasPermission("deluxetags.setorder")) {
+        MsgUtils.msg(sender, color + "/tags setorder <identifier> <order>");
+        MsgUtils.msg(sender, Lang.CMD_HELP_ADMIN_SET_ORDER.getConfigValue(null));
       }
       if (sender.hasPermission("deluxetags.setdisplay")) {
         MsgUtils.msg(sender, color + "/tags setdisplay <identifier> <tag display>");
@@ -413,22 +413,22 @@ public class TagCommand implements CommandExecutor {
       }));
       return true;
 
-    } else if (args[0].equalsIgnoreCase("setpriority")) {
-      if (!sender.hasPermission("deluxetags.setpriority")) {
+    } else if (args[0].equalsIgnoreCase("setorder")) {
+      if (!sender.hasPermission("deluxetags.setorder")) {
         MsgUtils.msg(sender, Lang.CMD_NO_PERMS.getConfigValue(new String[]{
-            "deluxetags.setpriority"
+            "deluxetags.setorder"
         }));
         return true;
       }
 
       if (args.length < 3) {
-        MsgUtils.msg(sender, Lang.CMD_ADMIN_SET_PRIORITY_INCORRECT.getConfigValue(null));
+        MsgUtils.msg(sender, Lang.CMD_ADMIN_SET_ORDER_INCORRECT.getConfigValue(null));
         return true;
       }
 
       DeluxeTag tag = DeluxeTag.getLoadedTag(args[1]);
       if (tag == null) {
-        MsgUtils.msg(sender, Lang.CMD_ADMIN_SET_PRIORITY_FAIL.getConfigValue(new String[]{
+        MsgUtils.msg(sender, Lang.CMD_ADMIN_SET_ORDER_FAIL.getConfigValue(new String[]{
             args[1]
         }));
         return true;
@@ -438,14 +438,14 @@ public class TagCommand implements CommandExecutor {
       try {
         priority = Integer.parseInt(args[2]);
       } catch (NumberFormatException ex) {
-        MsgUtils.msg(sender, Lang.CMD_ADMIN_SET_PRIORITY_NOT_A_NUMBER.getConfigValue(new String[]{
+        MsgUtils.msg(sender, Lang.CMD_ADMIN_SET_ORDER_NOT_A_NUMBER.getConfigValue(new String[]{
             args[2]
         }));
         return true;
       }
 
       if (DeluxeTag.getLoadedPriorities().contains(priority)) {
-        MsgUtils.msg(sender, Lang.CMD_ADMIN_SET_PRIORITY_ALREADY_EXISTS.getConfigValue(new String[]{
+        MsgUtils.msg(sender, Lang.CMD_ADMIN_SET_ORDER_ALREADY_EXISTS.getConfigValue(new String[]{
             args[2]
         }));
         return true;
@@ -456,7 +456,7 @@ public class TagCommand implements CommandExecutor {
       plugin.getCfg().saveTag(tag.getPriority(), tag.getIdentifier(), tag.getDisplayTag(),
           tag.getDescription(), tag.getPermission());
       tag.load();
-      MsgUtils.msg(sender, Lang.CMD_ADMIN_SET_PRIORITY_SUCCESS.getConfigValue(new String[]{
+      MsgUtils.msg(sender, Lang.CMD_ADMIN_SET_ORDER_SUCCESS.getConfigValue(new String[]{
           args[2], args[1]
       }));
       return true;

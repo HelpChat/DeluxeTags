@@ -53,8 +53,8 @@ public class TagPlaceholders extends PlaceholderExpansion {
             return MsgUtils.color(tag.getDescription());
         }
 
-        if (params.startsWith("priority_")) {
-            DeluxeTag tag = DeluxeTag.getLoadedTag(params.replace("priority_", ""));
+        if (params.startsWith("order_")) {
+            DeluxeTag tag = DeluxeTag.getLoadedTag(params.replace("order_", ""));
             if (tag == null) {
                 return "invalid tag";
             }
@@ -76,7 +76,7 @@ public class TagPlaceholders extends PlaceholderExpansion {
         }
 
         switch (params) {
-            case "priority":
+            case "order":
                 return DeluxeTag.getPlayerTagPriority(player) != -1 ? String.valueOf(DeluxeTag.getPlayerTagPriority(player)) : "";
             case "description":
                 return MsgUtils.color(DeluxeTag.getPlayerTagDescription(player));
