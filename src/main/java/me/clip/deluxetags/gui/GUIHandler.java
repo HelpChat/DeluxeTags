@@ -150,15 +150,17 @@ public class GUIHandler implements Listener {
 
         GUIOptions options = plugin.getGuiOptions();
 
+        int pages = (int) Math.ceil(ids.size() / 36d);
+        boolean hasNextPage = page < pages;
+
         String title = options.getMenuName();
-        title = DeluxeTags.setPlaceholders(p, title, null);
+        title = replacePageNumbers(DeluxeTags.setPlaceholders(p, title, null), page, hasNextPage);
         if (title.length() > 32) {
             title = title.substring(0, 31);
         }
 
         TagGUI gui = new TagGUI(title, page).setSlots(54);
 
-        int pages = (int) Math.ceil(ids.size() / 36d);
         if (page > 1 && page <= pages) {
             ids = ids.subList((36 * page) - 36, ids.size());
         }
@@ -182,8 +184,8 @@ public class GUIHandler implements Listener {
                     options.getTagSelectItem().getMaterial(),
                     options.getTagSelectItem().getData(),
                     1,
-                    DeluxeTags.setPlaceholders(p, options.getTagSelectItem().getName(), tag),
-                    processLore(options.getTagSelectItem().getLore(), p, tag)
+                    DeluxeTags.setPlaceholders(p, replacePageNumbers(options.getTagSelectItem().getName(), page, hasNextPage), tag),
+                    processLore(options.getTagSelectItem().getLore(), p, tag, page, hasNextPage)
                 )
             );
             count++;
@@ -194,8 +196,8 @@ public class GUIHandler implements Listener {
             options.getDividerItem().getMaterial(),
             options.getDividerItem().getData(),
             1,
-            DeluxeTags.setPlaceholders(p, options.getDividerItem().getName(), null),
-            processLore(options.getDividerItem().getLore(), p, null)
+            DeluxeTags.setPlaceholders(p, replacePageNumbers(options.getDividerItem().getName(), page, hasNextPage), null),
+            processLore(options.getDividerItem().getLore(), p, null, page, hasNextPage)
         );
         for (int b = 36; b < 45; b++) {
             gui.setItem(b, divider);
@@ -214,8 +216,8 @@ public class GUIHandler implements Listener {
             currentTagItem.getMaterial(),
             currentTagItem.getData(),
             1,
-            DeluxeTags.setPlaceholders(p, currentTagItem.getName(), null),
-            processLore(currentTagItem.getLore(), p, null)
+            DeluxeTags.setPlaceholders(p, replacePageNumbers(currentTagItem.getName(), page, hasNextPage), null),
+            processLore(currentTagItem.getLore(), p, null, page, hasNextPage)
         );
         gui.setItem(49, info);
 
@@ -223,8 +225,8 @@ public class GUIHandler implements Listener {
             options.getExitItem().getMaterial(),
             options.getExitItem().getData(),
             1,
-            DeluxeTags.setPlaceholders(p, options.getExitItem().getName(), null),
-            processLore(options.getExitItem().getLore(), p, null)
+            DeluxeTags.setPlaceholders(p, replacePageNumbers(options.getExitItem().getName(), page, hasNextPage), null),
+            processLore(options.getExitItem().getLore(), p, null, page, hasNextPage)
         );
         gui.setItem(48, exit);
         gui.setItem(50, exit);
@@ -234,19 +236,19 @@ public class GUIHandler implements Listener {
                 options.getPreviousPageItem().getMaterial(),
                 options.getPreviousPageItem().getData(),
                 1,
-                DeluxeTags.setPlaceholders(p, options.getPreviousPageItem().getName().replace("%page%", String.valueOf(page-1)), null),
-                processLore(options.getPreviousPageItem().getLore(), p, null)
+                DeluxeTags.setPlaceholders(p, replacePageNumbers(options.getPreviousPageItem().getName().replace("%page%", String.valueOf(page-1)), page, hasNextPage), null),
+                processLore(options.getPreviousPageItem().getLore(), p, null, page, hasNextPage)
             );
             gui.setItem(45, previousPage);
         }
 
-        if (page < pages) {
+        if (hasNextPage) {
             ItemStack nextPage = TagGUI.createItem(
                 options.getNextPageItem().getMaterial(),
                 options.getNextPageItem().getData(),
                 1,
-                DeluxeTags.setPlaceholders(p, options.getNextPageItem().getName().replace("%page%", String.valueOf(page+1)), null),
-                processLore(options.getNextPageItem().getLore(), p, null)
+                DeluxeTags.setPlaceholders(p, replacePageNumbers(options.getNextPageItem().getName().replace("%page%", String.valueOf(page+1)), page, true), null),
+                processLore(options.getNextPageItem().getLore(), p, null, page, true)
             );
             gui.setItem(53, nextPage);
         }
@@ -256,13 +258,29 @@ public class GUIHandler implements Listener {
         return true;
     }
 
-    private List<String> processLore(List<String> originalLore, Player player, DeluxeTag tag) {
+    private String replacePageNumbers(String line, int page, boolean hasNextPage) {
+        if (page <= 0) {
+            return line;
+        }
+
+        line = line
+            .replace("%previous_page%", page == 1 ? "" : Integer.toString(page  -1))
+            .replace("%previous_page%", page == 1 ? "" : Integer.toString(page  -1))
+            .replace("%current_page%", Integer.toString(page))
+            .replace("{current_page}", Integer.toString(page))
+            .replace("%next_page%", hasNextPage ? Integer.toString(page + 1) : "")
+            .replace("{next_page}", hasNextPage ? Integer.toString(page + 1) : "");
+
+        return line;
+    }
+
+    private List<String> processLore(List<String> originalLore, Player player, DeluxeTag tag, int page, boolean hasNextPage) {
         List<String> processedLore = null;
 
         if (originalLore != null && !originalLore.isEmpty()) {
             processedLore = new ArrayList<>();
             for (String line : originalLore) {
-                line = DeluxeTags.setPlaceholders(player, line, tag);
+                line = replacePageNumbers(DeluxeTags.setPlaceholders(player, line, tag), page, hasNextPage);
                 if (line.contains("\n")) {
                     processedLore.addAll(Arrays.asList(line.split("\n")));
                 } else {
