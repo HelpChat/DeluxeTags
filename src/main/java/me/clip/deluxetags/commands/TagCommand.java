@@ -5,9 +5,9 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-import me.clip.deluxetags.tags.DeluxeTag;
 import me.clip.deluxetags.DeluxeTags;
 import me.clip.deluxetags.config.Lang;
+import me.clip.deluxetags.tags.DeluxeTag;
 import me.clip.deluxetags.utils.MsgUtils;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.Bukkit;
@@ -619,10 +619,18 @@ public class TagCommand implements CommandExecutor {
 
       plugin.reloadConfig();
       plugin.saveConfig();
+      plugin.getCfg().reload();
+
       DeluxeTag.unloadData();
       int loaded = plugin.getCfg().loadTags();
-      DeluxeTags.setForceTags(plugin.getCfg().forceTags());
-      DeluxeTags.setLegacyHex(plugin.getCfg().legacyHex());
+
+      MsgUtils.setPattern(plugin.getCfg().legacyHex());
+      if (plugin.getCfg().legacyHex()) {
+        plugin.getLogger().info("Using legacy hex colors format: &#aaFF00");
+      } else {
+        plugin.getLogger().info("Using standard hex colors format: #aaFF00");
+      }
+
       DeluxeTags.setAvailableMessage(plugin.getCfg().availability(true));
       DeluxeTags.setUnavailableMessage(plugin.getCfg().availability(false));
 

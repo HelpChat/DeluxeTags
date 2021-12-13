@@ -9,7 +9,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-
 import java.util.stream.Collectors;
 import me.clip.deluxetags.DeluxeTags;
 import me.clip.placeholderapi.PlaceholderAPI;

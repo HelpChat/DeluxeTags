@@ -1,22 +1,32 @@
 package me.clip.deluxetags.config;
 
+import com.cryptomorin.xseries.XMaterial;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
-import me.clip.deluxetags.tags.DeluxeTag;
 import me.clip.deluxetags.DeluxeTags;
+import me.clip.deluxetags.gui.DisplayItem;
+import me.clip.deluxetags.gui.ItemType;
+import me.clip.deluxetags.tags.DeluxeTag;
+import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 
 public class TagConfig {
 
   DeluxeTags plugin;
-
   FileConfiguration config;
 
   public TagConfig(DeluxeTags instance) {
     plugin = instance;
+    config = plugin.getConfig();
+  }
+
+  public void reload() {
+    plugin.reloadConfig();
+    plugin.saveConfig();
     config = plugin.getConfig();
   }
 
@@ -106,6 +116,7 @@ public class TagConfig {
     config.options().copyDefaults(true);
     plugin.saveConfig();
     plugin.reloadConfig();
+    config = plugin.getConfig();
   }
 
   public boolean formatChat() {
@@ -118,7 +129,9 @@ public class TagConfig {
   }
 
   public String availability(boolean available) {
-    return available ? config.getString("tag_availability.available", "yes") : config.getString("tag_availability.unavailable", "no");
+    return available
+        ? config.getString("tag_availability.available", "yes")
+        : config.getString("tag_availability.unavailable", "no");
   }
 
   public boolean checkUpdates() {
@@ -130,7 +143,7 @@ public class TagConfig {
   }
 
   public boolean legacyHex() {
-    return config.getBoolean("legacy_hex", true);
+    return config.getBoolean("legacy_hex", false);
   }
 
   public boolean loadTagOnJoin() {
@@ -141,11 +154,38 @@ public class TagConfig {
     return config.getBoolean("force_tags");
   }
 
+  public String loadMenuName() {
+    return config.getString("gui.name", "&6Available tags&f: &6%deluxetags_amount%");
+  }
+
+  public DisplayItem loadGuiItem(ItemType type) {
+    Material material;
+    String displayName;
+    List<String> lore;
+    short data;
+
+    try {
+      material = XMaterial.matchXMaterial(config.getString("gui." + type.name().toLowerCase() + ".material").toUpperCase()).get().parseMaterial();
+    } catch (Exception e) {
+      material = type.getFallbackMaterial();
+    }
+
+    try {
+      data = Short.parseShort(config.getString("gui." + type.name().toLowerCase() + ".data", "0"));
+    } catch (Exception e) {
+      data = 0;
+    }
+
+    displayName = config.getString("gui." + type.name().toLowerCase() + ".displayname");
+    lore = config.getStringList("gui." + type.name().toLowerCase() + ".lore");
+
+    return material == null ? null : new DisplayItem(material, data, displayName, lore);
+  }
+
   public int loadTags() {
-    FileConfiguration c = plugin.getConfig();
     int loaded = 0;
 
-    ConfigurationSection deluxetags = c.getConfigurationSection("deluxetags");
+    ConfigurationSection deluxetags = config.getConfigurationSection("deluxetags");
     if (deluxetags == null) {
       return loaded;
     }
@@ -163,20 +203,20 @@ public class TagConfig {
       }
       String description;
 
-      if (c.isList("deluxetags." + identifier + ".description")) {
-        description = String.join("\n", c.getStringList("deluxetags." + identifier + ".description"));
+      if (config.isList("deluxetags." + identifier + ".description")) {
+        description = String.join("\n", config.getStringList("deluxetags." + identifier + ".description"));
       } else {
-        description = c.getString("deluxetags." + identifier + ".description", "&f");
+        description = config.getString("deluxetags." + identifier + ".description", "&f");
       }
 
-      if (!c.contains("deluxetags." + identifier + ".order")) {
+      if (!config.contains("deluxetags." + identifier + ".order")) {
         plugin.getLogger().log(Level.INFO, "Could not load tag: " + identifier + " because it does not have an order set.");
         continue;
       }
-      int priority = c.getInt("deluxetags." + identifier + ".order");
+      int priority = config.getInt("deluxetags." + identifier + ".order");
 
       DeluxeTag t = new DeluxeTag(priority, identifier, tag, description);
-      t.setPermission(c.getString("deluxetags." + identifier + ".permission", "deluxetags.tag." + identifier));
+      t.setPermission(config.getString("deluxetags." + identifier + ".permission", "deluxetags.tag." + identifier));
       t.load();
       loaded++;
     }
@@ -189,20 +229,18 @@ public class TagConfig {
   }
 
   public void saveTag(int priority, String identifier, String tag, String description, String permission) {
-    FileConfiguration c = plugin.getConfig();
-    c.set("deluxetags." + identifier + ".order", priority);
-    c.set("deluxetags." + identifier + ".tag", tag);
+    config.set("deluxetags." + identifier + ".order", priority);
+    config.set("deluxetags." + identifier + ".tag", tag);
     if (description == null) {
       description = "&fDescription for tag " + identifier;
     }
-    c.set("deluxetags." + identifier + ".description", description);
-    c.set("deluxetags." + identifier + ".permission", permission);
+    config.set("deluxetags." + identifier + ".description", description);
+    config.set("deluxetags." + identifier + ".permission", permission);
     plugin.saveConfig();
   }
 
   public void removeTag(String identifier) {
-    FileConfiguration c = plugin.getConfig();
-    c.set("deluxetags." + identifier, null);
+    config.set("deluxetags." + identifier, null);
     plugin.saveConfig();
   }
 }

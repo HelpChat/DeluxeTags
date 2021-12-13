@@ -1,8 +1,13 @@
 package me.clip.deluxetags.gui;
 
-import me.clip.deluxetags.tags.DeluxeTag;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import me.clip.deluxetags.DeluxeTags;
 import me.clip.deluxetags.config.Lang;
+import me.clip.deluxetags.tags.DeluxeTag;
 import me.clip.deluxetags.utils.MsgUtils;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -11,12 +16,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.ItemStack;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 public class GUIHandler implements Listener {
 
@@ -177,47 +176,27 @@ public class GUIHandler implements Listener {
                 tag = new DeluxeTag(1, "", "", "");
             }
 
-            String displayName = options.getTagSelectItem().getName();
-            displayName = DeluxeTags.setPlaceholders(p, displayName, tag);
-
-            List<String> tempLore = null;
-            List<String> origLore = options.getTagSelectItem().getLore();
-
-            if (origLore != null && !origLore.isEmpty()) {
-                tempLore = new ArrayList<>();
-                for (String line : origLore) {
-                    line = DeluxeTags.setPlaceholders(p, line, tag);
-                    if (line.contains("\n")) {
-                        tempLore.addAll(Arrays.asList(line.split("\n")));
-                    } else {
-                        tempLore.add(line);
-                    }
-                }
-            }
-
-            gui.setItem(count, TagGUI.createItem(options.getTagSelectItem().getMaterial(), options.getTagSelectItem().getData(), 1, displayName, tempLore));
+            gui.setItem(
+                count,
+                TagGUI.createItem(
+                    options.getTagSelectItem().getMaterial(),
+                    options.getTagSelectItem().getData(),
+                    1,
+                    DeluxeTags.setPlaceholders(p, options.getTagSelectItem().getName(), tag),
+                    processLore(options.getTagSelectItem().getLore(), p, tag)
+                )
+            );
             count++;
         }
         gui.setTags(tags);
 
-        String displayName = options.getDividerItem().getName();
-        displayName = DeluxeTags.setPlaceholders(p, displayName, null);
-
-        List<String> tempLore = null;
-        List<String> origLore = options.getDividerItem().getLore();
-
-        if (origLore != null && !origLore.isEmpty()) {
-            tempLore = new ArrayList<>();
-            for (String line : origLore) {
-                line = DeluxeTags.setPlaceholders(p, line, null);
-                if (line.contains("\n")) {
-                    tempLore.addAll(Arrays.asList(line.split("\n")));
-                } else {
-                    tempLore.add(line);
-                }
-            }
-        }
-        ItemStack divider = TagGUI.createItem(options.getDividerItem().getMaterial(), options.getDividerItem().getData(), 1, displayName, tempLore);
+        ItemStack divider = TagGUI.createItem(
+            options.getDividerItem().getMaterial(),
+            options.getDividerItem().getData(),
+            1,
+            DeluxeTags.setPlaceholders(p, options.getDividerItem().getName(), null),
+            processLore(options.getDividerItem().getLore(), p, null)
+        );
         for (int b = 36; b < 45; b++) {
             gui.setItem(b, divider);
         }
@@ -231,93 +210,67 @@ public class GUIHandler implements Listener {
             currentTagItem = options.getHasTagItem();
         }
 
-        displayName = currentTagItem.getName();
-        displayName = DeluxeTags.setPlaceholders(p, displayName, null);
-
-        tempLore = null;
-        origLore = currentTagItem.getLore();
-
-        if (origLore != null && !origLore.isEmpty()) {
-            tempLore = new ArrayList<>();
-            for (String line : origLore) {
-                line = DeluxeTags.setPlaceholders(p, line, null);
-                if (line.contains("\n")) {
-                    tempLore.addAll(Arrays.asList(line.split("\n")));
-                } else {
-                    tempLore.add(line);
-                }
-            }
-        }
-        ItemStack info = TagGUI.createItem(currentTagItem.getMaterial(), currentTagItem.getData(), 1, displayName, tempLore);
+        ItemStack info = TagGUI.createItem(
+            currentTagItem.getMaterial(),
+            currentTagItem.getData(),
+            1,
+            DeluxeTags.setPlaceholders(p, currentTagItem.getName(), null),
+            processLore(currentTagItem.getLore(), p, null)
+        );
         gui.setItem(49, info);
 
-        displayName = DeluxeTags.setPlaceholders(p, options.getExitItem().getName(), null);
-
-        tempLore = null;
-        origLore = options.getExitItem().getLore();
-
-        if (origLore != null && !origLore.isEmpty()) {
-            tempLore = new ArrayList<>();
-            for (String line : origLore) {
-                line = DeluxeTags.setPlaceholders(p, line, null);
-                if (line.contains("\n")) {
-                    tempLore.addAll(Arrays.asList(line.split("\n")));
-                } else {
-                    tempLore.add(line);
-                }
-            }
-        }
-
-        ItemStack exit = TagGUI.createItem(options.getExitItem().getMaterial(), options.getExitItem().getData(), 1, displayName, tempLore);
+        ItemStack exit = TagGUI.createItem(
+            options.getExitItem().getMaterial(),
+            options.getExitItem().getData(),
+            1,
+            DeluxeTags.setPlaceholders(p, options.getExitItem().getName(), null),
+            processLore(options.getExitItem().getLore(), p, null)
+        );
         gui.setItem(48, exit);
         gui.setItem(50, exit);
 
         if (page > 1) {
-            displayName = DeluxeTags.setPlaceholders(p, options.getPreviousPageItem().getName().replace("%page%", String.valueOf(page-1)), null);
-
-            tempLore = null;
-            origLore = options.getPreviousPageItem().getLore();
-
-            if (origLore != null && !origLore.isEmpty()) {
-                tempLore = new ArrayList<>();
-                for (String line : origLore) {
-                    line = DeluxeTags.setPlaceholders(p, line, null);
-                    if (line.contains("\n")) {
-                        tempLore.addAll(Arrays.asList(line.split("\n")));
-                    } else {
-                        tempLore.add(line);
-                    }
-                }
-            }
-
-            ItemStack previousPage = TagGUI.createItem(options.getPreviousPageItem().getMaterial(), options.getPreviousPageItem().getData(), 1, displayName, tempLore);
+            ItemStack previousPage = TagGUI.createItem(
+                options.getPreviousPageItem().getMaterial(),
+                options.getPreviousPageItem().getData(),
+                1,
+                DeluxeTags.setPlaceholders(p, options.getPreviousPageItem().getName().replace("%page%", String.valueOf(page-1)), null),
+                processLore(options.getPreviousPageItem().getLore(), p, null)
+            );
             gui.setItem(45, previousPage);
         }
 
         if (page < pages) {
-            displayName = DeluxeTags.setPlaceholders(p, options.getNextPageItem().getName().replace("%page%", String.valueOf(page+1)), null);
-
-            tempLore = null;
-            origLore = options.getNextPageItem().getLore();
-
-            if (origLore != null && !origLore.isEmpty()) {
-                tempLore = new ArrayList<>();
-                for (String line : origLore) {
-                    line = DeluxeTags.setPlaceholders(p, line, null);
-                    if (line.contains("\n")) {
-                        tempLore.addAll(Arrays.asList(line.split("\n")));
-                    } else {
-                        tempLore.add(line);
-                    }
-                }
-            }
-
-            ItemStack nextPage = TagGUI.createItem(options.getNextPageItem().getMaterial(), options.getNextPageItem().getData(), 1, displayName, tempLore);
+            ItemStack nextPage = TagGUI.createItem(
+                options.getNextPageItem().getMaterial(),
+                options.getNextPageItem().getData(),
+                1,
+                DeluxeTags.setPlaceholders(p, options.getNextPageItem().getName().replace("%page%", String.valueOf(page+1)), null),
+                processLore(options.getNextPageItem().getLore(), p, null)
+            );
             gui.setItem(53, nextPage);
         }
 
         gui.setPage(page);
         gui.openInventory(p);
         return true;
+    }
+
+    private List<String> processLore(List<String> originalLore, Player player, DeluxeTag tag) {
+        List<String> processedLore = null;
+
+        if (originalLore != null && !originalLore.isEmpty()) {
+            processedLore = new ArrayList<>();
+            for (String line : originalLore) {
+                line = DeluxeTags.setPlaceholders(player, line, tag);
+                if (line.contains("\n")) {
+                    processedLore.addAll(Arrays.asList(line.split("\n")));
+                } else {
+                    processedLore.add(line);
+                }
+            }
+        }
+
+        return processedLore;
     }
 }

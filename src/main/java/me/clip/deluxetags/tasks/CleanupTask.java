@@ -3,8 +3,8 @@ package me.clip.deluxetags.tasks;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import me.clip.deluxetags.tags.DeluxeTag;
 import me.clip.deluxetags.DeluxeTags;
+import me.clip.deluxetags.tags.DeluxeTag;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 

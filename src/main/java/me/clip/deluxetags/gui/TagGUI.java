@@ -3,7 +3,6 @@ package me.clip.deluxetags.gui;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import me.clip.deluxetags.utils.MsgUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;

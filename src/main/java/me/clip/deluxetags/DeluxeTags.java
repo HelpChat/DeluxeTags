@@ -1,7 +1,6 @@
 package me.clip.deluxetags;
 
 import java.util.List;
-
 import me.clip.deluxetags.commands.TagCommand;
 import me.clip.deluxetags.config.ConfigWrapper;
 import me.clip.deluxetags.config.Lang;
@@ -50,10 +49,6 @@ public class DeluxeTags extends JavaPlugin {
 	private static String availableMessage;
 
 	private static String unavailableMessage;
-
-	private static boolean legacyHex;
-
-	private static boolean forceTags;
 	
 	private static boolean papi;
 
@@ -66,13 +61,17 @@ public class DeluxeTags extends JavaPlugin {
 		
 		cfg.loadDefConfig();
 
+		MsgUtils.setPattern(cfg.legacyHex());
+
+		if (cfg.legacyHex()) {
+			getLogger().info("Using legacy hex colors format: &#aaFF00");
+		} else {
+			getLogger().info("Using standard hex colors format: #aaFF00");
+		}
+
 		availableMessage = cfg.availability(true);
 
 		unavailableMessage = cfg.availability(false);
-		
-		legacyHex = cfg.legacyHex();
-		
-		forceTags = cfg.forceTags();
 
 		int loaded = cfg.loadTags();
 		if (loaded == 1) {
@@ -110,12 +109,6 @@ public class DeluxeTags extends JavaPlugin {
 		loadMessages();
 		
 		papi = Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null;
-
-		if (legacyHex) {
-			getLogger().info("Using legacy hex colors format: &#aaFF00");
-		} else {
-			getLogger().info("Using standard hex colors format: #aaFF00");
-		}
 		
 		if (cfg.deluxeChat()) {
 			getLogger().info("DeluxeChat will handle fetching placeholders for tags!");
@@ -146,7 +139,7 @@ public class DeluxeTags extends JavaPlugin {
 				getLogger().info("DeluxeTags " + updater.getSpigotVersion());
 				getLogger().info("You are running " + getDescription().getVersion());
 				getLogger().info(" ");
-				getLogger().info("Download at http://www.spigotmc.org/resources/deluxetags.4390/");
+				getLogger().info("Download at https://www.spigotmc.org/resources/deluxetags.4390/");
 				getLogger().info("----------------------------");
 
 			} else {
@@ -200,24 +193,8 @@ public class DeluxeTags extends JavaPlugin {
 		return messages;
 	}
 
-	public static boolean isLegacyHex() {
-		return legacyHex;
-	}
-
-	public static boolean forceTags() {
-		return forceTags;
-	}
-
 	public static boolean papi() {
 		return papi;
-	}
-
-	public static void setLegacyHex(boolean value) {
-		legacyHex = value;
-	}
-
-	public static void setForceTags(boolean value) {
-		forceTags = value;
 	}
 
 	public static void setAvailableMessage(String value) {

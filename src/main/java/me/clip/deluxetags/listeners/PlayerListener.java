@@ -1,7 +1,7 @@
 package me.clip.deluxetags.listeners;
 
-import me.clip.deluxetags.tags.DeluxeTag;
 import me.clip.deluxetags.DeluxeTags;
+import me.clip.deluxetags.tags.DeluxeTag;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -17,7 +17,7 @@ public class PlayerListener implements Listener {
 	
 	@EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
 	public void onChat(AsyncPlayerChatEvent event) {
-		if (!event.getPlayer().isOp() && DeluxeTags.forceTags()) {
+		if (!event.getPlayer().isOp() && plugin.getCfg().forceTags()) {
 			DeluxeTag tag = DeluxeTag.getForcedTag(event.getPlayer());
 			if (tag != null) {
 				tag.setPlayerTag(event.getPlayer());
