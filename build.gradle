@@ -24,10 +24,10 @@ repositories {
 }
 
 dependencies {
-    compileOnly 'org.spigotmc:spigot-api:1.17-R0.1-SNAPSHOT'
+    compileOnly 'org.spigotmc:spigot-api:1.18-R0.1-SNAPSHOT'
     compileOnly 'me.clip:placeholderapi:2.10.10'
 
-    implementation 'com.github.cryptomorin:XSeries:8.3.0'
+    implementation 'com.github.cryptomorin:XSeries:8.4.0'
 }
 
 shadowJar {
