@@ -144,7 +144,7 @@ public class GUIHandler implements Listener {
     }
 
     public boolean openMenu(Player p, int page) {
-        List<String> ids = p.hasPermission("deluxetags.see.all") ? DeluxeTag.getAllTagIdentifiers() : DeluxeTag.getAvailableTagIdentifiers(p);
+        List<String> ids = DeluxeTag.getAllVisibleTagIdentifiers(p);
         if (ids == null || ids.isEmpty()) {
             return false;
         }

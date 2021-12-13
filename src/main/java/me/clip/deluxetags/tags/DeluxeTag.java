@@ -148,6 +148,15 @@ public class DeluxeTag {
 	public boolean hasTagPermission(Player p) {
 		return p.hasPermission(getPermission());
 	}
+
+	/**
+	 * check if player has permission to see this tag without checking permission to use
+	 * @param p Player to check visibility for
+	 * @return true if player can see the tag, false otherwise
+	 */
+	public boolean canSeeTag(Player p) {
+		return p.hasPermission("deluxetags.see.all") || p.hasPermission("deluxetags.see." + identifier);
+	}
 	
 	/**
 	 * check if a player has permission for this tag to be forced
@@ -404,6 +413,19 @@ public class DeluxeTag {
 		}
 
 		return getLoadedTags().stream().filter(Objects::nonNull).map(DeluxeTag::getIdentifier).collect(Collectors.toList());
+	}
+
+	/**
+	 * get a list of all tag identifiers that a player can see
+	 * @param p Player to get all visible tag identifiers for
+	 * @return null if no tags are loaded, empty list if player can't see any tags
+	 */
+	public static List<String> getAllVisibleTagIdentifiers(Player p) {
+		if (getLoadedTags() == null || getLoadedTags().isEmpty()) {
+			return null;
+		}
+
+		return getLoadedTags().stream().filter(tag -> tag != null && (tag.canSeeTag(p) || tag.hasTagPermission(p))).map(DeluxeTag::getIdentifier).collect(Collectors.toList());
 	}
 	
 	public static int getLoadedTagsAmount() {
