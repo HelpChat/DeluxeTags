@@ -157,6 +157,10 @@ public class TagConfig {
 
     for (String identifier : keys) {
       String tag = c.getString("deluxetags." + identifier + ".tag");
+      if (tag == null) {
+        plugin.getLogger().log(Level.INFO, "Could not load tag: " + identifier + " because it does not have a display set.");
+        continue;
+      }
       String description;
 
       if (c.isList("deluxetags." + identifier + ".description")) {
