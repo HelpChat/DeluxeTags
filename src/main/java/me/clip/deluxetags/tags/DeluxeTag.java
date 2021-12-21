@@ -369,7 +369,7 @@ public class DeluxeTag {
 	}
 	
 	/**
-	 * get the DeluxeChat tag object loaded by its identifier String
+	 * get the DeluxeTag tag object loaded by its identifier String
 	 * @param identifier String identifier of the tag object to get
 	 * @return null if there is no DeluxeTag object loaded for the identifier provided
 	 */

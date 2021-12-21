@@ -109,17 +109,17 @@ public class DeluxeTags extends JavaPlugin {
 		loadMessages();
 		
 		papi = Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null;
-		
-		if (cfg.deluxeChat()) {
-			getLogger().info("DeluxeChat will handle fetching placeholders for tags!");
+
+		if (cfg.papiChat()) {
+			getLogger().info("PAPI Chat enabled. This means your chat plugin will use placeholders to fetch the tags!");
 		} else {
 			if (cfg.formatChat()) {
 				Bukkit.getPluginManager().registerEvents(new ChatFormatListener(this), this);
 			}
-			
+
 			Bukkit.getPluginManager().registerEvents(new ChatListener(this), this);
-			
-			getLogger().info("You are not using DeluxeChat!");
+
+			getLogger().info("You are not using a chat plugin that supports PlaceholderAPI!");
 			getLogger().info("DeluxeTags will listen to the AsyncPlayerChatEvent to provide compatibility for some chat plugins.");
 		}
 
@@ -135,7 +135,7 @@ public class DeluxeTags extends JavaPlugin {
 				getLogger().info("----------------------------");
 				getLogger().info("     DeluxeTags Updater");
 				getLogger().info(" ");
-				getLogger().info("An update for DeluxeChat has been found!");
+				getLogger().info("An update for DeluxeThat has been found!");
 				getLogger().info("DeluxeTags " + updater.getSpigotVersion());
 				getLogger().info("You are running " + getDescription().getVersion());
 				getLogger().info(" ");

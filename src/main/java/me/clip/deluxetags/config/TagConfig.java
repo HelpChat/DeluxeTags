@@ -60,8 +60,8 @@ public class TagConfig {
     config.addDefault("force_tags", false);
     config.addDefault("check_updates", true);
     config.addDefault("legacy_hex", false);
-    config.addDefault("deluxe_chat", true);
-    config.addDefault("format_chat.enabled", true);
+    config.addDefault("papi_chat", true);
+    config.addDefault("format_chat.enabled", false);
     config.addDefault("format_chat.format", "{deluxetags_tag} <%1$s> %2$s");
     if (config.contains("force_tag_on_join")) {
       config.set("force_tag_on_join", null);
@@ -138,8 +138,8 @@ public class TagConfig {
     return config.getBoolean("check_updates");
   }
 
-  public boolean deluxeChat() {
-    return config.getBoolean("deluxe_chat");
+  public boolean papiChat() {
+    return config.getBoolean("papi_chat");
   }
 
   public boolean legacyHex() {
