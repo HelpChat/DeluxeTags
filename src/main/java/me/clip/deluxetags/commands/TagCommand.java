@@ -429,6 +429,7 @@ public class TagCommand implements CommandExecutor {
       DeluxeTag tag = DeluxeTag.getLoadedTag(args[1]);
       if (tag == null) {
         MsgUtils.msg(sender, Lang.CMD_ADMIN_SET_ORDER_FAIL.getConfigValue(new String[]{
+            args[1]
         }));
         return true;
       }
