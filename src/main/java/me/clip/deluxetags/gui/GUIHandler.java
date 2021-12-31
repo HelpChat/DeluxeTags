@@ -265,7 +265,7 @@ public class GUIHandler implements Listener {
 
         line = line
             .replace("%previous_page%", page == 1 ? "" : Integer.toString(page  -1))
-            .replace("%previous_page%", page == 1 ? "" : Integer.toString(page  -1))
+            .replace("{previous_page}", page == 1 ? "" : Integer.toString(page  -1))
             .replace("%current_page%", Integer.toString(page))
             .replace("{current_page}", Integer.toString(page))
             .replace("%next_page%", hasNextPage ? Integer.toString(page + 1) : "")
