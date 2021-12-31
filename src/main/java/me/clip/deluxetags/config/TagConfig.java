@@ -67,8 +67,6 @@ public class TagConfig {
       config.set("force_tag_on_join", null);
     }
     config.addDefault("load_tag_on_join", true);
-    config.addDefault("tag_availability.available", "yes");
-    config.addDefault("tag_availability.unavailable", "no");
     config.addDefault("gui.name", "&6Available tags&f: &6%deluxetags_amount%");
     config.addDefault("gui.tag_select_item.material", "NAME_TAG");
     config.addDefault("gui.tag_select_item.data", 0);
@@ -126,12 +124,6 @@ public class TagConfig {
   public String chatFormat() {
     String format = config.getString("format_chat.format");
     return format != null ? format : "{deluxetags_tag} <%1$s> %2$s";
-  }
-
-  public String availability(boolean available) {
-    return available
-        ? config.getString("tag_availability.available", "yes")
-        : config.getString("tag_availability.unavailable", "no");
   }
 
   public boolean checkUpdates() {
