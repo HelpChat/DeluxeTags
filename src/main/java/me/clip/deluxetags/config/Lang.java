@@ -60,6 +60,8 @@ public enum Lang {
 	CMD_ADMIN_SET_DISPLAY_FAIL("cmd.admin_set_display_fail", "&f{0} &cis not a loaded tag name!"),
 	CMD_ADMIN_RELOAD("cmd.admin_reload", "&aConfiguration successfully reloaded! &f{0} &atags loaded!"),
 	CMD_INCORRECT_USAGE("cmd.incorrect_usage", "&cIncorrect usage! Use &7/tags help"),
+	GUI_PLACEHOLDERS_TAG_AVAILABLE("gui.placeholders.tag.available", "&aAvailable"),
+	GUI_PLACEHOLDERS_TAG_UNAVAILABLE("gui.placeholders.tag.unavailable", "&cUnavailable"),
 	GUI_TAG_SELECTED("gui.tag_selected", "&aYour tag has been set to &f{0} &7({1}&7)"),
 	GUI_TAG_DISABLED("gui.tag_disabled", "&7Your tag has been disabled!"), 
 	GUI_PAGE_ERROR("gui.page_error", "&cThere was a problem getting the previous page number!")

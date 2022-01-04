@@ -631,9 +631,6 @@ public class TagCommand implements CommandExecutor {
         plugin.getLogger().info("Using standard hex colors format: #aaFF00");
       }
 
-      DeluxeTags.setAvailableMessage(plugin.getCfg().availability(true));
-      DeluxeTags.setUnavailableMessage(plugin.getCfg().availability(false));
-
       plugin.getPlayerFile().reloadConfig();
       plugin.getPlayerFile().saveConfig();
 

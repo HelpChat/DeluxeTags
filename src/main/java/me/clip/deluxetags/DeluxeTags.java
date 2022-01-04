@@ -46,10 +46,6 @@ public class DeluxeTags extends JavaPlugin {
 	
 	private BukkitTask cleanupTask = null;
 
-	private static String availableMessage;
-
-	private static String unavailableMessage;
-	
 	private static boolean papi;
 
 	@Override
@@ -68,10 +64,6 @@ public class DeluxeTags extends JavaPlugin {
 		} else {
 			getLogger().info("Using standard hex colors format: #aaFF00");
 		}
-
-		availableMessage = cfg.availability(true);
-
-		unavailableMessage = cfg.availability(false);
 
 		int loaded = cfg.loadTags();
 		if (loaded == 1) {
@@ -197,14 +189,6 @@ public class DeluxeTags extends JavaPlugin {
 		return papi;
 	}
 
-	public static void setAvailableMessage(String value) {
-		availableMessage = value;
-	}
-
-	public static void setUnavailableMessage(String value) {
-		unavailableMessage = value;
-	}
-
 	public String getSavedTagIdentifier(String uuid) {
 		FileConfiguration c = playerFile.getConfig();
 		if (c.contains(uuid) && c.isString(uuid) && c.getString(uuid) != null) {
@@ -274,7 +258,9 @@ public class DeluxeTags extends JavaPlugin {
 		List<String> tags = DeluxeTag.getAvailableTagIdentifiers(p);
 		String tagId = tag.getIdentifier() != null ? tag.getIdentifier() : "";
 		String amount = tags != null ? String.valueOf(tags.size()) : "0";
-		String availability = tag.hasTagPermission(p) ? availableMessage : unavailableMessage;
+		String availability = tag.hasTagPermission(p)
+			? Lang.GUI_PLACEHOLDERS_TAG_AVAILABLE.getConfigValue(null)
+			: Lang.GUI_PLACEHOLDERS_TAG_UNAVAILABLE.getConfigValue(null);
 
 		s = s
 			.replace("%player%", p.getName())
