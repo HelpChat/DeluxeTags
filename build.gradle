@@ -6,13 +6,13 @@ plugins {
 }
 
 ext {
-    majorVersion = "1.8.2"
+    majorVersion = "1.8.3"
     buildVersion = "DEV-" + System.getenv("BUILD_NUMBER")
     release = "Release"
 }
 
 group 'me.clip'
-version majorVersion + "-" + release
+version majorVersion + "-" + buildVersion
 sourceCompatibility = JavaVersion.VERSION_1_8
 
 repositories {
