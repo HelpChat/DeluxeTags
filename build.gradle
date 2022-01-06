@@ -12,7 +12,7 @@ ext {
 }
 
 group 'me.clip'
-version majorVersion + "-" + buildVersion
+version majorVersion + "-" + release
 sourceCompatibility = JavaVersion.VERSION_1_8
 
 repositories {
