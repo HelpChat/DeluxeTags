@@ -6,6 +6,7 @@ import me.clip.deluxetags.config.TagConfig;
 public class GUIOptions {
 	private final String menuName;
 	private DisplayItem tagSelectItem;
+	private DisplayItem tagVisibleItem;
 	private DisplayItem dividerItem;
 	private DisplayItem hasTagItem;
 	private DisplayItem noTagItem;
@@ -21,6 +22,9 @@ public class GUIOptions {
 			switch (type) {
 				case TAG_SELECT_ITEM:
 					this.tagSelectItem = config.loadGuiItem(type);
+					break;
+				case TAG_VISIBLE_ITEM:
+					this.tagVisibleItem = config.loadGuiItem(type);
 					break;
 				case DIVIDER_ITEM:
 					this.dividerItem = config.loadGuiItem(type);
@@ -70,6 +74,10 @@ public class GUIOptions {
 
 	public DisplayItem getPreviousPageItem() {
 		return previousPageItem;
+	}
+
+	public DisplayItem getTagVisibleItem() {
+		return tagVisibleItem;
 	}
 
 	public String getMenuName() {

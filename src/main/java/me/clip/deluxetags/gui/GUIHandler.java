@@ -178,16 +178,29 @@ public class GUIHandler implements Listener {
                 tag = new DeluxeTag(1, "", "", "");
             }
 
-            gui.setItem(
-                count,
-                TagGUI.createItem(
-                    options.getTagSelectItem().getMaterial(),
-                    options.getTagSelectItem().getData(),
-                    1,
-                    DeluxeTags.setPlaceholders(p, replacePageNumbers(options.getTagSelectItem().getName(), page, hasNextPage), tag),
-                    processLore(options.getTagSelectItem().getLore(), p, tag, page, hasNextPage)
-                )
-            );
+            if (tag.hasTagPermission(p)) {
+                gui.setItem(
+                    count,
+                    TagGUI.createItem(
+                        options.getTagSelectItem().getMaterial(),
+                        options.getTagSelectItem().getData(),
+                        1,
+                        DeluxeTags.setPlaceholders(p, replacePageNumbers(options.getTagSelectItem().getName(), page, hasNextPage), tag),
+                        processLore(options.getTagSelectItem().getLore(), p, tag, page, hasNextPage)
+                    )
+                );
+            } else {
+                gui.setItem(
+                    count,
+                    TagGUI.createItem(
+                        options.getTagVisibleItem().getMaterial(),
+                        options.getTagVisibleItem().getData(),
+                        1,
+                        DeluxeTags.setPlaceholders(p, replacePageNumbers(options.getTagVisibleItem().getName(), page, hasNextPage), tag),
+                        processLore(options.getTagVisibleItem().getLore(), p, tag, page, hasNextPage)
+                    )
+                );
+            }
             count++;
         }
         gui.setTags(tags);
