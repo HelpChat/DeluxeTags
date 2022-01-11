@@ -73,6 +73,11 @@ public class TagConfig {
     config.addDefault("gui.tag_select_item.displayname", "&6Tag&f: &6%deluxetags_identifier%");
     config.addDefault("gui.tag_select_item.lore",
         Arrays.asList("%deluxetags_tag%", "%deluxetags_description%"));
+    config.addDefault("gui.tag_visible_item.material", "NAME_TAG");
+    config.addDefault("gui.tag_visible_item.data", 0);
+    config.addDefault("gui.tag_visible_item.displayname", "&6Tag&f: &6%deluxetags_identifier%");
+    config.addDefault("gui.tag_visible_item.lore",
+        Arrays.asList("%deluxetags_tag%", "%deluxetags_description%", "&7You can see this tag but you can't select it!"));
     config.addDefault("gui.divider_item.material", "BLACK_STAINED_GLASS_PANE");
     config.addDefault("gui.divider_item.data", 0);
     config.addDefault("gui.divider_item.displayname", "");

@@ -6,7 +6,7 @@ plugins {
 }
 
 ext {
-    majorVersion = "1.8.2"
+    majorVersion = "1.8.3"
     buildVersion = "DEV-" + System.getenv("BUILD_NUMBER")
     release = "Release"
 }
@@ -27,7 +27,7 @@ dependencies {
     compileOnly 'org.spigotmc:spigot-api:1.18.1-R0.1-SNAPSHOT'
     compileOnly 'me.clip:placeholderapi:2.11.1'
 
-    implementation 'com.github.cryptomorin:XSeries:8.5.0.1'
+    implementation 'com.github.cryptomorin:XSeries:8.6.0.0.1'
 }
 
 shadowJar {
