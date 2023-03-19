@@ -6,7 +6,8 @@ plugins {
 }
 
 val majorVersion = "1.8.3"
-val buildVersion = "DEV-" + System.getenv("BUILD_NUMBER")
+val buildNumber = System.getenv("BUILD_NUMBER") ?: "LOCAL"
+val buildVersion = "DEV-$buildNumber"
 val release = "Release"
 
 group = "me.clip"
