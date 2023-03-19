@@ -9,7 +9,6 @@ import me.clip.deluxetags.DeluxeTags;
 import me.clip.deluxetags.config.Lang;
 import me.clip.deluxetags.tags.DeluxeTag;
 import me.clip.deluxetags.utils.MsgUtils;
-import org.apache.commons.lang.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -317,7 +316,7 @@ public class TagCommand implements CommandExecutor {
         return true;
       }
 
-      String tagDisplay = StringUtils.join(Arrays.copyOfRange(args, 2, args.length), " ");
+      String tagDisplay = String.join(" ", Arrays.copyOfRange(args, 2, args.length));
       if (tagDisplay.isEmpty()) {
         return true;
       }
@@ -400,7 +399,7 @@ public class TagCommand implements CommandExecutor {
         return true;
       }
 
-      String desc = StringUtils.join(Arrays.copyOfRange(args, 2, args.length), " ");
+      String desc =String.join(" ", Arrays.copyOfRange(args, 2, args.length));
       if (desc.endsWith("_")) {
         desc = desc.substring(0, desc.length() - 1) + " ";
       }
@@ -482,7 +481,7 @@ public class TagCommand implements CommandExecutor {
         return true;
       }
 
-      String tagDisplay = StringUtils.join(Arrays.copyOfRange(args, 2, args.length), " ");
+      String tagDisplay = String.join(" ", Arrays.copyOfRange(args, 2, args.length));
       if (tagDisplay.isEmpty()) {
         return true;
       }
