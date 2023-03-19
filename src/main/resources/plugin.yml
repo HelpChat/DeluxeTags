@@ -1,6 +1,6 @@
 name: DeluxeTags
 main: me.clip.deluxetags.DeluxeTags
-version: @version@
+version: ${version}
 api-version: "1.13"
 author: extended_clip
 description: DeluxeChat add on to allow players to select a custom tag
