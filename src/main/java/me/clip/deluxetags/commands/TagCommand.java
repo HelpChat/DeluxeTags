@@ -26,8 +26,10 @@ public class TagCommand implements CommandExecutor {
   @Override
   public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
 
+    final Player player = sender instanceof Player ? (Player) sender : null;
+
     if (args.length == 0) {
-      if (!(sender instanceof Player)) {
+      if (player == null) {
         MsgUtils.msg(sender, "&8&m+----------------+");
         MsgUtils.msg(sender, "&5&lDeluxeTags &f&o" + plugin.getDescription().getVersion());
         MsgUtils.msg(sender, "&7Created by &f&oextended_clip");
@@ -36,7 +38,7 @@ public class TagCommand implements CommandExecutor {
         return true;
       }
 
-      if (!sender.hasPermission("deluxetags.gui")) {
+      if (!player.hasPermission("deluxetags.gui")) {
         MsgUtils.msg(sender, Lang.CMD_NO_PERMS.getConfigValue(new String[]{
             "deluxetags.gui"
         }));
@@ -44,14 +46,12 @@ public class TagCommand implements CommandExecutor {
       }
 
       if (DeluxeTag.getLoadedTags() == null || DeluxeTag.getLoadedTags().isEmpty()) {
-        MsgUtils.msg(sender, Lang.CMD_NO_TAGS_LOADED.getConfigValue(null));
+        MsgUtils.msg(player, Lang.CMD_NO_TAGS_LOADED.getConfigValue(null));
         return true;
       }
 
-      Player player = (Player) sender;
-
       if (!plugin.getGUIHandler().openMenu(player, 1)) {
-        MsgUtils.msg(sender, Lang.CMD_NO_TAGS_AVAILABLE.getConfigValue(null));
+        MsgUtils.msg(player, Lang.CMD_NO_TAGS_AVAILABLE.getConfigValue(null));
       }
       return true;
 
