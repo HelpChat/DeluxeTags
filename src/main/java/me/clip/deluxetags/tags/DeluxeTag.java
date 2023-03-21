@@ -57,6 +57,14 @@ public class DeluxeTag {
 	 * get the display tag of this DeluxeTag
 	 * @return display tag String
 	 */
+	public String getDisplayTag() {
+		return displayTag;
+	}
+
+	/**
+	 * get the display tag of this DeluxeTag
+	 * @return display tag String
+	 */
 	public String getDisplayTag(final @Nullable OfflinePlayer player) {
 		return DeluxeTags.papi() ? PlaceholderAPI.setPlaceholders(player, displayTag): displayTag;
 	}
@@ -67,6 +75,14 @@ public class DeluxeTag {
 	 */
 	public void setDisplayTag(String newDisplayTag) {
 		this.displayTag = newDisplayTag;
+	}
+
+	/**
+	 * get the description of this DeluxeTag
+	 * @return description String
+	 */
+	public String getDescription() {
+		return description;
 	}
 
 	/**

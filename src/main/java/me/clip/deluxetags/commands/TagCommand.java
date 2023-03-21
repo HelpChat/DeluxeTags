@@ -30,16 +30,19 @@ public class TagCommand implements CommandExecutor {
 
     if (args.length == 0) {
       if (player == null) {
-        MsgUtils.msg(sender, "&8&m+----------------+");
-        MsgUtils.msg(sender, "&5&lDeluxeTags &f&o" + plugin.getDescription().getVersion());
-        MsgUtils.msg(sender, "&7Created by &f&oextended_clip");
-        MsgUtils.msg(sender, "Use /tags help for console commands");
-        MsgUtils.msg(sender, "&8&m+----------------+");
+
+        String builder = "&8&m+----------------+\n" +
+                "&5&lDeluxeTags &f&o" + plugin.getDescription().getVersion() + "\n" +
+                "&7Created by &f&oextended_clip&7, &f&oGlare&7, &f&oBlitzOffline\n" +
+                "Use /tags help for a list of commands\n" +
+                "&8&m+----------------+";
+
+        MsgUtils.msg(sender, builder);
         return true;
       }
 
       if (!player.hasPermission("deluxetags.gui")) {
-        MsgUtils.msg(sender, Lang.CMD_NO_PERMS.getConfigValue(new String[]{
+        MsgUtils.msg(player, Lang.CMD_NO_PERMS.getConfigValue(new String[]{
             "deluxetags.gui"
         }));
         return true;
@@ -56,65 +59,95 @@ public class TagCommand implements CommandExecutor {
       return true;
 
     } else if (args[0].equalsIgnoreCase("help")) {
+
+      final StringBuilder builder = new StringBuilder();
+
       String color = Lang.CMD_HELP_COLOR.getConfigValue(null);
-      MsgUtils.msg(sender, "&8&m+----------------+");
-      MsgUtils.msg(sender, Lang.CMD_HELP_TITLE.getConfigValue(null));
-      MsgUtils.msg(sender, " ");
+
+      builder.append("&8&m+----------------+").append("\n");
+      builder.append(Lang.CMD_HELP_TITLE.getConfigValue(null)).append("\n");
+      builder.append(" ").append("\n");
+
+      final StringBuilder perPermissionBuilder = new StringBuilder();
+
       if (sender.hasPermission("deluxetags.gui")) {
-        MsgUtils.msg(sender, color + "/tags");
-        MsgUtils.msg(sender, Lang.CMD_HELP_TAGS.getConfigValue(null));
+        perPermissionBuilder.append(color).append("/tags").append("\n");
+        perPermissionBuilder.append(Lang.CMD_HELP_TAGS.getConfigValue(null)).append("\n");
       }
       if (sender.hasPermission("deluxetags.list")) {
-        MsgUtils.msg(sender, color + "/tags list (all/<playername>)");
-        MsgUtils.msg(sender, Lang.CMD_HELP_LIST.getConfigValue(null));
+        perPermissionBuilder.append(color).append("/tags list (all/<playername>)").append("\n");
+        perPermissionBuilder.append(Lang.CMD_HELP_LIST.getConfigValue(null)).append("\n");
       }
       if (sender.hasPermission("deluxetags.select")) {
-        MsgUtils.msg(sender, color + "/tags select <tag>");
-        MsgUtils.msg(sender, Lang.CMD_HELP_SELECT.getConfigValue(null));
+        perPermissionBuilder.append(color).append("/tags select <tag>").append("\n");
+        perPermissionBuilder.append(Lang.CMD_HELP_SELECT.getConfigValue(null)).append("\n");
       }
       if (sender.hasPermission("deluxetags.set")) {
-        MsgUtils.msg(sender, color + "/tags set <player> <tag>");
-        MsgUtils.msg(sender, Lang.CMD_HELP_ADMIN_SET.getConfigValue(null));
+        perPermissionBuilder.append(color).append("/tags set <player> <tag>").append("\n");
+        perPermissionBuilder.append(Lang.CMD_HELP_ADMIN_SET.getConfigValue(null)).append("\n");
       }
       if (sender.hasPermission("deluxetags.clear")) {
-        MsgUtils.msg(sender, color + "/tags clear <player>");
-        MsgUtils.msg(sender, Lang.CMD_HELP_ADMIN_CLEAR.getConfigValue(null));
+        perPermissionBuilder.append(color).append("/tags clear <player>").append("\n");
+        perPermissionBuilder.append(Lang.CMD_HELP_ADMIN_CLEAR.getConfigValue(null)).append("\n");
       }
       if (sender.hasPermission("deluxetags.create")) {
-        MsgUtils.msg(sender, color + "/tags create <identifier> <tag>");
-        MsgUtils.msg(sender, Lang.CMD_HELP_ADMIN_CREATE.getConfigValue(null));
+        perPermissionBuilder.append(color).append("/tags create <identifier> <tag>").append("\n");
+        perPermissionBuilder.append(Lang.CMD_HELP_ADMIN_CREATE.getConfigValue(null)).append("\n");
       }
       if (sender.hasPermission("deluxetags.delete")) {
-        MsgUtils.msg(sender, color + "/tags delete <identifier>");
-        MsgUtils.msg(sender, Lang.CMD_HELP_ADMIN_DELETE.getConfigValue(null));
+        perPermissionBuilder.append(color).append("/tags delete <identifier>").append("\n");
+        perPermissionBuilder.append(Lang.CMD_HELP_ADMIN_DELETE.getConfigValue(null)).append("\n");
       }
       if (sender.hasPermission("deluxetags.setdescription")) {
-        MsgUtils.msg(sender, color + "/tags setdesc <identifier> <tag description>");
-        MsgUtils.msg(sender, Lang.CMD_HELP_ADMIN_SET_DESC.getConfigValue(null));
+        perPermissionBuilder.append(color).append("/tags setdesc <identifier> <tag description>").append("\n");
+        perPermissionBuilder.append(Lang.CMD_HELP_ADMIN_SET_DESC.getConfigValue(null)).append("\n");
       }
       if (sender.hasPermission("deluxetags.setorder")) {
-        MsgUtils.msg(sender, color + "/tags setorder <identifier> <order>");
-        MsgUtils.msg(sender, Lang.CMD_HELP_ADMIN_SET_ORDER.getConfigValue(null));
+        perPermissionBuilder.append(color).append("/tags setorder <identifier> <order>").append("\n");
+        perPermissionBuilder.append(Lang.CMD_HELP_ADMIN_SET_ORDER.getConfigValue(null)).append("\n");
       }
       if (sender.hasPermission("deluxetags.setdisplay")) {
-        MsgUtils.msg(sender, color + "/tags setdisplay <identifier> <tag display>");
-        MsgUtils.msg(sender, Lang.CMD_HELP_ADMIN_SET_DISPLAY.getConfigValue(null));
+        perPermissionBuilder.append(color).append("/tags setdisplay <identifier> <tag display>").append("\n");
+        perPermissionBuilder.append(Lang.CMD_HELP_ADMIN_SET_DISPLAY.getConfigValue(null)).append("\n");
       }
       if (sender.hasPermission("deluxetags.reload")) {
-        MsgUtils.msg(sender, color + "/tags reload");
-        MsgUtils.msg(sender, Lang.CMD_HELP_RELOAD.getConfigValue(null));
+        perPermissionBuilder.append(color).append("/tags reload").append("\n");
+        perPermissionBuilder.append(Lang.CMD_HELP_RELOAD.getConfigValue(null)).append("\n");
       }
-      MsgUtils.msg(sender, color + "/tags version");
-      MsgUtils.msg(sender, Lang.CMD_HELP_VERSION.getConfigValue(null));
-      MsgUtils.msg(sender, "&8&m+----------------+");
+      if (sender.hasPermission("deluxetags.version")) {
+        perPermissionBuilder.append(color).append("/tags version").append("\n");
+        perPermissionBuilder.append(Lang.CMD_HELP_VERSION.getConfigValue(null)).append("\n");
+      }
+
+
+      if (perPermissionBuilder.length() == 0) {
+        MsgUtils.msg(sender, Lang.CMD_NO_PERMS.getConfigValue(new String[]{
+            "deluxetags.gui"
+        }));
+        return true;
+      }
+
+      builder.append(perPermissionBuilder);
+      builder.append("&8&m+----------------+");
+
+      MsgUtils.msg(sender, builder.toString());
       return true;
 
     } else if (args[0].equalsIgnoreCase("version")) {
-      MsgUtils.msg(sender, "&8&m+----------------+");
-      MsgUtils.msg(sender, "&5&lDeluxeTags &f&o" + plugin.getDescription().getVersion());
-      MsgUtils.msg(sender, "&7Created by &f&oextended_clip");
-      MsgUtils.msg(sender, "&8&m+----------------+");
 
+      if (!sender.hasPermission("deluxetags.version")) {
+        MsgUtils.msg(sender, Lang.CMD_NO_PERMS.getConfigValue(new String[]{
+                "deluxetags.version"
+        }));
+        return true;
+      }
+
+      MsgUtils.msg(
+              sender,
+              "&8&m+----------------+\n"+
+                      "&5&lDeluxeTags &f&o" + plugin.getDescription().getVersion() + "\n" +
+                      "&7Created by &f&oextended_clip&7, &f&oGlare&7, &f&oBlitzOffline\n" +
+                      "&8&m+----------------+");
       return true;
 
     } else if (args[0].equalsIgnoreCase("list")) {
@@ -133,10 +166,10 @@ public class TagCommand implements CommandExecutor {
 
         Collection<DeluxeTag> tags;
 
-        if (!(sender instanceof Player)) {
+        if (player == null) {
           tags = DeluxeTag.getLoadedTags();
         } else {
-          tags = DeluxeTag.getLoadedTags().stream().filter(tag -> tag.hasTagPermission((Player) sender)).collect(Collectors.toList());
+          tags = DeluxeTag.getLoadedTags().stream().filter(tag -> tag.hasTagPermission(player)).collect(Collectors.toList());
         }
 
         if (tags.isEmpty()) {
@@ -150,7 +183,7 @@ public class TagCommand implements CommandExecutor {
               .append("&f")
               .append(tag.getIdentifier())
               .append("&7:&f")
-              .append(tag.getDisplayTag())
+              .append(tag.getDisplayTag(player))
               .append("&a, ");
         }
 
@@ -180,7 +213,7 @@ public class TagCommand implements CommandExecutor {
               .append("&f")
               .append(tag.getIdentifier())
               .append("&7:&f")
-              .append(tag.getDisplayTag())
+              .append(tag.getDisplayTag(player))
               .append("&a, ");
         }
 
@@ -228,7 +261,7 @@ public class TagCommand implements CommandExecutor {
               .append("&f")
               .append(tag.getIdentifier())
               .append("&7:&f")
-              .append(tag.getDisplayTag())
+              .append(tag.getDisplayTag(target))
               .append("&a, ");
         }
 
@@ -241,32 +274,31 @@ public class TagCommand implements CommandExecutor {
       return true;
 
     } else if (args[0].equalsIgnoreCase("select")) {
-      if (!(sender instanceof Player)) {
+      if (player == null) {
         MsgUtils.msg(sender, "&4This command can only be used in game!");
         return true;
       }
 
-      Player player = (Player) sender;
-      if (!sender.hasPermission("deluxetags.select")) {
-        MsgUtils.msg(sender, Lang.CMD_NO_PERMS.getConfigValue(new String[]{
+      if (!player.hasPermission("deluxetags.select")) {
+        MsgUtils.msg(player, Lang.CMD_NO_PERMS.getConfigValue(new String[]{
             "deluxetags.select"
         }));
         return true;
       }
 
       if (args.length != 2) {
-        MsgUtils.msg(sender, Lang.CMD_TAG_SEL_INCORRECT.getConfigValue(null));
+        MsgUtils.msg(player, Lang.CMD_TAG_SEL_INCORRECT.getConfigValue(null));
         return true;
       }
 
       if (DeluxeTag.getLoadedTags() == null || DeluxeTag.getLoadedTags().isEmpty()) {
-        MsgUtils.msg(sender, Lang.CMD_NO_TAGS_LOADED.getConfigValue(null));
+        MsgUtils.msg(player, Lang.CMD_NO_TAGS_LOADED.getConfigValue(null));
         return true;
       }
 
       List<String> availIdentifiers = DeluxeTag.getAvailableTagIdentifiers(player);
       if (availIdentifiers == null || availIdentifiers.isEmpty()) {
-        MsgUtils.msg(sender, Lang.CMD_NO_TAGS_AVAILABLE.getConfigValue(null));
+        MsgUtils.msg(player, Lang.CMD_NO_TAGS_AVAILABLE.getConfigValue(null));
         return true;
       }
 
@@ -282,15 +314,15 @@ public class TagCommand implements CommandExecutor {
         if (tag.setPlayerTag(player)) {
           plugin.saveTagIdentifier(player.getUniqueId().toString(), tag.getIdentifier());
           MsgUtils.msg(sender, Lang.CMD_TAG_SEL_SUCCESS.getConfigValue(new String[]{
-              tag.getIdentifier(), tag.getDisplayTag()}));
+              tag.getIdentifier(), tag.getDisplayTag(player)}));
         } else {
           MsgUtils.msg(sender, Lang.CMD_TAG_SEL_FAIL_SAMETAG.getConfigValue(new String[]{
-              tag.getIdentifier(), tag.getDisplayTag()}));
+              tag.getIdentifier(), tag.getDisplayTag(player)}));
         }
         return true;
       }
 
-      MsgUtils.msg(sender, Lang.CMD_TAG_SEL_FAIL_INVALID.getConfigValue(new String[]{
+      MsgUtils.msg(player, Lang.CMD_TAG_SEL_FAIL_INVALID.getConfigValue(new String[]{
           identifier
       }));
       return true;
@@ -399,7 +431,7 @@ public class TagCommand implements CommandExecutor {
         return true;
       }
 
-      String desc =String.join(" ", Arrays.copyOfRange(args, 2, args.length));
+      String desc = String.join(" ", Arrays.copyOfRange(args, 2, args.length));
       if (desc.endsWith("_")) {
         desc = desc.substring(0, desc.length() - 1) + " ";
       }
@@ -408,7 +440,7 @@ public class TagCommand implements CommandExecutor {
       plugin.getCfg().saveTag(tag.getPriority(), tag.getIdentifier(), tag.getDisplayTag(),
           tag.getDescription(), tag.getPermission());
       MsgUtils.msg(sender, Lang.CMD_ADMIN_SET_DESCRIPTION_SUCCESS.getConfigValue(new String[]{
-          identifier, tag.getDisplayTag(), desc
+          identifier, tag.getDisplayTag(player), desc
       }));
       return true;
 
@@ -544,11 +576,11 @@ public class TagCommand implements CommandExecutor {
         tag.setPlayerTag(target);
         plugin.saveTagIdentifier(target.getUniqueId().toString(), tag.getIdentifier());
         MsgUtils.msg(sender, Lang.CMD_ADMIN_SET_SUCCESS.getConfigValue(new String[]{
-            target.getName(), tag.getIdentifier(), tag.getDisplayTag()
+            target.getName(), tag.getIdentifier(), tag.getDisplayTag(target)
         }));
         if (target != sender) {
           MsgUtils.msg(target, Lang.CMD_ADMIN_SET_SUCCESS_TARGET.getConfigValue(new String[]{
-              tag.getIdentifier(), tag.getDisplayTag(), sender.getName()
+              tag.getIdentifier(), tag.getDisplayTag(target), sender.getName()
           }));
         }
         return true;
