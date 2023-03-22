@@ -33,14 +33,32 @@ public class DeluxeTag {
 	
 	/**
 	 * DeluxeTag object initializer
+	 * @param priority int priority of this DeluxeTag
 	 * @param identifier String identifier of this DeluxeTag
 	 * @param displayTag String displayTag of this DeluxeTag
+	 * @param description String description of this DeluxeTag
 	 */
 	public DeluxeTag(int priority, String identifier, String displayTag, String description) {
 		this.priority = priority;
 		this.identifier = identifier;
 		this.displayTag = displayTag;
 		this.description = description;
+	}
+
+	/**
+	 * DeluxeTag object initializer
+	 * @param priority int priority of this DeluxeTag
+	 * @param identifier String identifier of this DeluxeTag
+	 * @param displayTag String displayTag of this DeluxeTag
+	 * @param description String description of this DeluxeTag
+	 * @param permission String permission node of this DeluxeTag
+	 */
+	public DeluxeTag(int priority, String identifier, String displayTag, String description, String permission) {
+		this.priority = priority;
+		this.identifier = identifier;
+		this.displayTag = displayTag;
+		this.description = description;
+		this.permission = permission;
 	}
 
 	/**
