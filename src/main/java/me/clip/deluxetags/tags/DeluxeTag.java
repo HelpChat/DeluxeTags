@@ -12,7 +12,9 @@ import java.util.TreeMap;
 import java.util.stream.Collectors;
 import me.clip.deluxetags.DeluxeTags;
 import me.clip.placeholderapi.PlaceholderAPI;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * DeluxeTag class
@@ -50,7 +52,7 @@ public class DeluxeTag {
 	public String getIdentifier() {
 		return identifier;
 	}
-	
+
 	/**
 	 * get the display tag of this DeluxeTag
 	 * @return display tag String
@@ -58,15 +60,15 @@ public class DeluxeTag {
 	public String getDisplayTag() {
 		return displayTag;
 	}
-	
+
 	/**
-	 * get the description of this DeluxeTag
-	 * @return description String
+	 * get the display tag of this DeluxeTag
+	 * @return display tag String
 	 */
-	public String getDescription() {
-		return description;
+	public String getDisplayTag(final @Nullable OfflinePlayer player) {
+		return DeluxeTags.papi() ? PlaceholderAPI.setPlaceholders(player, displayTag): displayTag;
 	}
-	
+
 	/**
 	 * set the display tag for this DeluxeTag
 	 * @param newDisplayTag new display tag String
@@ -74,7 +76,24 @@ public class DeluxeTag {
 	public void setDisplayTag(String newDisplayTag) {
 		this.displayTag = newDisplayTag;
 	}
-	
+
+	/**
+	 * get the description of this DeluxeTag
+	 * @return description String
+	 */
+	public String getDescription() {
+		return description;
+	}
+
+	/**
+	 * get the description of this DeluxeTag with placeholders replaced
+	 * @param player to get the description for
+	 * @return description String
+	 */
+	public String getDescription(final @Nullable OfflinePlayer player) {
+		return DeluxeTags.papi() ? PlaceholderAPI.setPlaceholders(player, description): description;
+	}
+
 	/**
 	 * set the description for this DeluxeTag
 	 * @param newDescription new description String
@@ -352,16 +371,16 @@ public class DeluxeTag {
 	}
 
 	/**
-	 * get a players current tag description if they have a tag set, an empty string if not
-	 * @param uuid Player uuid to get tag description for
-	 * @return players current tag description if they have a tag set, empty string otherwise
+	 * get a players current tag priority if they have a tag set, -1 if not
+	 * @param uuid Player uuid to get tag priority for
+	 * @return players current tag priority if they have a tag set, -1 otherwise
 	 */
 	public static int getPlayerTagPriority(String uuid) {
 		if (playerTags == null) {
 			playerTags = new HashMap<>();
 		}
 
-		if (playerTags.isEmpty() || !playerTags.containsKey(uuid) || playerTags.get(uuid) == null || playerTags.get(uuid).getDescription() == null) {
+		if (playerTags.isEmpty() || !playerTags.containsKey(uuid) || playerTags.get(uuid) == null) {
 			return -1;
 		}
 

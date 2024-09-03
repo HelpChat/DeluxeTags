@@ -42,7 +42,7 @@ public class TagPlaceholders extends PlaceholderExpansion {
             if (tag == null) {
                 return "invalid tag";
             }
-            return MsgUtils.color(tag.getDisplayTag());
+            return MsgUtils.color(tag.getDisplayTag(offlinePlayer));
         }
 
         if (params.startsWith("description_")) {
@@ -50,7 +50,7 @@ public class TagPlaceholders extends PlaceholderExpansion {
             if (tag == null) {
                 return "invalid tag";
             }
-            return MsgUtils.color(tag.getDescription());
+            return MsgUtils.color(tag.getDescription(offlinePlayer));
         }
 
         if (params.startsWith("order_")) {

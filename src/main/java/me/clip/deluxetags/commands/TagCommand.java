@@ -26,8 +26,10 @@ public class TagCommand implements CommandExecutor {
   @Override
   public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
 
+    final Player player = sender instanceof Player ? (Player) sender : null;
+
     if (args.length == 0) {
-      if (!(sender instanceof Player)) {
+      if (player == null) {
 
         String builder = "&8&m+----------------+\n" +
                 "&5&lDeluxeTags &f&o" + plugin.getDescription().getVersion() + "\n" +
@@ -39,22 +41,20 @@ public class TagCommand implements CommandExecutor {
         return true;
       }
 
-      if (!sender.hasPermission("deluxetags.gui")) {
-        MsgUtils.msg(sender, Lang.CMD_NO_PERMS.getConfigValue(new String[]{
+      if (!player.hasPermission("deluxetags.gui")) {
+        MsgUtils.msg(player, Lang.CMD_NO_PERMS.getConfigValue(new String[]{
             "deluxetags.gui"
         }));
         return true;
       }
 
       if (DeluxeTag.getLoadedTags() == null || DeluxeTag.getLoadedTags().isEmpty()) {
-        MsgUtils.msg(sender, Lang.CMD_NO_TAGS_LOADED.getConfigValue(null));
+        MsgUtils.msg(player, Lang.CMD_NO_TAGS_LOADED.getConfigValue(null));
         return true;
       }
 
-      Player player = (Player) sender;
-
       if (!plugin.getGUIHandler().openMenu(player, 1)) {
-        MsgUtils.msg(sender, Lang.CMD_NO_TAGS_AVAILABLE.getConfigValue(null));
+        MsgUtils.msg(player, Lang.CMD_NO_TAGS_AVAILABLE.getConfigValue(null));
       }
       return true;
 
@@ -166,10 +166,10 @@ public class TagCommand implements CommandExecutor {
 
         Collection<DeluxeTag> tags;
 
-        if (!(sender instanceof Player)) {
+        if (player == null) {
           tags = DeluxeTag.getLoadedTags();
         } else {
-          tags = DeluxeTag.getLoadedTags().stream().filter(tag -> tag.hasTagPermission((Player) sender)).collect(Collectors.toList());
+          tags = DeluxeTag.getLoadedTags().stream().filter(tag -> tag.hasTagPermission(player)).collect(Collectors.toList());
         }
 
         if (tags.isEmpty()) {
@@ -183,7 +183,7 @@ public class TagCommand implements CommandExecutor {
               .append("&f")
               .append(tag.getIdentifier())
               .append("&7:&f")
-              .append(tag.getDisplayTag())
+              .append(tag.getDisplayTag(player))
               .append("&a, ");
         }
 
@@ -213,7 +213,7 @@ public class TagCommand implements CommandExecutor {
               .append("&f")
               .append(tag.getIdentifier())
               .append("&7:&f")
-              .append(tag.getDisplayTag())
+              .append(tag.getDisplayTag(player))
               .append("&a, ");
         }
 
@@ -261,7 +261,7 @@ public class TagCommand implements CommandExecutor {
               .append("&f")
               .append(tag.getIdentifier())
               .append("&7:&f")
-              .append(tag.getDisplayTag())
+              .append(tag.getDisplayTag(target))
               .append("&a, ");
         }
 
@@ -274,32 +274,31 @@ public class TagCommand implements CommandExecutor {
       return true;
 
     } else if (args[0].equalsIgnoreCase("select")) {
-      if (!(sender instanceof Player)) {
+      if (player == null) {
         MsgUtils.msg(sender, "&4This command can only be used in game!");
         return true;
       }
 
-      Player player = (Player) sender;
-      if (!sender.hasPermission("deluxetags.select")) {
-        MsgUtils.msg(sender, Lang.CMD_NO_PERMS.getConfigValue(new String[]{
+      if (!player.hasPermission("deluxetags.select")) {
+        MsgUtils.msg(player, Lang.CMD_NO_PERMS.getConfigValue(new String[]{
             "deluxetags.select"
         }));
         return true;
       }
 
       if (args.length != 2) {
-        MsgUtils.msg(sender, Lang.CMD_TAG_SEL_INCORRECT.getConfigValue(null));
+        MsgUtils.msg(player, Lang.CMD_TAG_SEL_INCORRECT.getConfigValue(null));
         return true;
       }
 
       if (DeluxeTag.getLoadedTags() == null || DeluxeTag.getLoadedTags().isEmpty()) {
-        MsgUtils.msg(sender, Lang.CMD_NO_TAGS_LOADED.getConfigValue(null));
+        MsgUtils.msg(player, Lang.CMD_NO_TAGS_LOADED.getConfigValue(null));
         return true;
       }
 
       List<String> availIdentifiers = DeluxeTag.getAvailableTagIdentifiers(player);
       if (availIdentifiers == null || availIdentifiers.isEmpty()) {
-        MsgUtils.msg(sender, Lang.CMD_NO_TAGS_AVAILABLE.getConfigValue(null));
+        MsgUtils.msg(player, Lang.CMD_NO_TAGS_AVAILABLE.getConfigValue(null));
         return true;
       }
 
@@ -315,15 +314,15 @@ public class TagCommand implements CommandExecutor {
         if (tag.setPlayerTag(player)) {
           plugin.saveTagIdentifier(player.getUniqueId().toString(), tag.getIdentifier());
           MsgUtils.msg(sender, Lang.CMD_TAG_SEL_SUCCESS.getConfigValue(new String[]{
-              tag.getIdentifier(), tag.getDisplayTag()}));
+              tag.getIdentifier(), tag.getDisplayTag(player)}));
         } else {
           MsgUtils.msg(sender, Lang.CMD_TAG_SEL_FAIL_SAMETAG.getConfigValue(new String[]{
-              tag.getIdentifier(), tag.getDisplayTag()}));
+              tag.getIdentifier(), tag.getDisplayTag(player)}));
         }
         return true;
       }
 
-      MsgUtils.msg(sender, Lang.CMD_TAG_SEL_FAIL_INVALID.getConfigValue(new String[]{
+      MsgUtils.msg(player, Lang.CMD_TAG_SEL_FAIL_INVALID.getConfigValue(new String[]{
           identifier
       }));
       return true;
@@ -432,7 +431,7 @@ public class TagCommand implements CommandExecutor {
         return true;
       }
 
-      String desc =String.join(" ", Arrays.copyOfRange(args, 2, args.length));
+      String desc = String.join(" ", Arrays.copyOfRange(args, 2, args.length));
       if (desc.endsWith("_")) {
         desc = desc.substring(0, desc.length() - 1) + " ";
       }
@@ -441,7 +440,7 @@ public class TagCommand implements CommandExecutor {
       plugin.getCfg().saveTag(tag.getPriority(), tag.getIdentifier(), tag.getDisplayTag(),
           tag.getDescription(), tag.getPermission());
       MsgUtils.msg(sender, Lang.CMD_ADMIN_SET_DESCRIPTION_SUCCESS.getConfigValue(new String[]{
-          identifier, tag.getDisplayTag(), desc
+          identifier, tag.getDisplayTag(player), desc
       }));
       return true;
 
@@ -577,11 +576,11 @@ public class TagCommand implements CommandExecutor {
         tag.setPlayerTag(target);
         plugin.saveTagIdentifier(target.getUniqueId().toString(), tag.getIdentifier());
         MsgUtils.msg(sender, Lang.CMD_ADMIN_SET_SUCCESS.getConfigValue(new String[]{
-            target.getName(), tag.getIdentifier(), tag.getDisplayTag()
+            target.getName(), tag.getIdentifier(), tag.getDisplayTag(target)
         }));
         if (target != sender) {
           MsgUtils.msg(target, Lang.CMD_ADMIN_SET_SUCCESS_TARGET.getConfigValue(new String[]{
-              tag.getIdentifier(), tag.getDisplayTag(), sender.getName()
+              tag.getIdentifier(), tag.getDisplayTag(target), sender.getName()
           }));
         }
         return true;
