@@ -1,7 +1,7 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 plugins {
-    `java`
+    java
     id("com.gradleup.shadow") version "8.3.0"
 }
 
