@@ -14,6 +14,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 
 public class TagCommand implements CommandExecutor {
 
@@ -24,7 +25,10 @@ public class TagCommand implements CommandExecutor {
   }
 
   @Override
-  public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+  public boolean onCommand(final @NotNull CommandSender sender,
+                           final @NotNull Command command,
+                           final @NotNull String label,
+                           final String[] args) {
 
     final Player player = sender instanceof Player ? (Player) sender : null;
 
@@ -233,7 +237,7 @@ public class TagCommand implements CommandExecutor {
           return true;
         }
 
-        if (DeluxeTag.getLoadedTags() == null || DeluxeTag.getLoadedTags().isEmpty()) {
+        if (DeluxeTag.getLoadedTags() == null  || DeluxeTag.getLoadedTags().isEmpty()) {
           MsgUtils.msg(sender, Lang.CMD_NO_TAGS_LOADED.getConfigValue(null));
           return true;
         }

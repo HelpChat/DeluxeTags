@@ -2,7 +2,7 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 plugins {
     `java`
-    id("com.github.johnrengelman.shadow") version "8.1.0"
+    id("com.gradleup.shadow") version "8.3.0"
 }
 
 val majorVersion = "1.8.3"
@@ -22,14 +22,10 @@ repositories {
 }
 
 dependencies {
-    compileOnly("org.spigotmc:spigot-api:1.19.4-R0.1-SNAPSHOT")
-    compileOnly("me.clip:placeholderapi:2.11.3")
+    compileOnly("org.spigotmc:spigot-api:1.21.1-R0.1-SNAPSHOT")
+    compileOnly("me.clip:placeholderapi:2.11.6")
 
-    implementation("com.github.cryptomorin:XSeries:9.3.0")
-}
-
-java {
-    sourceCompatibility = JavaVersion.VERSION_1_8
+    implementation("com.github.cryptomorin:XSeries:11.2.1")
 }
 
 tasks {
@@ -39,6 +35,11 @@ tasks {
 
     build {
         dependsOn("shadowJar")
+    }
+
+    java {
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
     }
 
     withType<JavaCompile> {
