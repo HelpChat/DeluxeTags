@@ -7,6 +7,7 @@ import me.clip.placeholderapi.PlaceholderAPIPlugin;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 
 public class TagPlaceholders extends PlaceholderExpansion {
     DeluxeTags plugin;
@@ -16,17 +17,17 @@ public class TagPlaceholders extends PlaceholderExpansion {
     }
 
     @Override
-    public String getIdentifier() {
+    public @NotNull String getIdentifier() {
         return "deluxetags";
     }
 
     @Override
-    public String getAuthor() {
+    public @NotNull String getAuthor() {
         return plugin.getDescription().getAuthors().get(0);
     }
 
     @Override
-    public String getVersion() {
+    public @NotNull String getVersion() {
         return plugin.getDescription().getVersion();
     }
 
@@ -38,7 +39,7 @@ public class TagPlaceholders extends PlaceholderExpansion {
     @Override
     public String onRequest(OfflinePlayer offlinePlayer, String params) {
         if (params.startsWith("tag_")) {
-            DeluxeTag tag = DeluxeTag.getLoadedTag(params.replace("tag_", ""));
+            DeluxeTag tag = plugin.getTagsHandler().getLoadedTag(params.replace("tag_", ""));
             if (tag == null) {
                 return "invalid tag";
             }
@@ -46,7 +47,7 @@ public class TagPlaceholders extends PlaceholderExpansion {
         }
 
         if (params.startsWith("description_")) {
-            DeluxeTag tag = DeluxeTag.getLoadedTag(params.replace("description_", ""));
+            DeluxeTag tag = plugin.getTagsHandler().getLoadedTag(params.replace("description_", ""));
             if (tag == null) {
                 return "invalid tag";
             }
@@ -54,7 +55,7 @@ public class TagPlaceholders extends PlaceholderExpansion {
         }
 
         if (params.startsWith("order_")) {
-            DeluxeTag tag = DeluxeTag.getLoadedTag(params.replace("order_", ""));
+            DeluxeTag tag = plugin.getTagsHandler().getLoadedTag(params.replace("order_", ""));
             if (tag == null) {
                 return "invalid tag";
             }
@@ -68,24 +69,24 @@ public class TagPlaceholders extends PlaceholderExpansion {
         Player player = offlinePlayer.getPlayer();
 
         if (params.startsWith("has_tag_")) {
-            DeluxeTag tag = DeluxeTag.getLoadedTag(params.replace("has_tag_", ""));
+            DeluxeTag tag = plugin.getTagsHandler().getLoadedTag(params.replace("has_tag_", ""));
             if (tag == null) {
                 return "invalid tag";
             }
-            return tag.hasTagPermission(player) ? PlaceholderAPIPlugin.booleanTrue() : PlaceholderAPIPlugin.booleanFalse();
+            return tag.hasPermissionToUse(player) ? PlaceholderAPIPlugin.booleanTrue() : PlaceholderAPIPlugin.booleanFalse();
         }
 
         switch (params) {
             case "order":
-                return DeluxeTag.getPlayerTagPriority(player) != -1 ? String.valueOf(DeluxeTag.getPlayerTagPriority(player)) : "";
+                return plugin.getTagsHandler().getPlayerTagPriority(player) != -1 ? String.valueOf(plugin.getTagsHandler().getPlayerTagPriority(player)) : "";
             case "description":
-                return MsgUtils.color(DeluxeTag.getPlayerTagDescription(player));
+                return MsgUtils.color(plugin.getTagsHandler().getPlayerTagDescription(player));
             case "identifier":
-                return DeluxeTag.getPlayerTagIdentifier(player) != null ? MsgUtils.color(DeluxeTag.getPlayerTagIdentifier(player)) : "";
+                return plugin.getTagsHandler().getPlayerTagIdentifier(player) != null ? MsgUtils.color(plugin.getTagsHandler().getPlayerTagIdentifier(player)) : "";
             case "amount":
-                return DeluxeTag.getAvailableTagIdentifiers(player) != null ? String.valueOf(DeluxeTag.getAvailableTagIdentifiers(player).size()) : "0";
+                return plugin.getTagsHandler().getAvailableTagIdentifiers(player) != null ? String.valueOf(plugin.getTagsHandler().getAvailableTagIdentifiers(player).size()) : "0";
             case "tag":
-                return MsgUtils.color(DeluxeTag.getPlayerDisplayTag(player));
+                return MsgUtils.color(plugin.getTagsHandler().getPlayerDisplayTag(player));
         }
         return null;
     }

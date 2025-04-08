@@ -18,20 +18,20 @@ public class CleanupTask implements Runnable {
 	
 	@Override
 	public void run() {
-		if (DeluxeTag.getLoadedPlayers() == null || DeluxeTag.getLoadedPlayers().isEmpty()) {
+		if (plugin.getTagsHandler().getLoadedPlayers() == null || plugin.getTagsHandler().getLoadedPlayers().isEmpty()) {
 			return;
 		}
 
-		List<String> remove = new ArrayList<>();
+		List<UUID> remove = new ArrayList<>();
 
 		Bukkit.getScheduler().runTask(plugin, () -> {
-			for (String uuid: DeluxeTag.getLoadedPlayers()) {
-				Player player = Bukkit.getPlayer(UUID.fromString(uuid));
+			for (UUID uuid: plugin.getTagsHandler().getLoadedPlayers()) {
+				Player player = Bukkit.getPlayer(uuid);
 				if (player == null) remove.add(uuid);
 			}
 
 			if (remove.isEmpty()) return;
-			for (String uuid : remove) DeluxeTag.removePlayer(uuid);
+			for (UUID uuid : remove) plugin.getTagsHandler().removePlayer(uuid);
 		});
 	}
 }

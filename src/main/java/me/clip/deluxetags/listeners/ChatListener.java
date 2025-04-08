@@ -19,7 +19,7 @@ public class ChatListener implements Listener {
 	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
 	public void onChat(AsyncPlayerChatEvent event) {
 		String format = event.getFormat();
-		format = DeluxeTags.setPlaceholders(event.getPlayer(), format, null);
+		format = plugin.setPlaceholders(event.getPlayer(), format, null);
 		event.setFormat(format);
 	}
 }

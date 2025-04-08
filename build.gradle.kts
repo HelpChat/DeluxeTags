@@ -2,7 +2,7 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 plugins {
     java
-    id("com.gradleup.shadow") version "8.3.0"
+    id("com.gradleup.shadow") version "8.3.6"
 }
 
 val majorVersion = "1.8.3"
@@ -16,16 +16,15 @@ version = "$majorVersion-$buildVersion"
 repositories {
     mavenCentral()
 
-    maven("https://oss.sonatype.org/content/groups/public/")
     maven("https://hub.spigotmc.org/nexus/content/repositories/snapshots/")
-    maven("https://repo.extendedclip.com/content/repositories/placeholderapi/")
+    maven("https://repo.extendedclip.com/releases/")
 }
 
 dependencies {
-    compileOnly("org.spigotmc:spigot-api:1.21.1-R0.1-SNAPSHOT")
+    compileOnly("org.spigotmc:spigot-api:1.21.4-R0.1-SNAPSHOT")
     compileOnly("me.clip:placeholderapi:2.11.6")
 
-    implementation("com.github.cryptomorin:XSeries:11.2.1")
+    implementation("com.github.cryptomorin:XSeries:13.2.0")
 }
 
 tasks {

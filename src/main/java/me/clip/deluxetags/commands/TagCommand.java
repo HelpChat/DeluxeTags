@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import me.clip.deluxetags.DeluxeTags;
 import me.clip.deluxetags.config.Lang;
@@ -25,9 +26,9 @@ public class TagCommand implements CommandExecutor {
   }
 
   @Override
-  public boolean onCommand(final @NotNull CommandSender sender,
-                           final @NotNull Command command,
-                           final @NotNull String label,
+  public boolean onCommand(@NotNull final CommandSender sender,
+                           @NotNull final Command command,
+                           @NotNull final String label,
                            final String[] args) {
 
     final Player player = sender instanceof Player ? (Player) sender : null;
@@ -52,7 +53,7 @@ public class TagCommand implements CommandExecutor {
         return true;
       }
 
-      if (DeluxeTag.getLoadedTags() == null || DeluxeTag.getLoadedTags().isEmpty()) {
+      if (plugin.getTagsHandler().getLoadedTags() == null || plugin.getTagsHandler().getLoadedTags().isEmpty()) {
         MsgUtils.msg(player, Lang.CMD_NO_TAGS_LOADED.getConfigValue(null));
         return true;
       }
@@ -163,7 +164,7 @@ public class TagCommand implements CommandExecutor {
           return true;
         }
 
-        if (DeluxeTag.getLoadedTags() == null || DeluxeTag.getLoadedTags().isEmpty()) {
+        if (plugin.getTagsHandler().getLoadedTags() == null || plugin.getTagsHandler().getLoadedTags().isEmpty()) {
           MsgUtils.msg(sender, Lang.CMD_NO_TAGS_LOADED.getConfigValue(null));
           return true;
         }
@@ -171,9 +172,9 @@ public class TagCommand implements CommandExecutor {
         Collection<DeluxeTag> tags;
 
         if (player == null) {
-          tags = DeluxeTag.getLoadedTags();
+          tags = plugin.getTagsHandler().getLoadedTags();
         } else {
-          tags = DeluxeTag.getLoadedTags().stream().filter(tag -> tag.hasTagPermission(player)).collect(Collectors.toList());
+          tags = plugin.getTagsHandler().getLoadedTags().stream().filter(tag -> tag.hasPermissionToUse(player)).collect(Collectors.toList());
         }
 
         if (tags.isEmpty()) {
@@ -205,12 +206,12 @@ public class TagCommand implements CommandExecutor {
           return true;
         }
 
-        if (DeluxeTag.getLoadedTags() == null || DeluxeTag.getLoadedTags().isEmpty()) {
+        if (plugin.getTagsHandler().getLoadedTags() == null || plugin.getTagsHandler().getLoadedTags().isEmpty()) {
           MsgUtils.msg(sender, Lang.CMD_NO_TAGS_LOADED.getConfigValue(null));
           return true;
         }
 
-        final Collection<DeluxeTag> tags = DeluxeTag.getLoadedTags();
+        final Collection<DeluxeTag> tags = plugin.getTagsHandler().getLoadedTags();
         StringBuilder stringBuilder = new StringBuilder();
         for (DeluxeTag tag : tags) {
           stringBuilder
@@ -237,7 +238,7 @@ public class TagCommand implements CommandExecutor {
           return true;
         }
 
-        if (DeluxeTag.getLoadedTags() == null  || DeluxeTag.getLoadedTags().isEmpty()) {
+        if (plugin.getTagsHandler().getLoadedTags() == null  || plugin.getTagsHandler().getLoadedTags().isEmpty()) {
           MsgUtils.msg(sender, Lang.CMD_NO_TAGS_LOADED.getConfigValue(null));
           return true;
         }
@@ -250,7 +251,7 @@ public class TagCommand implements CommandExecutor {
           return true;
         }
 
-        Collection<DeluxeTag> tags = DeluxeTag.getLoadedTags().stream().filter(tag -> tag.hasTagPermission(target)).collect(Collectors.toList());
+        Collection<DeluxeTag> tags = plugin.getTagsHandler().getLoadedTags().stream().filter(tag -> tag.hasPermissionToUse(target)).collect(Collectors.toList());
         StringBuilder stringBuilder = new StringBuilder();
 
         if (tags.isEmpty()) {
@@ -295,12 +296,12 @@ public class TagCommand implements CommandExecutor {
         return true;
       }
 
-      if (DeluxeTag.getLoadedTags() == null || DeluxeTag.getLoadedTags().isEmpty()) {
+      if (plugin.getTagsHandler().getLoadedTags() == null || plugin.getTagsHandler().getLoadedTags().isEmpty()) {
         MsgUtils.msg(player, Lang.CMD_NO_TAGS_LOADED.getConfigValue(null));
         return true;
       }
 
-      List<String> availIdentifiers = DeluxeTag.getAvailableTagIdentifiers(player);
+      List<String> availIdentifiers = plugin.getTagsHandler().getAvailableTagIdentifiers(player);
       if (availIdentifiers == null || availIdentifiers.isEmpty()) {
         MsgUtils.msg(player, Lang.CMD_NO_TAGS_AVAILABLE.getConfigValue(null));
         return true;
@@ -311,11 +312,11 @@ public class TagCommand implements CommandExecutor {
         if (!availIdentifier.equalsIgnoreCase(identifier)) {
           continue;
         }
-        DeluxeTag tag = DeluxeTag.getLoadedTag(availIdentifier);
+        DeluxeTag tag = plugin.getTagsHandler().getLoadedTag(availIdentifier);
         if (tag == null) {
           continue;
         }
-        if (tag.setPlayerTag(player)) {
+        if (plugin.getTagsHandler().setPlayerTag(player, tag)) {
           plugin.saveTagIdentifier(player.getUniqueId().toString(), tag.getIdentifier());
           MsgUtils.msg(sender, Lang.CMD_TAG_SEL_SUCCESS.getConfigValue(new String[]{
               tag.getIdentifier(), tag.getDisplayTag(player)}));
@@ -345,7 +346,7 @@ public class TagCommand implements CommandExecutor {
       }
 
       String identifier = args[1];
-      if (DeluxeTag.getLoadedTag(identifier) != null) {
+      if (plugin.getTagsHandler().getLoadedTag(identifier) != null) {
         MsgUtils.msg(sender, Lang.CMD_ADMIN_CREATE_TAG_FAIL.getConfigValue(new String[]{
             identifier
         }));
@@ -361,8 +362,8 @@ public class TagCommand implements CommandExecutor {
         tagDisplay = tagDisplay.substring(0, tagDisplay.length() - 1) + " ";
       }
 
-      int priority = DeluxeTag.getLoadedTagsAmount() + 1;
-      Set<Integer> priorities = DeluxeTag.getLoadedPriorities();
+      int priority = plugin.getTagsHandler().getLoadedTagsAmount() + 1;
+      Set<Integer> priorities = plugin.getTagsHandler().getLoadedPriorities();
       if (priorities != null && !priorities.isEmpty()) {
         for (int i = 1; i <= priorities.size() + 1; i++) {
           if (priorities.contains(i)) continue;
@@ -372,7 +373,7 @@ public class TagCommand implements CommandExecutor {
       }
 
       DeluxeTag tag = new DeluxeTag(priority, identifier, tagDisplay, "");
-      tag.load();
+      plugin.getTagsHandler().loadTag(tag);
       plugin.getCfg().saveTag(priority, identifier, tagDisplay, "&f", "deluxetags.tag." + identifier);
       MsgUtils.msg(sender, Lang.CMD_ADMIN_CREATE_TAG_SUCCESS.getConfigValue(new String[]{
           identifier, tagDisplay
@@ -392,7 +393,7 @@ public class TagCommand implements CommandExecutor {
       }
 
       String identifier = args[1];
-      DeluxeTag tag = DeluxeTag.getLoadedTag(identifier);
+      DeluxeTag tag = plugin.getTagsHandler().getLoadedTag(identifier);
       if (tag == null) {
         MsgUtils.msg(sender, Lang.CMD_ADMIN_DELETE_TAG_FAIL.getConfigValue(new String[]{
             identifier
@@ -400,12 +401,12 @@ public class TagCommand implements CommandExecutor {
         return true;
       }
 
-      List<String> remove = tag.removeActivePlayers();
+      List<UUID> remove = plugin.getTagsHandler().removeActivePlayers(tag);
       if (remove != null && !remove.isEmpty()) {
         plugin.removeSavedTags(remove);
       }
 
-      if (tag.unload()) {
+      if (plugin.getTagsHandler().unloadTag(tag)) {
         plugin.getCfg().removeTag(identifier);
         MsgUtils.msg(sender, Lang.CMD_ADMIN_DELETE_TAG_SUCCESS.getConfigValue(new String[]{
             identifier
@@ -427,7 +428,7 @@ public class TagCommand implements CommandExecutor {
       }
 
       String identifier = args[1];
-      DeluxeTag tag = DeluxeTag.getLoadedTag(identifier);
+      DeluxeTag tag = plugin.getTagsHandler().getLoadedTag(identifier);
       if (tag == null) {
         MsgUtils.msg(sender, Lang.CMD_ADMIN_SET_DESCRIPTION_FAIL.getConfigValue(new String[]{
             identifier
@@ -461,7 +462,7 @@ public class TagCommand implements CommandExecutor {
         return true;
       }
 
-      DeluxeTag tag = DeluxeTag.getLoadedTag(args[1]);
+      DeluxeTag tag = plugin.getTagsHandler().getLoadedTag(args[1]);
       if (tag == null) {
         MsgUtils.msg(sender, Lang.CMD_ADMIN_SET_ORDER_FAIL.getConfigValue(new String[]{
             args[1]
@@ -479,18 +480,18 @@ public class TagCommand implements CommandExecutor {
         return true;
       }
 
-      if (DeluxeTag.getLoadedPriorities().contains(priority)) {
+      if (plugin.getTagsHandler().getLoadedPriorities().contains(priority)) {
         MsgUtils.msg(sender, Lang.CMD_ADMIN_SET_ORDER_ALREADY_EXISTS.getConfigValue(new String[]{
             args[2]
         }));
         return true;
       }
 
-      tag.unload();
+      plugin.getTagsHandler().unloadTag(tag);
       tag.setPriority(priority);
       plugin.getCfg().saveTag(tag.getPriority(), tag.getIdentifier(), tag.getDisplayTag(),
           tag.getDescription(), tag.getPermission());
-      tag.load();
+      plugin.getTagsHandler().loadTag(tag);
       MsgUtils.msg(sender, Lang.CMD_ADMIN_SET_ORDER_SUCCESS.getConfigValue(new String[]{
           args[2], args[1]
       }));
@@ -509,7 +510,7 @@ public class TagCommand implements CommandExecutor {
       }
 
       String identifier = args[1];
-      DeluxeTag tag = DeluxeTag.getLoadedTag(identifier);
+      DeluxeTag tag = plugin.getTagsHandler().getLoadedTag(identifier);
       if (tag == null) {
         MsgUtils.msg(sender, Lang.CMD_ADMIN_SET_DISPLAY_FAIL.getConfigValue(new String[]{
             identifier
@@ -547,7 +548,7 @@ public class TagCommand implements CommandExecutor {
         return true;
       }
 
-      if (DeluxeTag.getLoadedTags() == null || DeluxeTag.getLoadedTags().isEmpty()) {
+      if (plugin.getTagsHandler().getLoadedTags() == null || plugin.getTagsHandler().getLoadedTags().isEmpty()) {
         MsgUtils.msg(sender, Lang.CMD_NO_TAGS_LOADED.getConfigValue(null));
         return true;
       }
@@ -560,7 +561,7 @@ public class TagCommand implements CommandExecutor {
         return true;
       }
 
-      List<String> availIdentifiers = DeluxeTag.getAvailableTagIdentifiers(target);
+      List<String> availIdentifiers = plugin.getTagsHandler().getAvailableTagIdentifiers(target);
       if (availIdentifiers == null || availIdentifiers.isEmpty()) {
         MsgUtils.msg(sender, Lang.CMD_ADMIN_SET_NO_TAGS.getConfigValue(new String[]{
             target.getName()
@@ -573,11 +574,11 @@ public class TagCommand implements CommandExecutor {
         if (!availIdentifier.equalsIgnoreCase(identifier)) {
           continue;
         }
-        DeluxeTag tag = DeluxeTag.getLoadedTag(availIdentifier);
+        DeluxeTag tag = plugin.getTagsHandler().getLoadedTag(availIdentifier);
         if (tag == null) {
           continue;
         }
-        tag.setPlayerTag(target);
+        plugin.getTagsHandler().setPlayerTag(target, tag);
         plugin.saveTagIdentifier(target.getUniqueId().toString(), tag.getIdentifier());
         MsgUtils.msg(sender, Lang.CMD_ADMIN_SET_SUCCESS.getConfigValue(new String[]{
             target.getName(), tag.getIdentifier(), tag.getDisplayTag(target)
@@ -608,7 +609,7 @@ public class TagCommand implements CommandExecutor {
         return true;
       }
 
-      if (DeluxeTag.getLoadedTags() == null || DeluxeTag.getLoadedTags().isEmpty()) {
+      if (plugin.getTagsHandler().getLoadedTags() == null || plugin.getTagsHandler().getLoadedTags().isEmpty()) {
         MsgUtils.msg(sender, Lang.CMD_NO_TAGS_LOADED.getConfigValue(null));
         return true;
       }
@@ -621,15 +622,15 @@ public class TagCommand implements CommandExecutor {
         return true;
       }
 
-      String tag = DeluxeTag.getPlayerTagIdentifier(target);
-      if (tag == null || DeluxeTag.getPlayerDisplayTag(target).isEmpty()) {
+      String tag = plugin.getTagsHandler().getPlayerTagIdentifier(target);
+      if (tag == null || plugin.getTagsHandler().getPlayerDisplayTag(target).isEmpty()) {
         MsgUtils.msg(sender, Lang.CMD_ADMIN_CLEAR_NO_TAG_SET.getConfigValue(new String[]{
             target.getName()
         }));
         return true;
       }
 
-      plugin.getDummy().setPlayerTag(target);
+      plugin.getTagsHandler().setPlayerTag(target, plugin.getDummyTag());
       plugin.removeSavedTag(target.getUniqueId().toString());
 
       MsgUtils.msg(sender, Lang.CMD_ADMIN_CLEAR_SUCCESS.getConfigValue(new String[]{
@@ -656,11 +657,12 @@ public class TagCommand implements CommandExecutor {
       plugin.saveConfig();
       plugin.getCfg().reload();
 
-      DeluxeTag.unloadData();
+      plugin.getTagsHandler().unloadData();
       int loaded = plugin.getCfg().loadTags();
 
-      MsgUtils.setPattern(plugin.getCfg().legacyHex());
-      if (plugin.getCfg().legacyHex()) {
+      final boolean useLegacyHexPattern = plugin.getCfg().legacyHex();
+      MsgUtils.setPattern(useLegacyHexPattern);
+      if (useLegacyHexPattern) {
         plugin.getLogger().info("Using legacy hex colors format: &#aaFF00");
       } else {
         plugin.getLogger().info("Using standard hex colors format: #aaFF00");
@@ -676,19 +678,19 @@ public class TagCommand implements CommandExecutor {
       plugin.reloadGUIOptions();
 
       for (Player online : Bukkit.getServer().getOnlinePlayers()) {
-        if (DeluxeTag.hasTagLoaded(online)) {
+        if (plugin.getTagsHandler().hasTagLoaded(online)) {
           continue;
         }
         String identifier = plugin.getSavedTagIdentifier(online.getUniqueId().toString());
         if (identifier == null) {
-          plugin.getDummy().setPlayerTag(online);
+          plugin.getTagsHandler().setPlayerTag(online, plugin.getDummyTag());
           continue;
         }
-        DeluxeTag loadedTag = DeluxeTag.getLoadedTag(identifier);
-        if (loadedTag != null && loadedTag.hasTagPermission(online)) {
-          loadedTag.setPlayerTag(online);
+        DeluxeTag loadedTag = plugin.getTagsHandler().getLoadedTag(identifier);
+        if (loadedTag != null && loadedTag.hasPermissionToUse(online)) {
+          plugin.getTagsHandler().setPlayerTag(online, loadedTag);
         } else {
-          plugin.getDummy().setPlayerTag(online);
+          plugin.getTagsHandler().setPlayerTag(online, plugin.getDummyTag());
         }
       }
 

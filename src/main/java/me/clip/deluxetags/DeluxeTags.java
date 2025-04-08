@@ -1,6 +1,8 @@
 package me.clip.deluxetags;
 
 import java.util.List;
+import java.util.UUID;
+
 import me.clip.deluxetags.commands.TagCommand;
 import me.clip.deluxetags.config.ConfigWrapper;
 import me.clip.deluxetags.config.Lang;
@@ -14,6 +16,7 @@ import me.clip.deluxetags.listeners.JoinListener;
 import me.clip.deluxetags.listeners.PlayerListener;
 import me.clip.deluxetags.placeholders.TagPlaceholders;
 import me.clip.deluxetags.tags.DeluxeTag;
+import me.clip.deluxetags.tags.DeluxeTagsHandler;
 import me.clip.deluxetags.tasks.CleanupTask;
 import me.clip.deluxetags.updater.UpdateChecker;
 import me.clip.deluxetags.utils.MsgUtils;
@@ -31,35 +34,29 @@ import org.bukkit.scheduler.BukkitTask;
  * @author Ryan McCarthy
  */
 public class DeluxeTags extends JavaPlugin {
-	
-	private TagConfig cfg;
-	
-	private ConfigWrapper messages;
-	
-	private ConfigWrapper playerFile;
-	
-	private GUIHandler guiHandler;
-	
-	private GUIOptions guiOptions;
 
-	private DeluxeTag dummy;
-	
+	private static final DeluxeTag DUMMY_TAG = new DeluxeTag(420691337, "", "", "");
+
+	private DeluxeTagsHandler tagsHandler;
+	private TagConfig cfg;
+	private ConfigWrapper messages;
+	private ConfigWrapper playerFile;
+	private GUIHandler guiHandler;
+	private GUIOptions guiOptions;
 	private BukkitTask cleanupTask = null;
 
 	private static boolean papi;
 
 	@Override
 	public void onEnable() {
-		
-		dummy = new DeluxeTag(420691337, "", "", "");
-		
+		tagsHandler = new DeluxeTagsHandler();
+
 		cfg = new TagConfig(this);
-		
 		cfg.loadDefConfig();
 
-		MsgUtils.setPattern(cfg.legacyHex());
-
-		if (cfg.legacyHex()) {
+		final boolean useLegacyHexPattern = cfg.legacyHex();
+		MsgUtils.setPattern(useLegacyHexPattern);
+		if (useLegacyHexPattern) {
 			getLogger().info("Using legacy hex colors format: &#aaFF00");
 		} else {
 			getLogger().info("Using standard hex colors format: #aaFF00");
@@ -154,19 +151,22 @@ public class DeluxeTags extends JavaPlugin {
 			cleanupTask = null;	
 		}
 		
-		DeluxeTag.unloadData();
+		this.getTagsHandler().unloadData();
 		TagGUI.unload();
 		
 		guiOptions = null;
-		dummy = null;
+	}
+
+	public DeluxeTagsHandler getTagsHandler() {
+		return tagsHandler;
 	}
 
 	public TagConfig getCfg() {
 		return cfg;
 	}
 
-	public DeluxeTag getDummy() {
-		return dummy;
+	public DeluxeTag getDummyTag() {
+		return DUMMY_TAG;
 	}
 
 	public GUIHandler getGUIHandler() {
@@ -211,7 +211,7 @@ public class DeluxeTags extends JavaPlugin {
 		}
 	}
 	
-	public void removeSavedTags(List<String> uuids) {
+	public void removeSavedTags(List<UUID> uuids) {
 		boolean requiresSave = false;
 		FileConfiguration config = playerFile.getConfig();
 
@@ -219,9 +219,9 @@ public class DeluxeTags extends JavaPlugin {
 			return;
 		}
 
-		for (String uuid : uuids) {
-			if (config.contains(uuid)) {
-				config.set(uuid, null);
+		for (UUID uuid : uuids) {
+			if (config.contains(uuid.toString())) {
+				config.set(uuid.toString(), null);
 				requiresSave = true;
 			}
 		}
@@ -246,19 +246,19 @@ public class DeluxeTags extends JavaPlugin {
 		guiOptions = new GUIOptions(this);
 	}
 
-	public static String setPlaceholders(Player p, String s, DeluxeTag tag) {
+	public String setPlaceholders(Player p, String s, DeluxeTag tag) {
 		if (tag == null) {
-			tag = DeluxeTag.getTag(p.getUniqueId().toString());
+			tag = this.getTagsHandler().getTag(p.getUniqueId());
 		}
 		
 		if (tag == null) {
-			tag = new DeluxeTag(1, "", "", "");
+			tag = DUMMY_TAG;
 		}
 
-		List<String> tags = DeluxeTag.getAvailableTagIdentifiers(p);
+		List<String> tags = this.getTagsHandler().getAvailableTagIdentifiers(p);
 		String tagId = tag.getIdentifier() != null ? tag.getIdentifier() : "";
 		String amount = tags != null ? String.valueOf(tags.size()) : "0";
-		String availability = tag.hasTagPermission(p)
+		String availability = tag.hasPermissionToUse(p)
 			? Lang.GUI_PLACEHOLDERS_TAG_AVAILABLE.getConfigValue(null)
 			: Lang.GUI_PLACEHOLDERS_TAG_UNAVAILABLE.getConfigValue(null);
 
