@@ -76,7 +76,7 @@ public class GUIHandler implements Listener {
                 return;
             }
 
-            DeluxeTag tag = DeluxeTag.getLoadedTag(id);
+            DeluxeTag tag = plugin.getTagsHandler().getTagByIdentifier(id);
             if (tag == null) {
                 return;
             }
@@ -90,16 +90,17 @@ public class GUIHandler implements Listener {
                 return;
             }
 
-            if (!tag.setPlayerTag(p)) {
+            if (!plugin.getTagsHandler().setPlayerTag(p, tag)) {
                 return;
             }
 
             TagGUI.close(p);
             p.closeInventory();
 
-            sms(p, Lang.GUI_TAG_SELECTED.getConfigValue(new String[]{
-                id, DeluxeTag.getPlayerDisplayTag(p)
-            }));
+            tag = plugin.getTagsHandler().getPlayerActiveTag(p);
+            final String displayName = tag == null ? "" : tag.getDisplayTag(p);
+
+            sms(p, Lang.GUI_TAG_SELECTED.getConfigValue(new String[]{id, displayName}));
 
             plugin.saveTagIdentifier(p.getUniqueId().toString(), id);
 
@@ -108,7 +109,8 @@ public class GUIHandler implements Listener {
             p.closeInventory();
 
         } else if (slot == 49) {
-            if (DeluxeTag.getPlayerDisplayTag(p).isEmpty()) {
+            final DeluxeTag tag = plugin.getTagsHandler().getPlayerActiveTag(p);
+            if (tag == null || tag.getDisplayTag(p).isEmpty() || plugin.getTagsHandler().isUsingDefaultTag(p) || plugin.getTagsHandler().isUsingForcedTag(p)) {
                 p.updateInventory();
                 return;
             }
@@ -116,7 +118,7 @@ public class GUIHandler implements Listener {
             TagGUI.close(p);
             p.closeInventory();
 
-            plugin.getDummy().setPlayerTag(p);
+            plugin.getTagsHandler().setPlayerTag(p, plugin.getDummyTag());
             plugin.removeSavedTag(p.getUniqueId().toString());
 
             sms(p, Lang.GUI_TAG_DISABLED.getConfigValue(null));
@@ -143,8 +145,8 @@ public class GUIHandler implements Listener {
     }
 
     public boolean openMenu(Player p, int page) {
-        List<String> ids = DeluxeTag.getAllVisibleTagIdentifiers(p);
-        if (ids == null || ids.isEmpty()) {
+        List<String> ids = plugin.getTagsHandler().getPlayerVisibleTagIdentifiers(p);
+        if (ids.isEmpty()) {
             return false;
         }
 
@@ -154,7 +156,7 @@ public class GUIHandler implements Listener {
         boolean hasNextPage = page < pages;
 
         String title = options.getMenuName();
-        title = replacePageNumbers(DeluxeTags.setPlaceholders(p, title, null), page, hasNextPage);
+        title = replacePageNumbers(plugin.setPlaceholders(p, title, null), page, hasNextPage);
         if (title.length() > 32) {
             title = title.substring(0, 31);
         }
@@ -173,19 +175,19 @@ public class GUIHandler implements Listener {
             }
 
             tags.put(count, id);
-            DeluxeTag tag = DeluxeTag.getLoadedTag(id);
+            DeluxeTag tag = plugin.getTagsHandler().getTagByIdentifier(id);
             if (tag == null) {
-                tag = new DeluxeTag(1, "", "", "");
+                tag = plugin.getDummyTag();
             }
 
-            if (tag.hasTagPermission(p)) {
+            if (tag.hasPermissionToUse(p)) {
                 gui.setItem(
                     count,
                     TagGUI.createItem(
                         options.getTagSelectItem().getMaterial(),
                         options.getTagSelectItem().getData(),
                         1,
-                        DeluxeTags.setPlaceholders(p, replacePageNumbers(options.getTagSelectItem().getName(), page, hasNextPage), tag),
+                        plugin.setPlaceholders(p, replacePageNumbers(options.getTagSelectItem().getName(), page, hasNextPage), tag),
                         processLore(options.getTagSelectItem().getLore(), p, tag, page, hasNextPage)
                     )
                 );
@@ -196,7 +198,7 @@ public class GUIHandler implements Listener {
                         options.getTagVisibleItem().getMaterial(),
                         options.getTagVisibleItem().getData(),
                         1,
-                        DeluxeTags.setPlaceholders(p, replacePageNumbers(options.getTagVisibleItem().getName(), page, hasNextPage), tag),
+                        plugin.setPlaceholders(p, replacePageNumbers(options.getTagVisibleItem().getName(), page, hasNextPage), tag),
                         processLore(options.getTagVisibleItem().getLore(), p, tag, page, hasNextPage)
                     )
                 );
@@ -209,17 +211,17 @@ public class GUIHandler implements Listener {
             options.getDividerItem().getMaterial(),
             options.getDividerItem().getData(),
             1,
-            DeluxeTags.setPlaceholders(p, replacePageNumbers(options.getDividerItem().getName(), page, hasNextPage), null),
+            plugin.setPlaceholders(p, replacePageNumbers(options.getDividerItem().getName(), page, hasNextPage), null),
             processLore(options.getDividerItem().getLore(), p, null, page, hasNextPage)
         );
         for (int b = 36; b < 45; b++) {
             gui.setItem(b, divider);
         }
 
-        String currentTag = DeluxeTag.getPlayerTagIdentifier(p);
+        final DeluxeTag currentTag = plugin.getTagsHandler().getPlayerActiveTag(p);
         DisplayItem currentTagItem;
 
-        if (currentTag == null || currentTag.isEmpty()) {
+        if (currentTag == null || currentTag.getIdentifier().isEmpty()) {
             currentTagItem = options.getNoTagItem();
         } else {
             currentTagItem = options.getHasTagItem();
@@ -229,7 +231,7 @@ public class GUIHandler implements Listener {
             currentTagItem.getMaterial(),
             currentTagItem.getData(),
             1,
-            DeluxeTags.setPlaceholders(p, replacePageNumbers(currentTagItem.getName(), page, hasNextPage), null),
+            plugin.setPlaceholders(p, replacePageNumbers(currentTagItem.getName(), page, hasNextPage), null),
             processLore(currentTagItem.getLore(), p, null, page, hasNextPage)
         );
         gui.setItem(49, info);
@@ -238,7 +240,7 @@ public class GUIHandler implements Listener {
             options.getExitItem().getMaterial(),
             options.getExitItem().getData(),
             1,
-            DeluxeTags.setPlaceholders(p, replacePageNumbers(options.getExitItem().getName(), page, hasNextPage), null),
+            plugin.setPlaceholders(p, replacePageNumbers(options.getExitItem().getName(), page, hasNextPage), null),
             processLore(options.getExitItem().getLore(), p, null, page, hasNextPage)
         );
         gui.setItem(48, exit);
@@ -249,7 +251,7 @@ public class GUIHandler implements Listener {
                 options.getPreviousPageItem().getMaterial(),
                 options.getPreviousPageItem().getData(),
                 1,
-                DeluxeTags.setPlaceholders(p, replacePageNumbers(options.getPreviousPageItem().getName().replace("%page%", String.valueOf(page-1)), page, hasNextPage), null),
+                plugin.setPlaceholders(p, replacePageNumbers(options.getPreviousPageItem().getName().replace("%page%", String.valueOf(page-1)), page, hasNextPage), null),
                 processLore(options.getPreviousPageItem().getLore(), p, null, page, hasNextPage)
             );
             gui.setItem(45, previousPage);
@@ -260,7 +262,7 @@ public class GUIHandler implements Listener {
                 options.getNextPageItem().getMaterial(),
                 options.getNextPageItem().getData(),
                 1,
-                DeluxeTags.setPlaceholders(p, replacePageNumbers(options.getNextPageItem().getName().replace("%page%", String.valueOf(page+1)), page, true), null),
+                plugin.setPlaceholders(p, replacePageNumbers(options.getNextPageItem().getName().replace("%page%", String.valueOf(page+1)), page, true), null),
                 processLore(options.getNextPageItem().getLore(), p, null, page, true)
             );
             gui.setItem(53, nextPage);
@@ -293,7 +295,7 @@ public class GUIHandler implements Listener {
         if (originalLore != null && !originalLore.isEmpty()) {
             processedLore = new ArrayList<>();
             for (String line : originalLore) {
-                line = replacePageNumbers(DeluxeTags.setPlaceholders(player, line, tag), page, hasNextPage);
+                line = replacePageNumbers(plugin.setPlaceholders(player, line, tag), page, hasNextPage);
                 if (line.contains("\n")) {
                     processedLore.addAll(Arrays.asList(line.split("\n")));
                 } else {

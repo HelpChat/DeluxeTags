@@ -7,6 +7,7 @@ import me.clip.placeholderapi.PlaceholderAPIPlugin;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 
 public class TagPlaceholders extends PlaceholderExpansion {
     DeluxeTags plugin;
@@ -16,17 +17,17 @@ public class TagPlaceholders extends PlaceholderExpansion {
     }
 
     @Override
-    public String getIdentifier() {
+    public @NotNull String getIdentifier() {
         return "deluxetags";
     }
 
     @Override
-    public String getAuthor() {
+    public @NotNull String getAuthor() {
         return plugin.getDescription().getAuthors().get(0);
     }
 
     @Override
-    public String getVersion() {
+    public @NotNull String getVersion() {
         return plugin.getDescription().getVersion();
     }
 
@@ -38,7 +39,7 @@ public class TagPlaceholders extends PlaceholderExpansion {
     @Override
     public String onRequest(OfflinePlayer offlinePlayer, String params) {
         if (params.startsWith("tag_")) {
-            DeluxeTag tag = DeluxeTag.getLoadedTag(params.replace("tag_", ""));
+            DeluxeTag tag = plugin.getTagsHandler().getTagByIdentifier(params.substring(4));
             if (tag == null) {
                 return "invalid tag";
             }
@@ -46,7 +47,7 @@ public class TagPlaceholders extends PlaceholderExpansion {
         }
 
         if (params.startsWith("description_")) {
-            DeluxeTag tag = DeluxeTag.getLoadedTag(params.replace("description_", ""));
+            DeluxeTag tag = plugin.getTagsHandler().getTagByIdentifier(params.substring(12));
             if (tag == null) {
                 return "invalid tag";
             }
@@ -54,7 +55,7 @@ public class TagPlaceholders extends PlaceholderExpansion {
         }
 
         if (params.startsWith("order_")) {
-            DeluxeTag tag = DeluxeTag.getLoadedTag(params.replace("order_", ""));
+            DeluxeTag tag = plugin.getTagsHandler().getTagByIdentifier(params.substring(6));
             if (tag == null) {
                 return "invalid tag";
             }
@@ -68,25 +69,42 @@ public class TagPlaceholders extends PlaceholderExpansion {
         Player player = offlinePlayer.getPlayer();
 
         if (params.startsWith("has_tag_")) {
-            DeluxeTag tag = DeluxeTag.getLoadedTag(params.replace("has_tag_", ""));
+            DeluxeTag tag = plugin.getTagsHandler().getTagByIdentifier(params.substring(8));
             if (tag == null) {
                 return "invalid tag";
             }
-            return tag.hasTagPermission(player) ? PlaceholderAPIPlugin.booleanTrue() : PlaceholderAPIPlugin.booleanFalse();
+            return tag.hasPermissionToUse(player) ? PlaceholderAPIPlugin.booleanTrue() : PlaceholderAPIPlugin.booleanFalse();
         }
 
+        final DeluxeTag tag = plugin.getTagsHandler().getPlayerActiveTag(player);
+
         switch (params) {
-            case "order":
-                return DeluxeTag.getPlayerTagPriority(player) != -1 ? String.valueOf(DeluxeTag.getPlayerTagPriority(player)) : "";
-            case "description":
-                return MsgUtils.color(DeluxeTag.getPlayerTagDescription(player));
-            case "identifier":
-                return DeluxeTag.getPlayerTagIdentifier(player) != null ? MsgUtils.color(DeluxeTag.getPlayerTagIdentifier(player)) : "";
             case "amount":
-                return DeluxeTag.getAvailableTagIdentifiers(player) != null ? String.valueOf(DeluxeTag.getAvailableTagIdentifiers(player).size()) : "0";
+                return String.valueOf(plugin.getTagsHandler().getPlayerAvailableTagIdentifiers(player).size());
+            case "order":
+                if (tag == null) {
+                    return "";
+                }
+
+                final int priority = tag.getPriority();
+                return priority != -1 ? String.valueOf(priority) : "";
+            case "description":
+                if (tag == null) {
+                    return "";
+                }
+                return MsgUtils.color(tag.getDescription(player));
+            case "identifier":
+                if (tag == null) {
+                    return "";
+                }
+                return MsgUtils.color(tag.getIdentifier());
             case "tag":
-                return MsgUtils.color(DeluxeTag.getPlayerDisplayTag(player));
+                if (tag == null) {
+                    return "";
+                }
+                return MsgUtils.color(tag.getDisplayTag(player));
         }
+
         return null;
     }
 }

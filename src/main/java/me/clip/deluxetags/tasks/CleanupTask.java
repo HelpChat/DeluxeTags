@@ -2,36 +2,47 @@ package me.clip.deluxetags.tasks;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import me.clip.deluxetags.DeluxeTags;
-import me.clip.deluxetags.tags.DeluxeTag;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 public class CleanupTask implements Runnable {
 	
 	DeluxeTags plugin;
-	
+
+	/**
+	 * This task removes active tags from players who are no longer online.
+	 */
 	public CleanupTask(DeluxeTags instance) {
 		plugin = instance;
 	}
 	
 	@Override
 	public void run() {
-		if (DeluxeTag.getLoadedPlayers() == null || DeluxeTag.getLoadedPlayers().isEmpty()) {
+		final Set<UUID> playersWithActiveTags = plugin.getTagsHandler().getPlayersWithActiveTags();
+        if (playersWithActiveTags.isEmpty()) {
 			return;
 		}
 
-		List<String> remove = new ArrayList<>();
+		final List<UUID> toRemove = new ArrayList<>();
 
 		Bukkit.getScheduler().runTask(plugin, () -> {
-			for (String uuid: DeluxeTag.getLoadedPlayers()) {
-				Player player = Bukkit.getPlayer(UUID.fromString(uuid));
-				if (player == null) remove.add(uuid);
+			for (final UUID uuid: playersWithActiveTags) {
+				final Player player = Bukkit.getPlayer(uuid);
+				if (player == null) {
+					toRemove.add(uuid);
+				}
 			}
 
-			if (remove.isEmpty()) return;
-			for (String uuid : remove) DeluxeTag.removePlayer(uuid);
+			if (toRemove.isEmpty()) {
+				return;
+			}
+
+			for (final UUID uuid : toRemove) {
+				plugin.getTagsHandler().removeActiveTagFromPlayer(uuid);
+			}
 		});
 	}
 }

@@ -214,7 +214,7 @@ public class TagConfig {
 
       DeluxeTag t = new DeluxeTag(priority, identifier, tag, description);
       t.setPermission(config.getString("deluxetags." + identifier + ".permission", "deluxetags.tag." + identifier));
-      t.load();
+      plugin.getTagsHandler().loadTag(t);
       loaded++;
     }
 
