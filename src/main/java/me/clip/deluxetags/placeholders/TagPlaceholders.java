@@ -39,7 +39,7 @@ public class TagPlaceholders extends PlaceholderExpansion {
     @Override
     public String onRequest(OfflinePlayer offlinePlayer, String params) {
         if (params.startsWith("tag_")) {
-            DeluxeTag tag = plugin.getTagsHandler().getLoadedTag(params.replace("tag_", ""));
+            DeluxeTag tag = plugin.getTagsHandler().getTagByIdentifier(params.substring(4));
             if (tag == null) {
                 return "invalid tag";
             }
@@ -47,7 +47,7 @@ public class TagPlaceholders extends PlaceholderExpansion {
         }
 
         if (params.startsWith("description_")) {
-            DeluxeTag tag = plugin.getTagsHandler().getLoadedTag(params.replace("description_", ""));
+            DeluxeTag tag = plugin.getTagsHandler().getTagByIdentifier(params.substring(12));
             if (tag == null) {
                 return "invalid tag";
             }
@@ -55,7 +55,7 @@ public class TagPlaceholders extends PlaceholderExpansion {
         }
 
         if (params.startsWith("order_")) {
-            DeluxeTag tag = plugin.getTagsHandler().getLoadedTag(params.replace("order_", ""));
+            DeluxeTag tag = plugin.getTagsHandler().getTagByIdentifier(params.substring(6));
             if (tag == null) {
                 return "invalid tag";
             }
@@ -69,25 +69,42 @@ public class TagPlaceholders extends PlaceholderExpansion {
         Player player = offlinePlayer.getPlayer();
 
         if (params.startsWith("has_tag_")) {
-            DeluxeTag tag = plugin.getTagsHandler().getLoadedTag(params.replace("has_tag_", ""));
+            DeluxeTag tag = plugin.getTagsHandler().getTagByIdentifier(params.substring(8));
             if (tag == null) {
                 return "invalid tag";
             }
             return tag.hasPermissionToUse(player) ? PlaceholderAPIPlugin.booleanTrue() : PlaceholderAPIPlugin.booleanFalse();
         }
 
+        final DeluxeTag tag = plugin.getTagsHandler().getPlayerActiveTag(player);
+
         switch (params) {
-            case "order":
-                return plugin.getTagsHandler().getPlayerTagPriority(player) != -1 ? String.valueOf(plugin.getTagsHandler().getPlayerTagPriority(player)) : "";
-            case "description":
-                return MsgUtils.color(plugin.getTagsHandler().getPlayerTagDescription(player));
-            case "identifier":
-                return plugin.getTagsHandler().getPlayerTagIdentifier(player) != null ? MsgUtils.color(plugin.getTagsHandler().getPlayerTagIdentifier(player)) : "";
             case "amount":
-                return plugin.getTagsHandler().getAvailableTagIdentifiers(player) != null ? String.valueOf(plugin.getTagsHandler().getAvailableTagIdentifiers(player).size()) : "0";
+                return String.valueOf(plugin.getTagsHandler().getPlayerAvailableTagIdentifiers(player).size());
+            case "order":
+                if (tag == null) {
+                    return "";
+                }
+
+                final int priority = tag.getPriority();
+                return priority != -1 ? String.valueOf(priority) : "";
+            case "description":
+                if (tag == null) {
+                    return "";
+                }
+                return MsgUtils.color(tag.getDescription(player));
+            case "identifier":
+                if (tag == null) {
+                    return "";
+                }
+                return MsgUtils.color(tag.getIdentifier());
             case "tag":
-                return MsgUtils.color(plugin.getTagsHandler().getPlayerDisplayTag(player));
+                if (tag == null) {
+                    return "";
+                }
+                return MsgUtils.color(tag.getDisplayTag(player));
         }
+
         return null;
     }
 }

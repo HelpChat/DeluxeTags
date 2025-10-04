@@ -1,18 +1,16 @@
 package me.clip.deluxetags.tags;
 
 import me.clip.deluxetags.DeluxeTags;
-import me.clip.placeholderapi.PlaceholderAPI;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
@@ -20,28 +18,19 @@ import java.util.stream.Collectors;
 
 public class DeluxeTagsHandler {
 
+    private final DeluxeTags plugin;
+
     private final TreeMap<Integer, DeluxeTag> configTags = new TreeMap<>();
     private final Map<UUID, DeluxeTag> playerTags = new HashMap<>();
 
-    /**
-     * load this tag into the tag list
-     */
-    public void loadTag(@NotNull final DeluxeTag tag) {
-        configTags.put(tag.getPriority(), tag);
+    private final List<UUID> playersUsingDefaultTag = new ArrayList<>();
+    private final List<UUID> playersUsingForcedTag = new ArrayList<>();
+
+    public DeluxeTagsHandler(@NotNull final DeluxeTags plugin) {
+        this.plugin = plugin;
     }
 
-    /**
-     * unload this tag from the tags list if it is loaded
-     * @return true if it was loaded and removed, false otherwise
-     */
-    public boolean unloadTag(@NotNull final DeluxeTag tag) {
-        if (configTags.isEmpty() || !configTags.containsKey(tag.getPriority())) {
-            return false;
-        }
-
-        configTags.remove(tag.getPriority());
-        return true;
-    }
+    // Player functions
 
     /**
      * set a players active tag to this tag
@@ -63,46 +52,26 @@ public class DeluxeTagsHandler {
         }
 
         playerTags.put(uuid, tag);
+        playersUsingDefaultTag.remove(uuid);
+        playersUsingForcedTag.remove(uuid);
         return true;
     }
 
     /**
-     * remove this tag from any player who has it set as the active tag
-     * @return list of uuids that were removed from this tag
+     * check if a player has an active tag
+     * @param player Player to check for
+     * @return true if player has an active tag
      */
-    public List<UUID> removeActivePlayers(@NotNull final DeluxeTag tag) {
-        if (playerTags.isEmpty()) {
-            return null;
-        }
-
-        List<UUID> remove = new ArrayList<>();
-
-        for (UUID uuid : playerTags.keySet()) {
-            if (getPlayerDisplayTag(uuid).equals(tag.getDisplayTag())) {
-                remove.add(uuid);
-                removePlayer(uuid);
-            }
-        }
-
-        return remove;
+    public boolean playerHasActiveTag(@NotNull final Player player) {
+        return playerHasActiveTag(player.getUniqueId());
     }
-
-
-    /**
-     * get list of DeluxeTag objects that have been loaded
-     * @return null if no tags have been loaded
-     */
-    public Collection<DeluxeTag> getLoadedTags() {
-        return configTags.values();
-    }
-
 
     /**
      * check if a player has an active tag
-     * @param uuid Player uuid to check
-     * @return true if uuid is loaded in the playerTags map
+     * @param uuid UUID of player to check for
+     * @return true if player has an active tag
      */
-    public boolean hasTagLoaded(@NotNull final UUID uuid) {
+    public boolean playerHasActiveTag(@NotNull final UUID uuid) {
         if (playerTags.isEmpty()) {
             return false;
         }
@@ -110,199 +79,188 @@ public class DeluxeTagsHandler {
         return playerTags.containsKey(uuid);
     }
 
-
     /**
-     * check if a player has a tag loaded in the playerTags map
-     * @param player Player to check
-     * @return true if player is loaded in the playerTags map
+     * get a player's active tag
+     * @param player Player to get the tag for
+     * @return null if player has no active tag
      */
-    public boolean hasTagLoaded(@NotNull final Player player) {
-        return hasTagLoaded(player.getUniqueId());
+    public @Nullable DeluxeTag getPlayerActiveTag(@NotNull final Player player) {
+        return getPlayerActiveTag(player.getUniqueId());
     }
 
     /**
-     * get a players current tag identifier
-     * @param player Player to get the identifier for
-     * @return null if player has no loaded tag
+     * get a player's active tag
+     * @param uuid UUID of player to get the tag for
+     * @return null if player has no active tag
      */
-    public String getPlayerTagIdentifier(@NotNull final Player player) {
-        return getPlayerTagIdentifier(player.getUniqueId());
-    }
-
-    /**
-     * get a players current tag
-     * @param uuid Players uuid to get the tag for
-     * @return null if player has no loaded tag
-     */
-    public DeluxeTag getTag(@NotNull final UUID uuid) {
-        if (playerTags.isEmpty() || !playerTags.containsKey(uuid) || playerTags.get(uuid) == null) {
-            return null;
-        }
-
+    public @Nullable DeluxeTag getPlayerActiveTag(@NotNull final UUID uuid) {
         return playerTags.get(uuid);
     }
 
     /**
-     * get a players current tag
+     * trigger a tag update for a player. will attempt to set player's forced tag, active tag or default tag
+     * @param player Player to update the tag for
+     */
+    public void updateTagForPlayer(@NotNull final Player player) {
+        // Forced tags take priority over all other tags
+        if (plugin.getCfg().forceTags() && setForcedTag(player)) {
+            return;
+        }
+
+        // If player has an active tag, and permissions to use it, keep that tag
+        final DeluxeTag currentTag = getPlayerActiveTag(player);
+        if (currentTag != null && currentTag != plugin.getDummyTag() && currentTag.hasPermissionToUse(player)) {
+            return;
+        }
+
+        // If player has an active tag (saved on file), and permissions to use it, use that tag
+        if (setSavedTag(player)) {
+            return;
+        }
+
+        // If the player has no forced or active tag, try to use a default tag, if the player has one
+        if (setDefaultTag(player)) {
+            return;
+        }
+
+        // The player has no forced, active or default tag. Use the dummy tag TODO: NOT SURE WHY THE DUMMY TAG EXISTS?
+        setPlayerTag(player, plugin.getDummyTag());
+        plugin.removeSavedTag(player.getUniqueId().toString());
+    }
+
+
+    // Tag functions
+
+    /**
+     * load this tag into the tag list. if a tag with the same priority already exists, it will be overwritten
+     */
+    public void loadTag(@NotNull final DeluxeTag tag) {
+        configTags.put(tag.getPriority(), tag);
+    }
+
+    /**
+     * unload this tag if it is loaded. priority is used to identify the tag
+     * @return true if it was loaded and removed, false otherwise
+     */
+    public boolean unloadTag(@NotNull final DeluxeTag tag) {
+        return configTags.remove(tag.getPriority()) != null;
+    }
+
+    /**
+     * remove this tag from any player who has it set as the active tag
+     * @return list of uuids of players that had the tag removed
+     */
+    public List<UUID> removeActivePlayers(@NotNull final DeluxeTag tag) {
+        if (playerTags.isEmpty()) {
+            return null;
+        }
+
+        final List<UUID> removedFrom = new ArrayList<>();
+
+        for (final UUID uuid: getPlayersWithActiveTags()) {
+            final DeluxeTag activeTag = getPlayerActiveTag(uuid);
+            if (activeTag == null || !activeTag.getIdentifier().equals(tag.getIdentifier())) {
+                continue;
+            }
+
+            removedFrom.add(uuid);
+            removeActiveTagFromPlayer(uuid);
+        }
+
+        return removedFrom;
+    }
+
+    /**
+     * get a DeluxeTag by its identifier. if multiple tags have the same identifier, the one with the lowest priority will be returned
+     * @param identifier Identifier of the tag to get
+     * @return null if there is no DeluxeTag for the identifier provided
+     */
+    public @Nullable DeluxeTag getTagByIdentifier(@NotNull final String identifier) {
+        return getAllTags().stream()
+                .filter(tag -> tag.getIdentifier().equals(identifier))
+                .min(Comparator.comparingInt(DeluxeTag::getPriority))
+                .orElse(null);
+    }
+
+    /**
+     * get a DeluxeTag that a player is forced to use. if the player has multiple tags forced, the one with the lowest priority will be returned
      * @param player Player to get the tag for
-     * @return null if player has no loaded tag
+     * @return null if the player has no forced tag
      */
-    public DeluxeTag getTag(@NotNull final Player player) {
-        return getTag(player.getUniqueId());
+    public @Nullable DeluxeTag getForcedTag(@NotNull final Player player) {
+        return getAllTags().stream()
+                .filter(tag -> tag.hasForceTagPermission(player))
+                .min(Comparator.comparingInt(DeluxeTag::getPriority))
+                .orElse(null);
     }
 
     /**
-     * get a players current tag identifier
-     * @param uuid Players uuid to get the identifier for
-     * @return null if player has no loaded tag
+     * get a DeluxeTag that is set as the default tag for a player. if the player has multiple default tags, the one with the lowest priority will be returned
+     * @param player Player to get the tag for
+     * @return null if the player has no default tag
      */
-    public String getPlayerTagIdentifier(@NotNull final UUID uuid) {
-        if (playerTags.isEmpty() || !playerTags.containsKey(uuid) || playerTags.get(uuid) == null) {
-            return null;
-        }
-
-        return playerTags.get(uuid).getIdentifier();
+    public @Nullable DeluxeTag getDefaultTag(@NotNull final Player player) {
+        return getAllTags().stream()
+                .filter(tag -> tag.hasDefaultTagPermission(player))
+                .min(Comparator.comparingInt(DeluxeTag::getPriority))
+                .orElse(null);
     }
 
 
-    /**
-     * get a players current display tag if they have one set, an empty string if not
-     * @param player Player to get display tag for
-     * @return players current active display tag if they have one set
-     */
-    public String getPlayerDisplayTag(@NotNull final Player player) {
-        String d = getPlayerDisplayTag(player.getUniqueId());
-        return DeluxeTags.papi() ? PlaceholderAPI.setPlaceholders(player, d): d;
-    }
+    // Tag list functions
 
     /**
-     * get a players current display tag if they have one set, an empty string if not
-     * @param uuid Player uuid to get display tag for
-     * @return players current active display tag if they have one set
+     * get list containing all DeluxeTags that have been loaded in increasing order of priority
+     * @return a non-null collection of all loaded tags
      */
-    public String getPlayerDisplayTag(@NotNull final UUID uuid) {
-        if (playerTags.isEmpty() || !playerTags.containsKey(uuid) || playerTags.get(uuid) == null) {
-            return "";
-        }
-
-        return playerTags.get(uuid).getDisplayTag();
-    }
-
-
-    /**
-     * get a players current tag description if they have a tag set, an empty string if not
-     * @param player Player to get tag description for
-     * @return players current tag description if they have a tag set, empty string otherwise
-     */
-    public String getPlayerTagDescription(@NotNull final Player player) {
-        String d = getPlayerTagDescription(player.getUniqueId());
-        return DeluxeTags.papi() ? PlaceholderAPI.setPlaceholders(player, d): d;
+    public @NotNull Collection<@NotNull DeluxeTag> getAllTags() {
+        return configTags.values();
     }
 
     /**
-     * get a players current tag description if they have a tag set, an empty string if not
-     * @param uuid Player uuid to get tag description for
-     * @return players current tag description if they have a tag set, empty string otherwise
+     * get a list of all available tag identifiers that have been loaded in increasing order of priority
+     * @return empty list if no tags are loaded
      */
-    public String getPlayerTagDescription(@NotNull final UUID uuid) {
-        if (playerTags.isEmpty() || !playerTags.containsKey(uuid) || playerTags.get(uuid) == null) {
-            return "";
-        }
-
-        return playerTags.get(uuid).getDescription();
-    }
-
-
-    /**
-     * get a players current tag description if they have a tag set, an empty string if not
-     * @param player Player to get tag description for
-     * @return players current tag description if they have a tag set, empty string otherwise
-     */
-    public int getPlayerTagPriority(@NotNull final Player player) {
-        return getPlayerTagPriority(player.getUniqueId());
+    public @NotNull List<@NotNull String> getAllTagIdentifiers() {
+        return getAllTags().stream()
+                .sorted(Comparator.comparingInt(DeluxeTag::getPriority))
+                .map(DeluxeTag::getIdentifier)
+                .collect(Collectors.toList());
     }
 
     /**
-     * get a players current tag priority if they have a tag set, -1 if not
-     * @param uuid Player uuid to get tag priority for
-     * @return players current tag priority if they have a tag set, -1 otherwise
-     */
-    public int getPlayerTagPriority(@NotNull final UUID uuid) {
-        if (playerTags.isEmpty() || !playerTags.containsKey(uuid) || playerTags.get(uuid) == null) {
-            return -1;
-        }
-
-        return playerTags.get(uuid).getPriority();
-    }
-
-
-    /**
-     * get the DeluxeTag tag object loaded by its identifier String
-     * @param identifier String identifier of the tag object to get
-     * @return null if there is no DeluxeTag object loaded for the identifier provided
-     */
-    public DeluxeTag getLoadedTag(@NotNull final String identifier) {
-        if (getLoadedTags() == null || getLoadedTags().isEmpty()) {
-            return null;
-        }
-
-        return getLoadedTags().stream().filter(tag -> tag != null && tag.getIdentifier().equals(identifier)).min(Comparator.comparingInt(DeluxeTag::getPriority)).orElse(null);
-    }
-
-    public DeluxeTag getForcedTag(@NotNull final Player player) {
-        if (getLoadedTags() == null || getLoadedTags().isEmpty()) {
-            return null;
-        }
-
-        return getLoadedTags().stream().filter(tag -> tag != null && tag.hasForceTagPermission(player)).min(Comparator.comparingInt(DeluxeTag::getPriority)).orElse(null);
-    }
-
-    public DeluxeTag getDefaultTag(@NotNull final Player player) {
-        if (getLoadedTags() == null || getLoadedTags().isEmpty()) {
-            return null;
-        }
-
-        return getLoadedTags().stream().filter(tag -> tag != null && tag.hasDefaultTagPermission(player)).min(Comparator.comparingInt(DeluxeTag::getPriority)).orElse(null);
-    }
-
-    /**
-     * get a list of all available tag identifiers a player has permission for
+     * get a list of all available tag identifiers a player has permission for in increasing order of priority
      * @param player Player to get tag identifiers for
-     * @return null if no tags are loaded, empty list if player doesn't have permission to any tags
+     * @return empty list if player doesn't have permission to any tags or no tags are loaded
      */
-    public List<String> getAvailableTagIdentifiers(@NotNull final Player player) {
-        if (getLoadedTags() == null || getLoadedTags().isEmpty()) {
-            return null;
-        }
-
-        return getLoadedTags().stream().filter(tag -> tag != null && tag.hasPermissionToUse(player)).map(DeluxeTag::getIdentifier).collect(Collectors.toList());
+    public @NotNull List<@NotNull String> getPlayerAvailableTagIdentifiers(@NotNull final Player player) {
+        return getAllTags().stream()
+                .filter(tag -> tag.hasPermissionToUse(player))
+                .sorted(Comparator.comparingInt(DeluxeTag::getPriority))
+                .map(DeluxeTag::getIdentifier)
+                .collect(Collectors.toList());
     }
 
     /**
-     * get a list of all available tag identifiers that have been loaded
-     * @return null if no tags have been loaded
+     * get a list of all tag identifiers that a player can see or use (players can see tags they have permission to use) in increasing order of priority
+     * @param player Player to get tag identifiers for
+     * @return empty list if player can't see any tags or no tags are loaded
      */
-    public List<String> getAllTagIdentifiers() {
-        if (getLoadedTags() == null || getLoadedTags().isEmpty()) {
-            return null;
-        }
-
-        return getLoadedTags().stream().filter(Objects::nonNull).map(DeluxeTag::getIdentifier).collect(Collectors.toList());
+    public @NotNull List<@NotNull String> getPlayerVisibleTagIdentifiers(@NotNull final Player player) {
+        return getAllTags().stream()
+                .filter(tag -> tag.hasPermissionToSee(player) || tag.hasPermissionToUse(player))
+                .sorted(Comparator.comparingInt(DeluxeTag::getPriority))
+                .map(DeluxeTag::getIdentifier)
+                .collect(Collectors.toList());
     }
+
+
+    // General functions
 
     /**
-     * get a list of all tag identifiers that a player can see
-     * @param player Player to get all visible tag identifiers for
-     * @return null if no tags are loaded, empty list if player can't see any tags
+     * get the count of all loaded tags
+     * @return 0 if no tags are loaded
      */
-    public List<String> getAllVisibleTagIdentifiers(@NotNull final Player player) {
-        if (getLoadedTags() == null || getLoadedTags().isEmpty()) {
-            return null;
-        }
-
-        return getLoadedTags().stream().filter(tag -> tag != null && (tag.hasPermissionToSee(player) || tag.hasPermissionToUse(player))).map(DeluxeTag::getIdentifier).collect(Collectors.toList());
-    }
-
     public int getLoadedTagsAmount() {
         if (configTags.isEmpty()) {
             return 0;
@@ -311,39 +269,103 @@ public class DeluxeTagsHandler {
         return configTags.size();
     }
 
-    public Set<Integer> getLoadedPriorities() {
-        if (configTags.isEmpty()) {
-            return Collections.emptySet();
-        }
-
+    /**
+     * get a list of all priorities set for loaded tags
+     * @return empty set if no tags are loaded
+     */
+    public @NotNull Set<@NotNull Integer> getLoadedPriorities() {
         return configTags.keySet();
     }
 
-
     /**
-     * get a list of all uuids that are currently loaded into the cache
-     * @return null if no players are loaded
+     * get a list of uuids of all players that have a tag active
+     * @return empty list if no players have tags active
      */
-    public Set<UUID> getLoadedPlayers() {
-        if (playerTags.isEmpty()) {
-            return null;
-        }
-
+    public @NotNull Set<@NotNull UUID> getPlayersWithActiveTags() {
         return playerTags.keySet();
     }
 
     /**
-     * remove a player from the cache
-     * @param uuid Player uuid to remove
+     * remove a player's active tag
+     * @param uuid UUID of the player to remove the tag from
      */
-    public void removePlayer(@NotNull final UUID uuid) {
-        if (hasTagLoaded(uuid)) {
-            playerTags.remove(uuid);
+    public void removeActiveTagFromPlayer(@NotNull final UUID uuid) {
+        if (!playerHasActiveTag(uuid)) {
+            return;
         }
+
+        playerTags.remove(uuid);
+        playersUsingDefaultTag.remove(uuid);
+        playersUsingForcedTag.remove(uuid);
     }
 
+    /**
+     * remove all active tags and unload all loaded tags
+     */
     public void unloadData() {
         configTags.clear();
         playerTags.clear();
+
+        playersUsingDefaultTag.clear();
+        playersUsingForcedTag.clear();
+    }
+
+
+    // Internal functions
+
+    private boolean setForcedTag(@NotNull final Player player) {
+        final DeluxeTag forcedTag = getForcedTag(player);
+        if (forcedTag == null) {
+            return false;
+        }
+
+        setPlayerTag(player, forcedTag);
+        playersUsingForcedTag.add(player.getUniqueId());
+        return true;
+    }
+
+    private boolean setSavedTag(@NotNull final Player player) {
+        final String identifier = plugin.getSavedTagIdentifier(player.getUniqueId().toString());
+        if (identifier == null) {
+            return false;
+        }
+
+        final DeluxeTag tag = getTagByIdentifier(identifier);
+        if (tag == null || !tag.hasPermissionToUse(player)) {
+            return false;
+        }
+
+        setPlayerTag(player, tag);
+        return true;
+    }
+
+    private boolean setDefaultTag(@NotNull final Player player) {
+        final DeluxeTag tag = getDefaultTag(player);
+        if (tag == null) {
+            return false;
+        }
+
+        setPlayerTag(player, tag);
+        playersUsingForcedTag.add(player.getUniqueId());
+        return true;
+    }
+
+    /**
+     * check if the player's active tag is a default tag
+     * @param player Player to check for
+     * @return true if the player is using a default tag
+     */
+    public boolean isUsingDefaultTag(@NotNull final Player player) {
+        return playersUsingDefaultTag.contains(player.getUniqueId());
+    }
+
+
+    /**
+     * check if the player's active tag is a forced tag
+     * @param player Player to check for
+     * @return true if the player is using a forced tag
+     */
+    public boolean isUsingForcedTag(@NotNull final Player player) {
+        return playersUsingForcedTag.contains(player.getUniqueId());
     }
 }

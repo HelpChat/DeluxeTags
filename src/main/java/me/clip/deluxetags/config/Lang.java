@@ -42,7 +42,7 @@ public enum Lang {
 	CMD_ADMIN_CLEAR_SUCCESS_TARGET("cmd.admin_clear_success_to_target", "&7Your tag has been cleared &aby &f{0}"),
 	CMD_ADMIN_CLEAR_FAIL("cmd.admin_set_success_fail", "&f{0} &cis not a valid tag for &f{1}&c!"),
 	CMD_ADMIN_CREATE_TAG_INCORRECT("cmd.admin_create_tag_incorrect_usage", "&cIncorrect usage! &7/tags create <identifier> <tag>"),
-	CMD_ADMIN_CREATE_TAG_SUCCESS("cmd.admin_create_tag_success", "&aTag created&7: &f{0}&7:&f{1}"),
+	CMD_ADMIN_CREATE_TAG_SUCCESS("cmd.admin_create_tag_success", "&aTag created&7: &f{0}&7: &f{1}"),
 	CMD_ADMIN_CREATE_TAG_FAIL("cmd.admin_create_tag_fail", "&f{0} &cis already a loaded tag name!"),
 	CMD_ADMIN_DELETE_TAG_INCORRECT("cmd.admin_delete_tag_incorrect_usage", "&cIncorrect usage! &7/tags delete <identifier>"),
 	CMD_ADMIN_DELETE_TAG_SUCCESS("cmd.admin_delete_tag_success", "&7Tag &f{0} &7has been deleted!"),

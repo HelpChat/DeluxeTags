@@ -49,7 +49,7 @@ public class DeluxeTags extends JavaPlugin {
 
 	@Override
 	public void onEnable() {
-		tagsHandler = new DeluxeTagsHandler();
+		tagsHandler = new DeluxeTagsHandler(this);
 
 		cfg = new TagConfig(this);
 		cfg.loadDefConfig();
@@ -248,14 +248,14 @@ public class DeluxeTags extends JavaPlugin {
 
 	public String setPlaceholders(Player p, String s, DeluxeTag tag) {
 		if (tag == null) {
-			tag = this.getTagsHandler().getTag(p.getUniqueId());
+			tag = this.getTagsHandler().getPlayerActiveTag(p);
 		}
 		
 		if (tag == null) {
 			tag = DUMMY_TAG;
 		}
 
-		List<String> tags = this.getTagsHandler().getAvailableTagIdentifiers(p);
+		List<String> tags = this.getTagsHandler().getPlayerAvailableTagIdentifiers(p);
 		String tagId = tag.getIdentifier() != null ? tag.getIdentifier() : "";
 		String amount = tags != null ? String.valueOf(tags.size()) : "0";
 		String availability = tag.hasPermissionToUse(p)

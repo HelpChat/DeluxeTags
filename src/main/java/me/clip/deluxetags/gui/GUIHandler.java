@@ -76,7 +76,7 @@ public class GUIHandler implements Listener {
                 return;
             }
 
-            DeluxeTag tag = plugin.getTagsHandler().getLoadedTag(id);
+            DeluxeTag tag = plugin.getTagsHandler().getTagByIdentifier(id);
             if (tag == null) {
                 return;
             }
@@ -97,9 +97,10 @@ public class GUIHandler implements Listener {
             TagGUI.close(p);
             p.closeInventory();
 
-            sms(p, Lang.GUI_TAG_SELECTED.getConfigValue(new String[]{
-                id, plugin.getTagsHandler().getPlayerDisplayTag(p)
-            }));
+            tag = plugin.getTagsHandler().getPlayerActiveTag(p);
+            final String displayName = tag == null ? "" : tag.getDisplayTag(p);
+
+            sms(p, Lang.GUI_TAG_SELECTED.getConfigValue(new String[]{id, displayName}));
 
             plugin.saveTagIdentifier(p.getUniqueId().toString(), id);
 
@@ -108,7 +109,8 @@ public class GUIHandler implements Listener {
             p.closeInventory();
 
         } else if (slot == 49) {
-            if (plugin.getTagsHandler().getPlayerDisplayTag(p).isEmpty()) {
+            final DeluxeTag tag = plugin.getTagsHandler().getPlayerActiveTag(p);
+            if (tag == null || tag.getDisplayTag(p).isEmpty() || plugin.getTagsHandler().isUsingDefaultTag(p) || plugin.getTagsHandler().isUsingForcedTag(p)) {
                 p.updateInventory();
                 return;
             }
@@ -143,8 +145,8 @@ public class GUIHandler implements Listener {
     }
 
     public boolean openMenu(Player p, int page) {
-        List<String> ids = plugin.getTagsHandler().getAllVisibleTagIdentifiers(p);
-        if (ids == null || ids.isEmpty()) {
+        List<String> ids = plugin.getTagsHandler().getPlayerVisibleTagIdentifiers(p);
+        if (ids.isEmpty()) {
             return false;
         }
 
@@ -173,7 +175,7 @@ public class GUIHandler implements Listener {
             }
 
             tags.put(count, id);
-            DeluxeTag tag = plugin.getTagsHandler().getLoadedTag(id);
+            DeluxeTag tag = plugin.getTagsHandler().getTagByIdentifier(id);
             if (tag == null) {
                 tag = plugin.getDummyTag();
             }
@@ -216,10 +218,10 @@ public class GUIHandler implements Listener {
             gui.setItem(b, divider);
         }
 
-        String currentTag = plugin.getTagsHandler().getPlayerTagIdentifier(p);
+        final DeluxeTag currentTag = plugin.getTagsHandler().getPlayerActiveTag(p);
         DisplayItem currentTagItem;
 
-        if (currentTag == null || currentTag.isEmpty()) {
+        if (currentTag == null || currentTag.getIdentifier().isEmpty()) {
             currentTagItem = options.getNoTagItem();
         } else {
             currentTagItem = options.getHasTagItem();
