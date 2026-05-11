@@ -216,9 +216,7 @@ public class GUIHandler implements Listener {
             plugin.setPlaceholders(p, replacePageNumbers(options.getDividerItem().getName(), page, hasNextPage), null),
             processLore(options.getDividerItem().getLore(), p, null, page, hasNextPage)
         );
-        for (int b = 36; b < 45; b++) {
-            gui.setItem(b, divider);
-        }
+        gui.setItem(options.getDividerItem().getSlots(), divider);
 
         final DeluxeTag currentTag = plugin.getTagsHandler().getPlayerActiveTag(p);
         DisplayItem currentTagItem;
@@ -236,7 +234,7 @@ public class GUIHandler implements Listener {
             plugin.setPlaceholders(p, replacePageNumbers(currentTagItem.getName(), page, hasNextPage), null),
             processLore(currentTagItem.getLore(), p, null, page, hasNextPage)
         );
-        gui.setItem(49, info);
+        gui.setItem(currentTagItem.getSlots(), info);
 
         ItemStack exit = TagGUI.createItem(
             options.getExitItem().getMaterial(),
@@ -245,8 +243,7 @@ public class GUIHandler implements Listener {
             plugin.setPlaceholders(p, replacePageNumbers(options.getExitItem().getName(), page, hasNextPage), null),
             processLore(options.getExitItem().getLore(), p, null, page, hasNextPage)
         );
-        gui.setItem(48, exit);
-        gui.setItem(50, exit);
+        gui.setItem(options.getExitItem().getSlots(), exit);
 
         if (page > 1) {
             ItemStack previousPage = TagGUI.createItem(
@@ -256,7 +253,7 @@ public class GUIHandler implements Listener {
                 plugin.setPlaceholders(p, replacePageNumbers(options.getPreviousPageItem().getName().replace("%page%", String.valueOf(page-1)), page, hasNextPage), null),
                 processLore(options.getPreviousPageItem().getLore(), p, null, page, hasNextPage)
             );
-            gui.setItem(45, previousPage);
+            gui.setItem(options.getPreviousPageItem().getSlots(), previousPage);
         }
 
         if (hasNextPage) {
@@ -267,7 +264,7 @@ public class GUIHandler implements Listener {
                 plugin.setPlaceholders(p, replacePageNumbers(options.getNextPageItem().getName().replace("%page%", String.valueOf(page+1)), page, true), null),
                 processLore(options.getNextPageItem().getLore(), p, null, page, true)
             );
-            gui.setItem(53, nextPage);
+            gui.setItem(options.getNextPageItem().getSlots(), nextPage);
         }
 
         gui.setPage(page);

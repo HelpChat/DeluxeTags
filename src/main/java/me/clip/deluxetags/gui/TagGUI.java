@@ -48,7 +48,19 @@ public class TagGUI {
 	public boolean contains(ItemStack item){
 		return this.items.containsValue(item);
 	}
-	
+
+	public TagGUI setItem(List<Integer> slots, ItemStack item) {
+		for (Integer slot : slots) {
+			this.items.put(slot, item);
+		}
+		return this;
+	}
+
+
+	/**
+	 * @deprecated Use {@link TagGUI#setItem(List, ItemStack)}
+	 */
+	@Deprecated
 	public TagGUI setItem(int slot, ItemStack item){
 		items.put(slot, item);
 		return this;
@@ -63,6 +75,10 @@ public class TagGUI {
 		this.inventory = Bukkit.createInventory(null, slots, MsgUtils.color(displayName));
 		
 		for(Integer slot : this.items.keySet()){
+			if (slot > slots) {
+				break;
+			}
+
 			inventory.setItem(slot, this.items.get(slot));
 		}
 		player.openInventory(this.inventory);
