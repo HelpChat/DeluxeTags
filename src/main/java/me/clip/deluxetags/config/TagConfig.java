@@ -212,8 +212,8 @@ public class TagConfig {
           slots.add(Integer.parseInt(slot));
         }
       }
-    } else {
-      slots.add(config.getInt("gui." + type.name().toLowerCase() + ".slot", 0));
+    } else if (config.contains("gui." + type.name().toLowerCase() + ".slot") && config.isInt("gui." + type.name().toLowerCase() + ".slot")) {
+      slots.add(config.getInt("gui." + type.name().toLowerCase() + ".slot"));
     }
 
     return material == null ? null : new DisplayItem(material, data, displayName, lore, slots);
