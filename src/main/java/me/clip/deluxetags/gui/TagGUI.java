@@ -20,9 +20,7 @@ public class TagGUI {
 	private final Map<Integer, ItemStack> items;
 	private final String displayName;
 	private int slots;
-
 	private int page;
-
 	
 	public TagGUI(String displayName, int page){
 		this.displayName = displayName;
@@ -76,7 +74,7 @@ public class TagGUI {
 		
 		for(Integer slot : this.items.keySet()){
 			if (slot < 0 || slot >= slots) {
-				break;
+				continue;
 			}
 
 			inventory.setItem(slot, this.items.get(slot));
