@@ -75,7 +75,7 @@ public class TagGUI {
 		this.inventory = Bukkit.createInventory(null, slots, MsgUtils.color(displayName));
 		
 		for(Integer slot : this.items.keySet()){
-			if (slot >= slots) {
+			if (slot < 0 || slot >= slots) {
 				break;
 			}
 
