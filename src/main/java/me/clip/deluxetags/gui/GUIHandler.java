@@ -161,20 +161,22 @@ public class GUIHandler implements Listener {
             title = title.substring(0, 31);
         }
 
-        TagGUI gui = new TagGUI(title, page).setSlots(54);
+        int slots = options.getMenuSize();
+
+        TagGUI gui = new TagGUI(title, page).setSlots(slots);
 
         if (page > 1 && page <= pages) {
             ids = ids.subList((36 * page) - 36, ids.size());
         }
 
-        int count = 0;
+        int slot = 0;
         Map<Integer, String> tags = new HashMap<>();
         for (String id : ids) {
-            if (count >= 36) {
+            if (slot >= 36) {
                 break;
             }
 
-            tags.put(count, id);
+            tags.put(slot, id);
             DeluxeTag tag = plugin.getTagsHandler().getTagByIdentifier(id);
             if (tag == null) {
                 tag = plugin.getDummyTag();
@@ -182,7 +184,7 @@ public class GUIHandler implements Listener {
 
             if (tag.hasPermissionToUse(p)) {
                 gui.setItem(
-                    count,
+                    slot,
                     TagGUI.createItem(
                         options.getTagSelectItem().getMaterial(),
                         options.getTagSelectItem().getData(),
@@ -193,7 +195,7 @@ public class GUIHandler implements Listener {
                 );
             } else {
                 gui.setItem(
-                    count,
+                    slot,
                     TagGUI.createItem(
                         options.getTagVisibleItem().getMaterial(),
                         options.getTagVisibleItem().getData(),
@@ -203,7 +205,7 @@ public class GUIHandler implements Listener {
                     )
                 );
             }
-            count++;
+            slot++;
         }
         gui.setTags(tags);
 
