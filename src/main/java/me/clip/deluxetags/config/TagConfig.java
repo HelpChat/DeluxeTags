@@ -92,7 +92,7 @@ public class TagConfig {
     config.addDefault("gui.divider_item.displayname", "");
     config.addDefault("gui.divider_item.lore",
         Collections.emptyList());
-    config.addDefault("gui.divider_item.slots", Arrays.asList(36, 37, 38, 39, 40, 41, 42, 43, 44, 45));
+    config.addDefault("gui.divider_item.slots", Arrays.asList(36, 37, 38, 39, 40, 41, 42, 43, 44));
     // Has Tag item
     config.addDefault("gui.has_tag_item.material", "PLAYER_HEAD");
     config.addDefault("gui.has_tag_item.data", 0);
