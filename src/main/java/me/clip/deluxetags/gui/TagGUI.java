@@ -1,8 +1,7 @@
 package me.clip.deluxetags.gui;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+
 import me.clip.deluxetags.utils.MsgUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -17,7 +16,7 @@ public class TagGUI {
 	private Map<Integer, String> tags;
 
 	private Inventory inventory;
-	private final Map<Integer, ItemStack> items;
+	private final Map<Integer, DisplayItem> items;
 	private final String displayName;
 	private int slots;
 	private int page;
@@ -37,18 +36,18 @@ public class TagGUI {
 		return this.displayName;
 	}
  
-	public TagGUI clear(){
+	public TagGUI clear() {
 		this.items.clear();
 		this.tags = null;
 		return this;
 	}
 	
-	public boolean contains(ItemStack item){
+	public boolean contains(DisplayItem item) {
 		return this.items.containsValue(item);
 	}
 
-	public TagGUI setItem(List<Integer> slots, ItemStack item) {
-		for (Integer slot : slots) {
+	public TagGUI addDisplayItem(DisplayItem item) {
+		for (Integer slot : item.getSlots()) {
 			this.items.put(slot, item);
 		}
 		return this;
@@ -56,11 +55,12 @@ public class TagGUI {
 
 
 	/**
-	 * @deprecated Use {@link TagGUI#setItem(List, ItemStack)}
+	 * @deprecated Use {@link TagGUI#addDisplayItem(DisplayItem)}
 	 */
 	@Deprecated
-	public TagGUI setItem(int slot, ItemStack item){
-		items.put(slot, item);
+	public TagGUI setItem(int slot, ItemStack item) {
+		List<Integer> singleSlot = Collections.singletonList(slot);
+		items.put(slot, new DisplayItem(ItemType.UNKNOWN, item, singleSlot));
 		return this;
 	}
 
@@ -77,7 +77,7 @@ public class TagGUI {
 				continue;
 			}
 
-			inventory.setItem(slot, this.items.get(slot));
+			inventory.setItem(slot, this.items.get(slot).getItemStack());
 		}
 		player.openInventory(this.inventory);
 		
@@ -134,6 +134,12 @@ public class TagGUI {
 		getGUI(p).clear();
 		inGUI.remove(p.getName());
 		return true;
+	}
+
+	public ItemType getClickedItemType(int slot) {
+		DisplayItem clickedDisplayItem = this.items.get(slot);
+
+		return clickedDisplayItem != null ? clickedDisplayItem.getType() : null;
 	}
 
 	public int getPage() {

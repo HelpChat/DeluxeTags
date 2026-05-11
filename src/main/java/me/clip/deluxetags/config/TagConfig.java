@@ -9,9 +9,11 @@ import me.clip.deluxetags.DeluxeTags;
 import me.clip.deluxetags.gui.DisplayItem;
 import me.clip.deluxetags.gui.ItemType;
 import me.clip.deluxetags.tags.DeluxeTag;
+import me.clip.deluxetags.utils.ItemUtils;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.inventory.ItemStack;
 
 public class TagConfig {
 
@@ -70,7 +72,7 @@ public class TagConfig {
     // GUI properties
     config.addDefault("gui.name", "&6Available tags&f: &6%deluxetags_amount%");
     config.addDefault("gui.size", 54);
-    config.addDefault("gui.tagSlots", Collections.singletonList("0-35"));
+    config.addDefault("gui.tag_slots", Collections.singletonList("0-35"));
 
     // Tag Select item
     config.addDefault("gui.tag_select_item.material", "NAME_TAG");
@@ -188,6 +190,11 @@ public class TagConfig {
     return config.getBoolean("force_tags");
   }
 
+  public List<Integer> getTagSlots() {
+    // Conforms to existing code style but isn't as efficient as it could be due to processing on each call
+    return loadSlots("gui.tag_slots", "gui.tag_slots");
+  }
+
   public String getMenuName() {
     return config.getString("gui.name", "&6Available tags&f: &6%deluxetags_amount%");
   }
@@ -206,38 +213,25 @@ public class TagConfig {
     String basePath = "gui." + type.name().toLowerCase();
 
     try {
-      material = XMaterial.matchXMaterial(config.getString("gui." + type.name().toLowerCase() + ".material").toUpperCase()).get().parseMaterial();
+      material = XMaterial.matchXMaterial(config.getString(basePath + ".material").toUpperCase()).get().parseMaterial();
     } catch (Exception e) {
       material = type.getFallbackMaterial();
     }
 
     try {
-      data = Short.parseShort(config.getString("gui." + type.name().toLowerCase() + ".data", "0"));
+      data = Short.parseShort(config.getString(basePath + ".data", "0"));
     } catch (Exception e) {
       data = 0;
     }
 
-    displayName = config.getString("gui." + type.name().toLowerCase() + ".displayname");
-    lore = config.getStringList("gui." + type.name().toLowerCase() + ".lore");
+    displayName = config.getString(basePath + ".displayname");
+    lore = config.getStringList(basePath + ".lore");
 
-    slots = new ArrayList<>();
-    if (config.contains("gui." + type.name().toLowerCase() + ".slots") && config.isList("gui." + type.name().toLowerCase() + ".slots")) {
-      List<String> confSlots = config.getStringList("gui." + type.name().toLowerCase() + ".slots");
-      for (String slot : confSlots) {
-        String[] values = slot.split("-", 2);
-        if (values.length == 2) {
-          for (int i = Integer.parseInt(values[0]); i <= Integer.parseInt(values[1]); i++) {
-            slots.add(i);
-          }
-        } else {
-          slots.add(Integer.parseInt(slot));
-        }
-      }
-    } else if (config.contains("gui." + type.name().toLowerCase() + ".slot") && config.isInt("gui." + type.name().toLowerCase() + ".slot")) {
-      slots.add(config.getInt("gui." + type.name().toLowerCase() + ".slot"));
-    }
+    slots = loadSlots(basePath + ".slots", basePath + ".slot");
 
-    return material == null ? null : new DisplayItem(material, data, displayName, lore, slots);
+    ItemStack itemStack = ItemUtils.createItem(material, data, displayName, lore);
+
+    return material == null ? null : new DisplayItem(type, itemStack, slots);
   }
 
   public int loadTags() {
@@ -300,5 +294,26 @@ public class TagConfig {
   public void removeTag(String identifier) {
     config.set("deluxetags." + identifier, null);
     plugin.saveConfig();
+  }
+
+  private List<Integer> loadSlots(String slotsPath, String slotPath) {
+    List<Integer> slotsList = new ArrayList<>();
+    if (config.contains(slotsPath) && config.isList(slotsPath)) {
+      List<String> confSlots = config.getStringList(slotsPath);
+      for (String slot : confSlots) {
+        String[] values = slot.split("-", 2);
+        if (values.length == 2) {
+          for (int i = Integer.parseInt(values[0]); i <= Integer.parseInt(values[1]); i++) {
+            slotsList.add(i);
+          }
+        } else {
+          slotsList.add(Integer.parseInt(slot));
+        }
+      }
+    } else if (config.contains(slotPath) && config.isInt(slotPath)) {
+      slotsList.add(config.getInt(slotPath));
+    }
+
+    return slotsList;
   }
 }
