@@ -5,6 +5,7 @@ import me.clip.deluxetags.config.TagConfig;
 
 public class GUIOptions {
 	private final String menuName;
+	private int menuSize;
 	private DisplayItem tagSelectItem;
 	private DisplayItem tagVisibleItem;
 	private DisplayItem dividerItem;
@@ -16,7 +17,13 @@ public class GUIOptions {
 
 	public GUIOptions(DeluxeTags plugin) {
 		TagConfig config = plugin.getCfg();
-		menuName = config.loadMenuName();
+		menuName = config.getMenuName();
+
+		menuSize = config.getMenuSize();
+		// Validate menu size is 9, 18, 27, 36, 45 or 54
+		if (menuSize > 54 || menuSize < 9 || menuSize % 9 != 0) {
+			menuSize = 54;
+		}
 
 		for (ItemType type : ItemType.getCached()) {
 			switch (type) {
@@ -82,5 +89,9 @@ public class GUIOptions {
 
 	public String getMenuName() {
 		return menuName;
+	}
+
+	public int getMenuSize() {
+		return menuSize;
 	}
 }

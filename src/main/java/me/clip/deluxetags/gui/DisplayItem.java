@@ -9,12 +9,14 @@ public class DisplayItem {
 	private short data;
 	private String name;
 	private List<String> lore;
+	private List<Integer> slots;
 
-	public DisplayItem(Material material, short data, String name, List<String> lore) {
+	public DisplayItem(Material material, short data, String name, List<String> lore, List<Integer> slots) {
 		this.setMaterial(material);
 		this.setData(data);
 		this.setName(name);
 		this.setLore(lore);
+		this.setSlots(slots);
 	}
 
 	public Material getMaterial() {
@@ -48,5 +50,12 @@ public class DisplayItem {
 	public void setLore(List<String> lore) {
 		this.lore = lore;
 	}
-	
+
+	public List<Integer> getSlots() {
+		return slots;
+	}
+
+	public void setSlots(List<Integer> slots) {
+		this.slots = slots;
+	}
 }

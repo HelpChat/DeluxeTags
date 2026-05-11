@@ -1,11 +1,12 @@
 package me.clip.deluxetags.config;
 
 import com.cryptomorin.xseries.XMaterial;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
+
+import java.util.*;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
 import me.clip.deluxetags.DeluxeTags;
 import me.clip.deluxetags.gui.DisplayItem;
 import me.clip.deluxetags.gui.ItemType;
@@ -67,47 +68,66 @@ public class TagConfig {
       config.set("force_tag_on_join", null);
     }
     config.addDefault("load_tag_on_join", true);
+    // GUI properties
     config.addDefault("gui.name", "&6Available tags&f: &6%deluxetags_amount%");
+    config.addDefault("gui.size", 54);
+    config.addDefault("gui.tagSlots", IntStream.rangeClosed(0, 35)
+      .boxed()
+      .collect(Collectors.toList()));
+    // Tag Select item
     config.addDefault("gui.tag_select_item.material", "NAME_TAG");
     config.addDefault("gui.tag_select_item.data", 0);
     config.addDefault("gui.tag_select_item.displayname", "&6Tag&f: &6%deluxetags_identifier%");
     config.addDefault("gui.tag_select_item.lore",
         Arrays.asList("%deluxetags_tag%", "%deluxetags_description%"));
+    // Tag Visible item
     config.addDefault("gui.tag_visible_item.material", "NAME_TAG");
     config.addDefault("gui.tag_visible_item.data", 0);
     config.addDefault("gui.tag_visible_item.displayname", "&6Tag&f: &6%deluxetags_identifier%");
     config.addDefault("gui.tag_visible_item.lore",
         Arrays.asList("%deluxetags_tag%", "%deluxetags_description%", "&7You can see this tag but you can't select it!"));
+    // Divider item
     config.addDefault("gui.divider_item.material", "BLACK_STAINED_GLASS_PANE");
     config.addDefault("gui.divider_item.data", 0);
     config.addDefault("gui.divider_item.displayname", "");
     config.addDefault("gui.divider_item.lore",
         Collections.emptyList());
+    config.addDefault("gui.divider_item.slots", Arrays.asList(36, 37, 38, 39, 40, 41, 42, 43, 44, 45));
+    // Has Tag item
     config.addDefault("gui.has_tag_item.material", "PLAYER_HEAD");
     config.addDefault("gui.has_tag_item.data", 0);
     config.addDefault("gui.has_tag_item.displayname", "&eCurrent tag&f: &6%deluxetags_identifier%");
     config.addDefault("gui.has_tag_item.lore",
         Arrays.asList("%deluxetags_tag%", "Click to remove your current tag"));
+    config.addDefault("gui.has_tag_item.slot", 49);
+    // No Tag item
     config.addDefault("gui.no_tag_item.material", "PLAYER_HEAD");
     config.addDefault("gui.no_tag_item.data", 0);
     config.addDefault("gui.no_tag_item.displayname", "&cYou don't have a tag set!");
     config.addDefault("gui.no_tag_item.lore",
         Collections.singletonList("&7Click a tag above to select one!"));
+    config.addDefault("gui.no_tag_item.slot", 49);
+    // Exit item
     config.addDefault("gui.exit_item.material", "IRON_DOOR");
     config.addDefault("gui.exit_item.data", 0);
     config.addDefault("gui.exit_item.displayname", "&cClick to exit");
     config.addDefault("gui.exit_item.lore",
         Collections.singletonList("&7Exit the tags menu"));
+    config.addDefault("gui.exit_item.slots", Arrays.asList(48, 50));
+    // Next Page item
     config.addDefault("gui.next_page.material", "PAPER");
     config.addDefault("gui.next_page.data", 0);
     config.addDefault("gui.next_page.displayname", "&6Next page: %page%");
     config.addDefault("gui.next_page.lore",
         Collections.singletonList("&7Move to the next page"));
+    config.addDefault("gui.next_page.slot", 53);
+    // Previous Page item
     config.addDefault("gui.previous_page.material", "PAPER");
     config.addDefault("gui.previous_page.data", 0);
     config.addDefault("gui.previous_page.displayname", "&6Previous page: %page%");
     config.addDefault("gui.previous_page.lore",
         Collections.singletonList("&7Move to the previous page"));
+    config.addDefault("gui.previous_page.slot", 45);
 
     if (!config.contains("deluxetags")) {
       config.set("deluxetags.example.order", 1);
@@ -151,15 +171,22 @@ public class TagConfig {
     return config.getBoolean("force_tags");
   }
 
-  public String loadMenuName() {
+  public String getMenuName() {
     return config.getString("gui.name", "&6Available tags&f: &6%deluxetags_amount%");
+  }
+
+  public int getMenuSize() {
+    return config.getInt("gui.size", 54);
   }
 
   public DisplayItem loadGuiItem(ItemType type) {
     Material material;
     String displayName;
     List<String> lore;
+    List<Integer> slots;
     short data;
+
+    String basePath = "gui." + type.name().toLowerCase();
 
     try {
       material = XMaterial.matchXMaterial(config.getString("gui." + type.name().toLowerCase() + ".material").toUpperCase()).get().parseMaterial();
@@ -176,7 +203,24 @@ public class TagConfig {
     displayName = config.getString("gui." + type.name().toLowerCase() + ".displayname");
     lore = config.getStringList("gui." + type.name().toLowerCase() + ".lore");
 
-    return material == null ? null : new DisplayItem(material, data, displayName, lore);
+    slots = new ArrayList<>();
+    if (config.contains("gui." + type.name().toLowerCase() + ".slots") && config.isList("gui." + type.name().toLowerCase() + ".slots")) {
+      List<String> confSlots = config.getStringList("gui." + type.name().toLowerCase() + ".slots");
+      for (String slot : confSlots) {
+        String[] values = slot.split("-", 2);
+        if (values.length == 2) {
+          for (int i = Integer.parseInt(values[0]); i <= Integer.parseInt(values[1]); i++) {
+            slots.add(i);
+          }
+        } else {
+          slots.add(Integer.parseInt(slot));
+        }
+      }
+    } else {
+      slots.add(config.getInt("gui." + type.name().toLowerCase() + ".slot", 0));
+    }
+
+    return material == null ? null : new DisplayItem(material, data, displayName, lore, slots);
   }
 
   public int loadTags() {
