@@ -53,7 +53,6 @@ public class TagGUI {
 		return this;
 	}
 
-
 	/**
 	 * @deprecated Use {@link TagGUI#addDisplayItem(DisplayItem)}
 	 */
