@@ -4,8 +4,6 @@ import com.cryptomorin.xseries.XMaterial;
 
 import java.util.*;
 import java.util.logging.Level;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import me.clip.deluxetags.DeluxeTags;
 import me.clip.deluxetags.gui.DisplayItem;
@@ -71,9 +69,7 @@ public class TagConfig {
     // GUI properties
     config.addDefault("gui.name", "&6Available tags&f: &6%deluxetags_amount%");
     config.addDefault("gui.size", 54);
-    config.addDefault("gui.tagSlots", IntStream.rangeClosed(0, 35)
-      .boxed()
-      .collect(Collectors.toList()));
+    config.addDefault("gui.tagSlots", Collections.singletonList("0-35"));
     // Tag Select item
     config.addDefault("gui.tag_select_item.material", "NAME_TAG");
     config.addDefault("gui.tag_select_item.data", 0);
@@ -92,7 +88,7 @@ public class TagConfig {
     config.addDefault("gui.divider_item.displayname", "");
     config.addDefault("gui.divider_item.lore",
         Collections.emptyList());
-    config.addDefault("gui.divider_item.slots", Arrays.asList(36, 37, 38, 39, 40, 41, 42, 43, 44));
+    config.addDefault("gui.divider_item.slots", Collections.singletonList("36-44"));
     // Has Tag item
     config.addDefault("gui.has_tag_item.material", "PLAYER_HEAD");
     config.addDefault("gui.has_tag_item.data", 0);
