@@ -53,16 +53,6 @@ public class TagGUI {
 		return this;
 	}
 
-	/**
-	 * @deprecated Use {@link TagGUI#addDisplayItem(DisplayItem)}
-	 */
-	@Deprecated
-	public TagGUI setItem(int slot, ItemStack item) {
-		List<Integer> singleSlot = Collections.singletonList(slot);
-		items.put(slot, new DisplayItem(ItemType.UNKNOWN, item, singleSlot));
-		return this;
-	}
-
 	public TagGUI setSlots(int slots){
 		this.slots = slots;
 		return this;

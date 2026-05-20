@@ -29,11 +29,6 @@ public class DisplayItem {
 		this.slots = slotsCopy;
 	}
 
-	@Deprecated
-	public DisplayItem(Material material, short data, String name, List<String> lore, List<Integer> slots) {
-		this(ItemType.UNKNOWN, ItemUtils.createItem(material, data, name, lore), slots);
-	}
-
 	public ItemType getType() {
 		return type;
 	}
