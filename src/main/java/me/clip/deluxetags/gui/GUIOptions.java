@@ -3,8 +3,12 @@ package me.clip.deluxetags.gui;
 import me.clip.deluxetags.DeluxeTags;
 import me.clip.deluxetags.config.TagConfig;
 
+import java.util.List;
+
 public class GUIOptions {
 	private final String menuName;
+	private int menuSize;
+	private List<Integer> tagSlots;
 	private DisplayItem tagSelectItem;
 	private DisplayItem tagVisibleItem;
 	private DisplayItem dividerItem;
@@ -16,7 +20,15 @@ public class GUIOptions {
 
 	public GUIOptions(DeluxeTags plugin) {
 		TagConfig config = plugin.getCfg();
-		menuName = config.loadMenuName();
+		menuName = config.getMenuName();
+
+		menuSize = config.getMenuSize();
+		// Validate menu size is 9, 18, 27, 36, 45 or 54
+		if (menuSize > 54 || menuSize < 9 || menuSize % 9 != 0) {
+			menuSize = 54;
+		}
+
+		tagSlots = config.getTagSlots();
 
 		for (ItemType type : ItemType.getCached()) {
 			switch (type) {
@@ -82,5 +94,13 @@ public class GUIOptions {
 
 	public String getMenuName() {
 		return menuName;
+	}
+
+	public int getMenuSize() {
+		return menuSize;
+	}
+
+	public List<Integer> getTagSlots() {
+		return tagSlots;
 	}
 }

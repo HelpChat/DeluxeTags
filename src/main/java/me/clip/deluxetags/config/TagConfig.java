@@ -1,18 +1,20 @@
 package me.clip.deluxetags.config;
 
 import com.cryptomorin.xseries.XMaterial;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
+
+import java.util.*;
 import java.util.logging.Level;
+
 import me.clip.deluxetags.DeluxeTags;
 import me.clip.deluxetags.gui.DisplayItem;
 import me.clip.deluxetags.gui.ItemType;
 import me.clip.deluxetags.tags.DeluxeTag;
+import me.clip.deluxetags.utils.ItemUtils;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.inventory.ItemStack;
+import org.jetbrains.annotations.NotNull;
 
 public class TagConfig {
 
@@ -67,47 +69,73 @@ public class TagConfig {
       config.set("force_tag_on_join", null);
     }
     config.addDefault("load_tag_on_join", true);
+
+    // GUI properties
     config.addDefault("gui.name", "&6Available tags&f: &6%deluxetags_amount%");
+    config.addDefault("gui.size", 54);
+    config.addDefault("gui.tag_slots", Collections.singletonList("0-35"));
+
+    // Tag Select item
     config.addDefault("gui.tag_select_item.material", "NAME_TAG");
     config.addDefault("gui.tag_select_item.data", 0);
     config.addDefault("gui.tag_select_item.displayname", "&6Tag&f: &6%deluxetags_identifier%");
     config.addDefault("gui.tag_select_item.lore",
         Arrays.asList("%deluxetags_tag%", "%deluxetags_description%"));
+
+    // Tag Visible item
     config.addDefault("gui.tag_visible_item.material", "NAME_TAG");
     config.addDefault("gui.tag_visible_item.data", 0);
     config.addDefault("gui.tag_visible_item.displayname", "&6Tag&f: &6%deluxetags_identifier%");
     config.addDefault("gui.tag_visible_item.lore",
         Arrays.asList("%deluxetags_tag%", "%deluxetags_description%", "&7You can see this tag but you can't select it!"));
+
+    // Divider item
     config.addDefault("gui.divider_item.material", "BLACK_STAINED_GLASS_PANE");
     config.addDefault("gui.divider_item.data", 0);
     config.addDefault("gui.divider_item.displayname", "");
     config.addDefault("gui.divider_item.lore",
         Collections.emptyList());
+    addDefaultUnlessAlternativePathExists("gui.divider_item.slots", Collections.singletonList("36-44"), "gui.divider_item.slot");
+
+    // Has Tag item
     config.addDefault("gui.has_tag_item.material", "PLAYER_HEAD");
     config.addDefault("gui.has_tag_item.data", 0);
     config.addDefault("gui.has_tag_item.displayname", "&eCurrent tag&f: &6%deluxetags_identifier%");
     config.addDefault("gui.has_tag_item.lore",
         Arrays.asList("%deluxetags_tag%", "Click to remove your current tag"));
+    addDefaultUnlessAlternativePathExists("gui.has_tag_item.slot", 49, "gui.has_tag_item.slots");
+
+    // No Tag item
     config.addDefault("gui.no_tag_item.material", "PLAYER_HEAD");
     config.addDefault("gui.no_tag_item.data", 0);
     config.addDefault("gui.no_tag_item.displayname", "&cYou don't have a tag set!");
     config.addDefault("gui.no_tag_item.lore",
         Collections.singletonList("&7Click a tag above to select one!"));
+    addDefaultUnlessAlternativePathExists("gui.no_tag_item.slot", 49,  "gui.no_tag_item.slots");
+
+    // Exit item
     config.addDefault("gui.exit_item.material", "IRON_DOOR");
     config.addDefault("gui.exit_item.data", 0);
     config.addDefault("gui.exit_item.displayname", "&cClick to exit");
     config.addDefault("gui.exit_item.lore",
         Collections.singletonList("&7Exit the tags menu"));
+    addDefaultUnlessAlternativePathExists("gui.exit_item.slots", Arrays.asList(48, 50), "gui.exit_item.slot");
+
+    // Next Page item
     config.addDefault("gui.next_page.material", "PAPER");
     config.addDefault("gui.next_page.data", 0);
     config.addDefault("gui.next_page.displayname", "&6Next page: %page%");
     config.addDefault("gui.next_page.lore",
         Collections.singletonList("&7Move to the next page"));
+    addDefaultUnlessAlternativePathExists("gui.next_page.slot", 53, "gui.next_page.slots");
+
+    // Previous Page item
     config.addDefault("gui.previous_page.material", "PAPER");
     config.addDefault("gui.previous_page.data", 0);
     config.addDefault("gui.previous_page.displayname", "&6Previous page: %page%");
     config.addDefault("gui.previous_page.lore",
         Collections.singletonList("&7Move to the previous page"));
+    addDefaultUnlessAlternativePathExists("gui.previous_page.slot", 45, "gui.previous_page.slots");
 
     if (!config.contains("deluxetags")) {
       config.set("deluxetags.example.order", 1);
@@ -120,6 +148,18 @@ public class TagConfig {
     plugin.saveConfig();
     plugin.reloadConfig();
     config = plugin.getConfig();
+  }
+
+  /**
+   * Adds config path unless alternative path is set.
+   * @param path path to set
+   * @param value path value
+   * @param alternativePath alternative path that means original path shouldn't be set
+   */
+  private void addDefaultUnlessAlternativePathExists(String path, Object value, String alternativePath) {
+    if (!config.contains(alternativePath)) {
+      config.addDefault(path, value);
+    }
   }
 
   public boolean formatChat() {
@@ -151,32 +191,48 @@ public class TagConfig {
     return config.getBoolean("force_tags");
   }
 
-  public String loadMenuName() {
+  public List<Integer> getTagSlots() {
+    // Conforms to existing code style but isn't as efficient as it could be due to processing on each call
+    return loadSlots("gui.tag_slots", "gui.tag_slots");
+  }
+
+  public String getMenuName() {
     return config.getString("gui.name", "&6Available tags&f: &6%deluxetags_amount%");
   }
 
-  public DisplayItem loadGuiItem(ItemType type) {
+  public int getMenuSize() {
+    return config.getInt("gui.size", 54);
+  }
+
+  public DisplayItem loadGuiItem(@NotNull final ItemType type) {
     Material material;
     String displayName;
     List<String> lore;
+    List<Integer> slots;
     short data;
 
+    String basePath = "gui." + type.name().toLowerCase();
+
     try {
-      material = XMaterial.matchXMaterial(config.getString("gui." + type.name().toLowerCase() + ".material").toUpperCase()).get().parseMaterial();
+      material = XMaterial.matchXMaterial(config.getString(basePath + ".material").toUpperCase()).get().parseMaterial();
     } catch (Exception e) {
       material = type.getFallbackMaterial();
     }
 
     try {
-      data = Short.parseShort(config.getString("gui." + type.name().toLowerCase() + ".data", "0"));
+      data = Short.parseShort(config.getString(basePath + ".data", "0"));
     } catch (Exception e) {
       data = 0;
     }
 
-    displayName = config.getString("gui." + type.name().toLowerCase() + ".displayname");
-    lore = config.getStringList("gui." + type.name().toLowerCase() + ".lore");
+    displayName = config.getString(basePath + ".displayname");
+    lore = config.getStringList(basePath + ".lore");
 
-    return material == null ? null : new DisplayItem(material, data, displayName, lore);
+    slots = loadSlots(basePath + ".slots", basePath + ".slot");
+
+    ItemStack itemStack = ItemUtils.createItem(material, data, displayName, lore);
+
+    return material == null ? null : new DisplayItem(type, itemStack, slots);
   }
 
   public int loadTags() {
@@ -239,5 +295,26 @@ public class TagConfig {
   public void removeTag(String identifier) {
     config.set("deluxetags." + identifier, null);
     plugin.saveConfig();
+  }
+
+  private List<Integer> loadSlots(String slotsPath, String slotPath) {
+    List<Integer> slotsList = new ArrayList<>();
+    if (config.contains(slotsPath) && config.isList(slotsPath)) {
+      List<String> confSlots = config.getStringList(slotsPath);
+      for (String slot : confSlots) {
+        String[] values = slot.split("-", 2);
+        if (values.length == 2) {
+          for (int i = Integer.parseInt(values[0]); i <= Integer.parseInt(values[1]); i++) {
+            slotsList.add(i);
+          }
+        } else {
+          slotsList.add(Integer.parseInt(slot));
+        }
+      }
+    } else if (config.contains(slotPath) && config.isInt(slotPath)) {
+      slotsList.add(config.getInt(slotPath));
+    }
+
+    return slotsList;
   }
 }

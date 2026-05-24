@@ -1,10 +1,7 @@
 package me.clip.deluxetags.gui;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+
 import me.clip.deluxetags.DeluxeTags;
 import me.clip.deluxetags.config.Lang;
 import me.clip.deluxetags.tags.DeluxeTag;
@@ -16,6 +13,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 
 public class GUIHandler implements Listener {
 
@@ -53,83 +51,99 @@ public class GUIHandler implements Listener {
 
         int slot = e.getRawSlot();
 
-        if (slot < 36) {
-            Map<Integer, String> tags;
-            try {
-                tags = gui.getTags();
-            } catch (NullPointerException ex) {
+        ItemType clickedItemType = gui.getClickedItemType(slot);
+        switch (clickedItemType) {
+            case UNKNOWN:
+                break;
+            case EXIT_ITEM:
                 TagGUI.close(p);
                 p.closeInventory();
-                return;
-            }
-
-            if (tags.isEmpty()) {
+                break;
+            case NO_TAG_ITEM:
                 TagGUI.close(p);
                 p.closeInventory();
-                return;
-            }
+                break;
+            case NEXT_PAGE:
+                openMenu(p, gui.getPage()+1);
+                break;
+            case DIVIDER_ITEM:
+                break;
+            case HAS_TAG_ITEM:
+                final DeluxeTag currentTag = plugin.getTagsHandler().getPlayerActiveTag(p);
+                if (currentTag == null || currentTag.getDisplayTag(p).isEmpty() || plugin.getTagsHandler().isUsingDefaultTag(p) || plugin.getTagsHandler().isUsingForcedTag(p)) {
+                    p.updateInventory();
+                    return;
+                }
 
-            String id = tags.get(slot);
-            if (id == null || id.isEmpty()) {
                 TagGUI.close(p);
                 p.closeInventory();
-                return;
-            }
 
-            DeluxeTag tag = plugin.getTagsHandler().getTagByIdentifier(id);
-            if (tag == null) {
-                return;
-            }
+                plugin.getTagsHandler().setPlayerTag(p, plugin.getDummyTag());
+                plugin.removeSavedTag(p.getUniqueId().toString());
 
-            if (!p.hasPermission(tag.getPermission())) {
-                sms(p, Lang.CMD_NO_PERMS.getConfigValue(new String[]{
-                    "deluxetags.tag." + id
-                }));
-                TagGUI.close(p);
-                p.closeInventory();
-                return;
-            }
-
-            if (!plugin.getTagsHandler().setPlayerTag(p, tag)) {
-                return;
-            }
-
-            TagGUI.close(p);
-            p.closeInventory();
-
-            tag = plugin.getTagsHandler().getPlayerActiveTag(p);
-            final String displayName = tag == null ? "" : tag.getDisplayTag(p);
-
-            sms(p, Lang.GUI_TAG_SELECTED.getConfigValue(new String[]{id, displayName}));
-
-            plugin.saveTagIdentifier(p.getUniqueId().toString(), id);
-
-        } else if (slot == 48 || slot == 50) {
-            TagGUI.close(p);
-            p.closeInventory();
-
-        } else if (slot == 49) {
-            final DeluxeTag tag = plugin.getTagsHandler().getPlayerActiveTag(p);
-            if (tag == null || tag.getDisplayTag(p).isEmpty() || plugin.getTagsHandler().isUsingDefaultTag(p) || plugin.getTagsHandler().isUsingForcedTag(p)) {
+                sms(p, Lang.GUI_TAG_DISABLED.getConfigValue(null));
                 p.updateInventory();
-                return;
-            }
+                break;
+            case PREVIOUS_PAGE:
+                openMenu(p, gui.getPage()-1);
+                break;
+            case TAG_SELECT_ITEM:
+                Map<Integer, String> tags;
+                try {
+                    tags = gui.getTags();
+                } catch (NullPointerException ex) {
+                    TagGUI.close(p);
+                    p.closeInventory();
+                    return;
+                }
 
-            TagGUI.close(p);
-            p.closeInventory();
+                if (tags.isEmpty()) {
+                    TagGUI.close(p);
+                    p.closeInventory();
+                    return;
+                }
 
-            plugin.getTagsHandler().setPlayerTag(p, plugin.getDummyTag());
-            plugin.removeSavedTag(p.getUniqueId().toString());
+                String id = tags.get(slot);
+                if (id == null || id.isEmpty()) {
+                    TagGUI.close(p);
+                    p.closeInventory();
+                    return;
+                }
 
-            sms(p, Lang.GUI_TAG_DISABLED.getConfigValue(null));
-            p.updateInventory();
+                DeluxeTag selectedTag = plugin.getTagsHandler().getTagByIdentifier(id);
+                if (selectedTag == null) {
+                    return;
+                }
 
-        } else if (slot == 45) {
-            openMenu(p, gui.getPage()-1);
+                if (!p.hasPermission(selectedTag.getPermission())) {
+                    sms(p, Lang.CMD_NO_PERMS.getConfigValue(new String[]{
+                      "deluxetags.tag." + id
+                    }));
+                    TagGUI.close(p);
+                    p.closeInventory();
+                    return;
+                }
 
-        } else if (slot == 53) {
-            openMenu(p, gui.getPage()+1);
+                if (!plugin.getTagsHandler().setPlayerTag(p, selectedTag)) {
+                    return;
+                }
+
+                TagGUI.close(p);
+                p.closeInventory();
+
+                selectedTag = plugin.getTagsHandler().getPlayerActiveTag(p);
+                final String displayName = selectedTag == null ? "" : selectedTag.getDisplayTag(p);
+
+                sms(p, Lang.GUI_TAG_SELECTED.getConfigValue(new String[]{id, displayName}));
+
+                plugin.saveTagIdentifier(p.getUniqueId().toString(), id);
+                break;
+            case TAG_VISIBLE_ITEM:
+                break;
+            default:
+                break;
         }
+
     }
 
     @EventHandler
@@ -152,7 +166,9 @@ public class GUIHandler implements Listener {
 
         GUIOptions options = plugin.getGuiOptions();
 
-        int pages = (int) Math.ceil(ids.size() / 36d);
+        List<Integer> tagSlots = options.getTagSlots();
+
+        int pages = (int) Math.ceil(ids.size() / (double) tagSlots.size());
         boolean hasNextPage = page < pages;
 
         String title = options.getMenuName();
@@ -161,63 +177,55 @@ public class GUIHandler implements Listener {
             title = title.substring(0, 31);
         }
 
-        TagGUI gui = new TagGUI(title, page).setSlots(54);
+        int menuSlots = options.getMenuSize();
+
+        TagGUI gui = new TagGUI(title, page).setSlots(menuSlots);
 
         if (page > 1 && page <= pages) {
-            ids = ids.subList((36 * page) - 36, ids.size());
+            ids = ids.subList((tagSlots.size() * page) - tagSlots.size(), ids.size());
         }
 
-        int count = 0;
+        int idIndex = 0;
         Map<Integer, String> tags = new HashMap<>();
-        for (String id : ids) {
-            if (count >= 36) {
+        for (int tagSlot: tagSlots) {
+            if (idIndex >= ids.size()) {
                 break;
             }
 
-            tags.put(count, id);
+            String id = ids.get(idIndex);
+
+            tags.put(tagSlot, id);
             DeluxeTag tag = plugin.getTagsHandler().getTagByIdentifier(id);
             if (tag == null) {
                 tag = plugin.getDummyTag();
             }
 
-            if (tag.hasPermissionToUse(p)) {
-                gui.setItem(
-                    count,
-                    TagGUI.createItem(
-                        options.getTagSelectItem().getMaterial(),
-                        options.getTagSelectItem().getData(),
-                        1,
-                        plugin.setPlaceholders(p, replacePageNumbers(options.getTagSelectItem().getName(), page, hasNextPage), tag),
-                        processLore(options.getTagSelectItem().getLore(), p, tag, page, hasNextPage)
-                    )
-                );
-            } else {
-                gui.setItem(
-                    count,
-                    TagGUI.createItem(
-                        options.getTagVisibleItem().getMaterial(),
-                        options.getTagVisibleItem().getData(),
-                        1,
-                        plugin.setPlaceholders(p, replacePageNumbers(options.getTagVisibleItem().getName(), page, hasNextPage), tag),
-                        processLore(options.getTagVisibleItem().getLore(), p, tag, page, hasNextPage)
-                    )
-                );
+            // Adds Tag Item to Menu
+            DisplayItem tagDisplayItem = new DisplayItem(tag.hasPermissionToUse(p) ? options.getTagSelectItem() : options.getTagVisibleItem());
+            ItemMeta tagItemMeta = tagDisplayItem.getItemStack().getItemMeta();
+            if (tagItemMeta != null) {
+                tagItemMeta.setDisplayName(plugin.setPlaceholders(p, replacePageNumbers(tagDisplayItem.getName(), page, hasNextPage), tag));
+                tagItemMeta.setLore(processLore(tagDisplayItem.getLore(), p, tag, page, hasNextPage));
+                tagDisplayItem.getItemStack().setItemMeta(tagItemMeta);
             }
-            count++;
+            tagDisplayItem.setSlots(Collections.singletonList(tagSlot));
+            gui.addDisplayItem(tagDisplayItem);
+
+            idIndex++;
         }
         gui.setTags(tags);
 
-        ItemStack divider = TagGUI.createItem(
-            options.getDividerItem().getMaterial(),
-            options.getDividerItem().getData(),
-            1,
-            plugin.setPlaceholders(p, replacePageNumbers(options.getDividerItem().getName(), page, hasNextPage), null),
-            processLore(options.getDividerItem().getLore(), p, null, page, hasNextPage)
-        );
-        for (int b = 36; b < 45; b++) {
-            gui.setItem(b, divider);
+        // Adds Divider Item to Menu
+        DisplayItem dividerDisplayItem = new DisplayItem(options.getDividerItem());
+        ItemMeta dividerItemMeta = dividerDisplayItem.getItemStack().getItemMeta();
+        if (dividerItemMeta != null) {
+            dividerItemMeta.setDisplayName(plugin.setPlaceholders(p, replacePageNumbers(dividerDisplayItem.getName(), page, hasNextPage), null));
+            dividerItemMeta.setLore(processLore(dividerDisplayItem.getLore(), p, null, page, hasNextPage));
+            dividerDisplayItem.getItemStack().setItemMeta(dividerItemMeta);
         }
+        gui.addDisplayItem(dividerDisplayItem);
 
+        // Gets Tag Item that represents Player's tag status (Tag equipped or not equipped)
         final DeluxeTag currentTag = plugin.getTagsHandler().getPlayerActiveTag(p);
         DisplayItem currentTagItem;
 
@@ -227,45 +235,48 @@ public class GUIHandler implements Listener {
             currentTagItem = options.getHasTagItem();
         }
 
-        ItemStack info = TagGUI.createItem(
-            currentTagItem.getMaterial(),
-            currentTagItem.getData(),
-            1,
-            plugin.setPlaceholders(p, replacePageNumbers(currentTagItem.getName(), page, hasNextPage), null),
-            processLore(currentTagItem.getLore(), p, null, page, hasNextPage)
-        );
-        gui.setItem(49, info);
+        // Adds Info Item to Menu
+        DisplayItem infoDisplayItem = new DisplayItem(currentTagItem);
+        ItemMeta infoItemMeta = infoDisplayItem.getItemStack().getItemMeta();
+        if (infoItemMeta != null) {
+            infoItemMeta.setDisplayName(plugin.setPlaceholders(p, replacePageNumbers(infoDisplayItem.getName(), page, hasNextPage), null));
+            infoItemMeta.setLore(processLore(infoDisplayItem.getLore(), p, null, page, hasNextPage));
+            infoDisplayItem.getItemStack().setItemMeta(infoItemMeta);
+        }
+        gui.addDisplayItem(infoDisplayItem);
 
-        ItemStack exit = TagGUI.createItem(
-            options.getExitItem().getMaterial(),
-            options.getExitItem().getData(),
-            1,
-            plugin.setPlaceholders(p, replacePageNumbers(options.getExitItem().getName(), page, hasNextPage), null),
-            processLore(options.getExitItem().getLore(), p, null, page, hasNextPage)
-        );
-        gui.setItem(48, exit);
-        gui.setItem(50, exit);
+        // Adds Exit Item to Menu
+        DisplayItem exitDisplayItem = new DisplayItem(options.getExitItem());
+        ItemMeta exitItemMeta = dividerDisplayItem.getItemStack().getItemMeta();
+        if (exitItemMeta != null) {
+            exitItemMeta.setDisplayName(plugin.setPlaceholders(p, replacePageNumbers(exitDisplayItem.getName(), page, hasNextPage), null));
+            exitItemMeta.setLore(processLore(exitDisplayItem.getLore(), p, null, page, hasNextPage));
+            exitDisplayItem.getItemStack().setItemMeta(exitItemMeta);
+        }
+        gui.addDisplayItem(exitDisplayItem);
 
         if (page > 1) {
-            ItemStack previousPage = TagGUI.createItem(
-                options.getPreviousPageItem().getMaterial(),
-                options.getPreviousPageItem().getData(),
-                1,
-                plugin.setPlaceholders(p, replacePageNumbers(options.getPreviousPageItem().getName().replace("%page%", String.valueOf(page-1)), page, hasNextPage), null),
-                processLore(options.getPreviousPageItem().getLore(), p, null, page, hasNextPage)
-            );
-            gui.setItem(45, previousPage);
+            // Adds Previous Page Item to Menu
+            DisplayItem previousPageDisplayItem = new DisplayItem(options.getPreviousPageItem());
+            ItemMeta previousPageItemMeta = previousPageDisplayItem.getItemStack().getItemMeta();
+            if (previousPageItemMeta != null) {
+                previousPageItemMeta.setDisplayName(plugin.setPlaceholders(p, replacePageNumbers(previousPageDisplayItem.getName(), page, hasNextPage), null));
+                previousPageItemMeta.setLore(processLore(previousPageDisplayItem.getLore(), p, null, page, hasNextPage));
+                previousPageDisplayItem.getItemStack().setItemMeta(previousPageItemMeta);
+            }
+            gui.addDisplayItem(previousPageDisplayItem);
         }
 
         if (hasNextPage) {
-            ItemStack nextPage = TagGUI.createItem(
-                options.getNextPageItem().getMaterial(),
-                options.getNextPageItem().getData(),
-                1,
-                plugin.setPlaceholders(p, replacePageNumbers(options.getNextPageItem().getName().replace("%page%", String.valueOf(page+1)), page, true), null),
-                processLore(options.getNextPageItem().getLore(), p, null, page, true)
-            );
-            gui.setItem(53, nextPage);
+            // Adds Next Page Item to Menu
+            DisplayItem nextPageDisplayItem = new DisplayItem(options.getNextPageItem());
+            ItemMeta nextPageItemMeta = nextPageDisplayItem.getItemStack().getItemMeta();
+            if (nextPageItemMeta != null) {
+                nextPageItemMeta.setDisplayName(plugin.setPlaceholders(p, replacePageNumbers(nextPageDisplayItem.getName(), page, hasNextPage), null));
+                nextPageItemMeta.setLore(processLore(nextPageDisplayItem.getLore(), p, null, page, hasNextPage));
+                nextPageDisplayItem.getItemStack().setItemMeta(nextPageItemMeta);
+            }
+            gui.addDisplayItem(nextPageDisplayItem);
         }
 
         gui.setPage(page);

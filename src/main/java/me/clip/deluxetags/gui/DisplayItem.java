@@ -1,52 +1,101 @@
 package me.clip.deluxetags.gui;
 
+import java.util.ArrayList;
 import java.util.List;
+
 import org.bukkit.Material;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.jetbrains.annotations.NotNull;
 
 public class DisplayItem {
 
-	private Material material;
-	private short data;
-	private String name;
-	private List<String> lore;
+	private ItemType type;
+	private ItemStack itemStack;
+	private List<Integer> slots;
 
-	public DisplayItem(Material material, short data, String name, List<String> lore) {
-		this.setMaterial(material);
-		this.setData(data);
-		this.setName(name);
-		this.setLore(lore);
+	public DisplayItem(@NotNull final ItemType type, @NotNull final ItemStack itemStack, @NotNull final List<Integer> slots) {
+		this.type = type;
+		this.itemStack = itemStack;
+		this.slots = slots;
 	}
 
-	public Material getMaterial() {
-		return material;
+	public DisplayItem(@NotNull final DisplayItem displayItem) {
+		this(
+			displayItem.getType(),
+			displayItem.getItemStack().clone(),
+			new ArrayList<>(displayItem.getSlots())
+		);
 	}
 
-	public void setMaterial(Material material) {
-		this.material = material;
+	public @NotNull ItemType getType() {
+		return type;
+	}
+
+	public void setType(ItemType type) {
+		this.type = type;
+	}
+
+	public @NotNull ItemStack getItemStack() {
+		return itemStack;
+	}
+
+	public void setItemStack(@NotNull final ItemStack itemStack) {
+		this.itemStack = itemStack;
+	}
+
+	public @NotNull Material getMaterial() {
+		return this.itemStack.getType();
+	}
+
+	public void setMaterial(@NotNull final Material material) {
+		this.itemStack.setType(material);
 	}
 
 	public short getData() {
-		return data;
+		return this.itemStack.getDurability();
 	}
 
 	public void setData(short data) {
-		this.data = data;
+		this.itemStack.setDurability(data);
 	}
 
 	public String getName() {
-		return name;
+		ItemMeta itemMeta = this.itemStack.getItemMeta();
+		return itemMeta != null ? itemMeta.getDisplayName() : null;
 	}
 
 	public void setName(String name) {
-		this.name = name;
+		ItemMeta itemMeta = this.itemStack.getItemMeta();
+
+		if (itemMeta != null) {
+			itemMeta.setDisplayName(name);
+		}
+
+		this.itemStack.setItemMeta(itemMeta);
 	}
 
 	public List<String> getLore() {
-		return lore;
+		ItemMeta itemMeta = this.itemStack.getItemMeta();
+
+		return itemMeta != null ? itemMeta.getLore() : null;
 	}
 
 	public void setLore(List<String> lore) {
-		this.lore = lore;
+		ItemMeta itemMeta = this.itemStack.getItemMeta();
+
+		if (itemMeta != null) {
+			itemMeta.setLore(lore);
+		}
+
+		this.itemStack.setItemMeta(itemMeta);
 	}
-	
+
+	public List<Integer> getSlots() {
+		return slots;
+	}
+
+	public void setSlots(List<Integer> slots) {
+		this.slots = slots;
+	}
 }

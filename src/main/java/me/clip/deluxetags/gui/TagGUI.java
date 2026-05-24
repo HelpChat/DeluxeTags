@@ -1,8 +1,7 @@
 package me.clip.deluxetags.gui;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+
 import me.clip.deluxetags.utils.MsgUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -17,12 +16,10 @@ public class TagGUI {
 	private Map<Integer, String> tags;
 
 	private Inventory inventory;
-	private final Map<Integer, ItemStack> items;
+	private final Map<Integer, DisplayItem> items;
 	private final String displayName;
 	private int slots;
-
 	private int page;
-
 	
 	public TagGUI(String displayName, int page){
 		this.displayName = displayName;
@@ -39,18 +36,20 @@ public class TagGUI {
 		return this.displayName;
 	}
  
-	public TagGUI clear(){
+	public TagGUI clear() {
 		this.items.clear();
 		this.tags = null;
 		return this;
 	}
 	
-	public boolean contains(ItemStack item){
+	public boolean contains(DisplayItem item) {
 		return this.items.containsValue(item);
 	}
-	
-	public TagGUI setItem(int slot, ItemStack item){
-		items.put(slot, item);
+
+	public TagGUI addDisplayItem(DisplayItem item) {
+		for (Integer slot : item.getSlots()) {
+			this.items.put(slot, item);
+		}
 		return this;
 	}
 
@@ -63,7 +62,11 @@ public class TagGUI {
 		this.inventory = Bukkit.createInventory(null, slots, MsgUtils.color(displayName));
 		
 		for(Integer slot : this.items.keySet()){
-			inventory.setItem(slot, this.items.get(slot));
+			if (slot < 0 || slot >= slots) {
+				continue;
+			}
+
+			inventory.setItem(slot, this.items.get(slot).getItemStack());
 		}
 		player.openInventory(this.inventory);
 		
@@ -72,28 +75,6 @@ public class TagGUI {
 		}
 		
 		inGUI.put(player.getName(), this);
-	}
-
-	public static ItemStack createItem(Material mat, short data, int amount, String displayName, List<String> lore) {
-		if (mat == null) {
-			return null;
-		}
-		ItemStack item = new ItemStack(mat, amount);
-		if (data > 0) {
-			item.setDurability(data);
-		}
-		ItemMeta itemMeta = item.getItemMeta();
-		if (itemMeta == null) {
-			return null;
-		}
-		if (displayName != null) {
-			itemMeta.setDisplayName(displayName);
-		}
-		if (lore != null && !lore.isEmpty()) {
-			itemMeta.setLore(lore);
-		}
-		item.setItemMeta(itemMeta);
-		return item;
 	}
 	
 	public static boolean hasGUI(Player p) {
@@ -120,6 +101,12 @@ public class TagGUI {
 		getGUI(p).clear();
 		inGUI.remove(p.getName());
 		return true;
+	}
+
+	public ItemType getClickedItemType(int slot) {
+		DisplayItem clickedDisplayItem = this.items.get(slot);
+
+		return clickedDisplayItem != null ? clickedDisplayItem.getType() : null;
 	}
 
 	public int getPage() {
