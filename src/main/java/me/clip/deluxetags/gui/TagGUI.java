@@ -76,28 +76,6 @@ public class TagGUI {
 		
 		inGUI.put(player.getName(), this);
 	}
-
-	public static ItemStack createItem(Material mat, short data, int amount, String displayName, List<String> lore) {
-		if (mat == null) {
-			return null;
-		}
-		ItemStack item = new ItemStack(mat, amount);
-		if (data > 0) {
-			item.setDurability(data);
-		}
-		ItemMeta itemMeta = item.getItemMeta();
-		if (itemMeta == null) {
-			return null;
-		}
-		if (displayName != null) {
-			itemMeta.setDisplayName(displayName);
-		}
-		if (lore != null && !lore.isEmpty()) {
-			itemMeta.setLore(lore);
-		}
-		item.setItemMeta(itemMeta);
-		return item;
-	}
 	
 	public static boolean hasGUI(Player p) {
 		if (inGUI == null) {
