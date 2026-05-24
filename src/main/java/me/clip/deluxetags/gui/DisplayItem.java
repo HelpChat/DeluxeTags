@@ -3,7 +3,6 @@ package me.clip.deluxetags.gui;
 import java.util.ArrayList;
 import java.util.List;
 
-import me.clip.deluxetags.utils.ItemUtils;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -37,41 +36,36 @@ public class DisplayItem {
 		this.type = type;
 	}
 
-	public ItemStack getItemStack() {
+	public @NotNull ItemStack getItemStack() {
 		return itemStack;
 	}
 
-	public void setItemStack(ItemStack itemStack) {
+	public void setItemStack(@NotNull final ItemStack itemStack) {
 		this.itemStack = itemStack;
 	}
 
-	public Material getMaterial() {
-		return this.itemStack != null ? this.itemStack.getType() : null;
+	public @NotNull Material getMaterial() {
+		return this.itemStack.getType();
 	}
 
-	public void setMaterial(Material material) {
-		if (this.itemStack != null) this.itemStack.setType(material);
+	public void setMaterial(@NotNull final Material material) {
+		this.itemStack.setType(material);
 	}
 
 	public short getData() {
-		return this.itemStack != null ? this.itemStack.getDurability() : 0;
+		return this.itemStack.getDurability();
 	}
 
 	public void setData(short data) {
-		if (this.itemStack != null) this.itemStack.setDurability(data);
+		this.itemStack.setDurability(data);
 	}
 
 	public String getName() {
-		if (this.itemStack == null) return null;
-
 		ItemMeta itemMeta = this.itemStack.getItemMeta();
-
 		return itemMeta != null ? itemMeta.getDisplayName() : null;
 	}
 
 	public void setName(String name) {
-		if (this.itemStack == null) return;
-
 		ItemMeta itemMeta = this.itemStack.getItemMeta();
 
 		if (itemMeta != null) {
@@ -82,16 +76,12 @@ public class DisplayItem {
 	}
 
 	public List<String> getLore() {
-		if (this.itemStack == null) return null;
-
 		ItemMeta itemMeta = this.itemStack.getItemMeta();
 
 		return itemMeta != null ? itemMeta.getLore() : null;
 	}
 
 	public void setLore(List<String> lore) {
-		if (this.itemStack == null) return;
-
 		ItemMeta itemMeta = this.itemStack.getItemMeta();
 
 		if (itemMeta != null) {

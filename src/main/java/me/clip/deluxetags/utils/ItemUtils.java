@@ -8,7 +8,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 
 public class ItemUtils {
-  public static @NotNull ItemStack createItem(Material material, short data, String name, List<String> lore) {
+  public static @NotNull ItemStack createItem(@NotNull final Material material, short data, String name, List<String> lore) {
     if (material == null) {
       return null;
     }
