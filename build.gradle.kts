@@ -24,7 +24,7 @@ dependencies {
     compileOnly("org.spigotmc:spigot-api:1.21.9-R0.1-SNAPSHOT")
     compileOnly("me.clip:placeholderapi:2.11.6")
 
-    implementation("com.github.cryptomorin:XSeries:13.4.0")
+    implementation("com.github.cryptomorin:XSeries:13.7.0")
 }
 
 tasks {
