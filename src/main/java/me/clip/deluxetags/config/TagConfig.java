@@ -14,6 +14,7 @@ import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.inventory.ItemStack;
+import org.jetbrains.annotations.NotNull;
 
 public class TagConfig {
 
@@ -203,7 +204,7 @@ public class TagConfig {
     return config.getInt("gui.size", 54);
   }
 
-  public DisplayItem loadGuiItem(ItemType type) {
+  public DisplayItem loadGuiItem(@NotNull final ItemType type) {
     Material material;
     String displayName;
     List<String> lore;

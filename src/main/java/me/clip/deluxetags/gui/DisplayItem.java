@@ -7,6 +7,7 @@ import me.clip.deluxetags.utils.ItemUtils;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.jetbrains.annotations.NotNull;
 
 public class DisplayItem {
 
@@ -14,22 +15,21 @@ public class DisplayItem {
 	private ItemStack itemStack;
 	private List<Integer> slots;
 
-	public DisplayItem(ItemType type, ItemStack itemStack, List<Integer> slots) {
+	public DisplayItem(@NotNull final ItemType type, @NotNull final ItemStack itemStack, @NotNull final List<Integer> slots) {
 		this.type = type;
 		this.itemStack = itemStack;
 		this.slots = slots;
 	}
 
-	public DisplayItem(DisplayItem displayItem) {
-		ItemStack cloned = displayItem.getItemStack() == null ? null : displayItem.getItemStack().clone();
-		List<Integer> slotsCopy = displayItem.getSlots() == null ? null : new ArrayList<>(displayItem.getSlots());
-
-		this.type = displayItem.getType();
-		this.itemStack = cloned;
-		this.slots = slotsCopy;
+	public DisplayItem(@NotNull final DisplayItem displayItem) {
+		this(
+			displayItem.getType(),
+			displayItem.getItemStack().clone(),
+			new ArrayList<>(displayItem.getSlots())
+		);
 	}
 
-	public ItemType getType() {
+	public @NotNull ItemType getType() {
 		return type;
 	}
 
