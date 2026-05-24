@@ -9,7 +9,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 public class CleanupTask implements Runnable {
-	
+
 	DeluxeTags plugin;
 
 	/**
@@ -18,18 +18,18 @@ public class CleanupTask implements Runnable {
 	public CleanupTask(DeluxeTags instance) {
 		plugin = instance;
 	}
-	
+
 	@Override
 	public void run() {
 		final Set<UUID> playersWithActiveTags = plugin.getTagsHandler().getPlayersWithActiveTags();
-        if (playersWithActiveTags.isEmpty()) {
+		if (playersWithActiveTags.isEmpty()) {
 			return;
 		}
 
-		final List<UUID> toRemove = new ArrayList<>();
+		plugin.getFoliaLib().getScheduler().runNextTick(t -> {
+			final List<UUID> toRemove = new ArrayList<>();
 
-		Bukkit.getScheduler().runTask(plugin, () -> {
-			for (final UUID uuid: playersWithActiveTags) {
+			for (final UUID uuid : playersWithActiveTags) {
 				final Player player = Bukkit.getPlayer(uuid);
 				if (player == null) {
 					toRemove.add(uuid);
