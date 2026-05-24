@@ -5,6 +5,7 @@ api-version: "1.13"
 author: extended_clip
 description: DeluxeChat add on to allow players to select a custom tag
 softdepend: [PlaceholderAPI]
+folia-supported: true
 commands:
    tags:
      description: DeluxeTags command

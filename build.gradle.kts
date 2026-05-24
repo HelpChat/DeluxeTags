@@ -18,6 +18,7 @@ repositories {
 
     maven("https://hub.spigotmc.org/nexus/content/repositories/snapshots/")
     maven("https://repo.extendedclip.com/releases/")
+    maven("https://repo.tcoded.com/releases")
 }
 
 dependencies {
@@ -25,6 +26,7 @@ dependencies {
     compileOnly("me.clip:placeholderapi:2.11.6")
 
     implementation("com.github.cryptomorin:XSeries:13.7.0")
+    implementation("com.tcoded:FoliaLib:0.5.1")
 }
 
 tasks {
@@ -47,6 +49,7 @@ tasks {
 
     withType<ShadowJar> {
         relocate("com.cryptomorin.xseries", "me.clip.deluxetags.libs.xseries")
+        relocate("com.tcoded.folialib", "me.clip.deluxetags.libs.folialib")
         archiveFileName.set("DeluxeTags-${project.version}.jar")
     }
 }
