@@ -660,13 +660,7 @@ public class TagCommand implements CommandExecutor {
       plugin.getTagsHandler().unloadData();
       int loaded = plugin.getCfg().loadTags();
 
-      final boolean useLegacyHexPattern = plugin.getCfg().legacyHex();
-      MsgUtils.setPattern(useLegacyHexPattern);
-      if (useLegacyHexPattern) {
-        plugin.getLogger().info("Using legacy hex colors format: &#aaFF00");
-      } else {
-        plugin.getLogger().info("Using standard hex colors format: #aaFF00");
-      }
+      plugin.reloadFormattingOptions();
 
       plugin.getPlayerFile().reloadConfig();
       plugin.getPlayerFile().saveConfig();

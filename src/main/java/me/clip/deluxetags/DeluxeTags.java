@@ -54,13 +54,7 @@ public class DeluxeTags extends JavaPlugin {
 		cfg = new TagConfig(this);
 		cfg.loadDefConfig();
 
-		final boolean useLegacyHexPattern = cfg.legacyHex();
-		MsgUtils.setPattern(useLegacyHexPattern);
-		if (useLegacyHexPattern) {
-			getLogger().info("Using legacy hex colors format: &#aaFF00");
-		} else {
-			getLogger().info("Using standard hex colors format: #aaFF00");
-		}
+		reloadFormattingOptions();
 
 		int loaded = cfg.loadTags();
 		if (loaded == 1) {
@@ -244,6 +238,24 @@ public class DeluxeTags extends JavaPlugin {
 
 	public void reloadGUIOptions() {
 		guiOptions = new GUIOptions(this);
+	}
+
+	public void reloadFormattingOptions() {
+		final boolean useLegacyHexPattern = cfg.legacyHex();
+		final boolean useMiniMessage = cfg.useMiniMessage();
+
+		MsgUtils.setPattern(useLegacyHexPattern);
+		MsgUtils.setMiniMessage(useMiniMessage);
+
+		if (useLegacyHexPattern) {
+			getLogger().info("Using legacy hex colors format: &#aaFF00");
+		} else {
+			getLogger().info("Using standard hex colors format: #aaFF00");
+		}
+
+		if (useMiniMessage) {
+			getLogger().info("MiniMessage formatting enabled for tags, messages, and GUI text.");
+		}
 	}
 
 	public String setPlaceholders(Player p, String s, DeluxeTag tag) {
