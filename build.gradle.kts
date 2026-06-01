@@ -25,6 +25,10 @@ dependencies {
     compileOnly("me.clip:placeholderapi:2.11.6")
 
     implementation("com.github.cryptomorin:XSeries:13.7.0")
+    implementation("net.kyori:adventure-text-minimessage:4.17.0")
+    implementation("net.kyori:adventure-text-serializer-legacy:4.17.0")
+
+    testImplementation("junit:junit:4.13.2")
 }
 
 tasks {
@@ -47,6 +51,7 @@ tasks {
 
     withType<ShadowJar> {
         relocate("com.cryptomorin.xseries", "me.clip.deluxetags.libs.xseries")
+        relocate("net.kyori", "me.clip.deluxetags.libs.kyori")
         archiveFileName.set("DeluxeTags-${project.version}.jar")
     }
 }

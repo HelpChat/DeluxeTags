@@ -37,6 +37,11 @@ public class TagConfig {
     config.options().header(
         "DeluxeTags version: " + plugin.getDescription().getVersion() + " Main Configuration"
             + "\n"
+        + "\nFormatting options:"
+        + "\nlegacy_hex: false # Use '&#RRGGBB' instead of '#RRGGBB' for raw hex colors"
+        + "\nuse_minimessage: false # Enable MiniMessage tags like <red> and <gradient:#ff0000:#00ff00>"
+      + "\nMiniMessage example tag: '<gradient:#ff0000:#ffaa00><bold>[VIP]</bold></gradient>'"
+        + "\n"
             + "\nCreate your tags using the following format:"
             + "\n"
             + "\ndeluxetags:"
@@ -62,6 +67,7 @@ public class TagConfig {
     config.addDefault("force_tags", false);
     config.addDefault("check_updates", true);
     config.addDefault("legacy_hex", false);
+    config.addDefault("use_minimessage", false);
     config.addDefault("papi_chat", true);
     config.addDefault("format_chat.enabled", false);
     config.addDefault("format_chat.format", "{deluxetags_tag} <%1$s> %2$s");
@@ -181,6 +187,10 @@ public class TagConfig {
 
   public boolean legacyHex() {
     return config.getBoolean("legacy_hex", false);
+  }
+
+  public boolean useMiniMessage() {
+    return config.getBoolean("use_minimessage", false);
   }
 
   public boolean loadTagOnJoin() {
