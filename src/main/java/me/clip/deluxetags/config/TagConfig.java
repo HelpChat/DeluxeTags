@@ -10,10 +10,13 @@ import me.clip.deluxetags.gui.DisplayItem;
 import me.clip.deluxetags.gui.ItemType;
 import me.clip.deluxetags.tags.DeluxeTag;
 import me.clip.deluxetags.utils.ItemUtils;
+import me.clip.deluxetags.utils.VersionHelper;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.NotNull;
 
 public class TagConfig {
@@ -231,6 +234,14 @@ public class TagConfig {
     slots = loadSlots(basePath + ".slots", basePath + ".slot");
 
     ItemStack itemStack = ItemUtils.createItem(material, data, displayName, lore);
+    if (VersionHelper.HAS_TOOLTIP_STYLE && config.isSet(basePath + ".item_model")) {
+      NamespacedKey itemModel = NamespacedKey.fromString(config.getString(basePath + ".item_model"));
+      if (itemModel != null) {
+        ItemMeta itemMeta = itemStack.getItemMeta();
+        itemMeta.setItemModel(itemModel);
+        itemStack.setItemMeta(itemMeta);
+      }
+    }
 
     return material == null ? null : new DisplayItem(type, itemStack, slots);
   }
