@@ -247,7 +247,7 @@ public class GUIHandler implements Listener {
 
         // Adds Exit Item to Menu
         DisplayItem exitDisplayItem = new DisplayItem(options.getExitItem());
-        ItemMeta exitItemMeta = dividerDisplayItem.getItemStack().getItemMeta();
+        ItemMeta exitItemMeta = exitDisplayItem.getItemStack().getItemMeta();
         if (exitItemMeta != null) {
             exitItemMeta.setDisplayName(plugin.setPlaceholders(p, replacePageNumbers(exitDisplayItem.getName(), page, hasNextPage), null));
             exitItemMeta.setLore(processLore(exitDisplayItem.getLore(), p, null, page, hasNextPage));
