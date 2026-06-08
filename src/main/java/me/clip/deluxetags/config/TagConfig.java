@@ -4,17 +4,25 @@ import com.cryptomorin.xseries.XMaterial;
 
 import java.util.*;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 
 import me.clip.deluxetags.DeluxeTags;
 import me.clip.deluxetags.gui.DisplayItem;
 import me.clip.deluxetags.gui.ItemType;
+import me.clip.deluxetags.gui.options.CustomModelDataComponent;
 import me.clip.deluxetags.tags.DeluxeTag;
 import me.clip.deluxetags.utils.ItemUtils;
+import me.clip.deluxetags.utils.StringUtils;
+import me.clip.deluxetags.utils.VersionHelper;
+import org.bukkit.Color;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class TagConfig {
 
@@ -241,6 +249,37 @@ public class TagConfig {
     slots = loadSlots(basePath + ".slots", basePath + ".slot");
 
     ItemStack itemStack = ItemUtils.createItem(material, data, displayName, lore);
+    ItemMeta itemMeta = itemStack.getItemMeta();
+
+    // Sets Item Model
+    if (VersionHelper.HAS_TOOLTIP_STYLE && config.isSet(basePath + ".item_model")) {
+      NamespacedKey itemModel = NamespacedKey.fromString(config.getString(basePath + ".item_model"));
+      if (itemModel != null) {
+        itemMeta.setItemModel(itemModel);
+      }
+    }
+
+    // Sets Model Data
+    if (VersionHelper.IS_CUSTOM_MODEL_DATA && config.isSet(basePath + ".model_data")) {
+      try {
+        final int modelData = config.getInt(basePath + ".model_data");
+        itemMeta.setCustomModelData(modelData);
+      } catch (final Exception ignored) {
+      }
+    }
+
+    // Sets Model Data Component
+    if (VersionHelper.IS_CUSTOM_MODEL_DATA_COMPONENT && config.isConfigurationSection(basePath + ".model_data_component")) {
+      CustomModelDataComponent configCustomModelDataComponent = CustomModelDataComponent.builder()
+        .colors(config.getStringList(basePath + ".model_data_component.colors"))
+        .flags(config.getStringList(basePath + ".model_data_component.flags"))
+        .floats(config.getStringList(basePath + ".model_data_component.floats"))
+        .strings(config.getStringList(basePath + ".model_data_component.strings"));
+
+      itemMeta.setCustomModelDataComponent(parseCustomModelDataComponent(configCustomModelDataComponent, itemMeta.getCustomModelDataComponent()));
+    }
+
+    itemStack.setItemMeta(itemMeta);
 
     return material == null ? null : new DisplayItem(type, itemStack, slots);
   }
@@ -326,5 +365,52 @@ public class TagConfig {
     }
 
     return slotsList;
+  }
+
+  private @NotNull org.bukkit.inventory.meta.components.CustomModelDataComponent parseCustomModelDataComponent(
+    @NotNull final CustomModelDataComponent unparsedComponent,
+    @NotNull final org.bukkit.inventory.meta.components.CustomModelDataComponent component
+  ) {
+    if (!unparsedComponent.colors().isEmpty()) {
+      final List<Color> colors = unparsedComponent.colors()
+        .stream()
+        .map(this::parseRGBColor)
+        .filter(Objects::nonNull)
+        .collect(Collectors.toList());
+      component.setColors(colors);
+    }
+
+    if (!unparsedComponent.flags().isEmpty()) {
+      final List<Boolean> flags = unparsedComponent.flags()
+        .stream()
+        .map(Boolean::parseBoolean)
+        .collect(Collectors.toList());
+      component.setFlags(flags);
+    }
+
+    if (!unparsedComponent.floats().isEmpty()) {
+      final List<Float> floats = unparsedComponent.floats()
+        .stream()
+        .map(Float::parseFloat)
+        .collect(Collectors.toList());
+      component.setFloats(floats);
+    }
+
+    if (!unparsedComponent.strings().isEmpty()) {
+      final List<String> strings = unparsedComponent.strings()
+        .stream()
+        .collect(Collectors.toList());
+      component.setStrings(strings);
+    }
+
+    return component;
+  }
+
+  private @Nullable Color parseRGBColor(@NotNull final String input) {
+    final Color color = StringUtils.parseRGBColor(input);
+    if (color == null) {
+      plugin.getLogger().warning("Invalid RGB color found: " + input);
+    }
+    return color;
   }
 }
