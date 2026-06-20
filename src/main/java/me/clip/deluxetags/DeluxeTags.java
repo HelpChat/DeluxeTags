@@ -16,6 +16,7 @@ import me.clip.deluxetags.listeners.JoinListener;
 import me.clip.deluxetags.listeners.PlayerListener;
 import me.clip.deluxetags.placeholders.TagPlaceholders;
 import me.clip.deluxetags.tags.DeluxeTag;
+import me.clip.deluxetags.tags.DeluxeTagCategory;
 import me.clip.deluxetags.tags.DeluxeTagsHandler;
 import me.clip.deluxetags.tasks.CleanupTask;
 import me.clip.deluxetags.updater.UpdateChecker;
@@ -260,6 +261,10 @@ public class DeluxeTags extends JavaPlugin {
 	}
 
 	public String setPlaceholders(Player p, String s, DeluxeTag tag) {
+		return setPlaceholders(p, s, tag, DeluxeTagCategory.ALL_IDENTIFIER);
+	}
+
+	public String setPlaceholders(Player p, String s, DeluxeTag tag, String categoryIdentifier) {
 		if (tag == null) {
 			tag = this.getTagsHandler().getPlayerActiveTag(p);
 		}
@@ -271,9 +276,11 @@ public class DeluxeTags extends JavaPlugin {
 		List<String> tags = this.getTagsHandler().getPlayerAvailableTagIdentifiers(p);
 		String tagId = tag.getIdentifier() != null ? tag.getIdentifier() : "";
 		String amount = tags != null ? String.valueOf(tags.size()) : "0";
-		String availability = tag.hasPermissionToUse(p)
-			? Lang.GUI_PLACEHOLDERS_TAG_AVAILABLE.getConfigValue(null)
-			: Lang.GUI_PLACEHOLDERS_TAG_UNAVAILABLE.getConfigValue(null);
+		String categoryAmount = amount;
+		if (categoryIdentifier != null && !categoryIdentifier.trim().isEmpty()) {
+			categoryAmount = String.valueOf(this.getTagsHandler().getPlayerAvailableTagIdentifiers(p, categoryIdentifier).size());
+		}
+		String availability = cfg.getTagAvailabilityPlaceholder(tag.hasPermissionToUse(p));
 
 		s = s
 			.replace("%player%", p.getName())
@@ -288,6 +295,8 @@ public class DeluxeTags extends JavaPlugin {
 			.replace("{deluxetags_description}", tag.getDescription(p))
 			.replace("%deluxetags_amount%", amount)
 			.replace("{deluxetags_amount}", amount)
+			.replace("%deluxetags_category_amount%", categoryAmount)
+			.replace("{deluxetags_category_amount}", categoryAmount)
 			.replace("%deluxetags_available%", availability)
 			.replace("{deluxetags_available}", availability);
 		

@@ -2,6 +2,7 @@ package me.clip.deluxetags.tags;
 
 import me.clip.deluxetags.DeluxeTags;
 import me.clip.placeholderapi.PlaceholderAPI;
+import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
@@ -14,12 +15,17 @@ import org.jetbrains.annotations.Nullable;
  */
 public class DeluxeTag {
 
+    public static final String DEFAULT_DISPLAY_NAME = "&6Tag&f: &6%deluxetags_identifier%";
+
     private final String identifier;
 
     private String displayTag;
+    private String displayName;
     private String description;
     private String permission;
     private String category;
+    private Material material;
+    private short data;
     private int priority;
 
     /**
@@ -35,10 +41,38 @@ public class DeluxeTag {
     }
 
     public DeluxeTag(final int priority, @NotNull final String identifier, @NotNull final String displayTag, @NotNull String description, @NotNull final String category) {
+        this(priority, identifier, displayTag, description, category, DEFAULT_DISPLAY_NAME, null, (short) 0);
+    }
+
+    public DeluxeTag(
+        final int priority,
+        @NotNull final String identifier,
+        @NotNull final String displayTag,
+        @NotNull String description,
+        @NotNull final String category,
+        @Nullable final Material material,
+        final short data
+    ) {
+        this(priority, identifier, displayTag, description, category, DEFAULT_DISPLAY_NAME, material, data);
+    }
+
+    public DeluxeTag(
+        final int priority,
+        @NotNull final String identifier,
+        @NotNull final String displayTag,
+        @NotNull String description,
+        @NotNull final String category,
+        @NotNull final String displayName,
+        @Nullable final Material material,
+        final short data
+    ) {
         this.priority = priority;
         this.identifier = identifier;
         this.displayTag = displayTag;
+        this.displayName = displayName;
         this.description = description;
+        this.material = material;
+        this.data = data;
         setCategory(category);
     }
 
@@ -76,6 +110,24 @@ public class DeluxeTag {
      */
     public @NotNull String getDisplayTag(final @Nullable OfflinePlayer player) {
         return DeluxeTags.papi() ? PlaceholderAPI.setPlaceholders(player, displayTag) : displayTag;
+    }
+
+    /**
+     * get the GUI display name of this DeluxeTag
+     *
+     * @return GUI display name String
+     */
+    public @NotNull String getDisplayName() {
+        return displayName;
+    }
+
+    /**
+     * set the GUI display name for this DeluxeTag
+     *
+     * @param displayName new GUI display name String
+     */
+    public void setDisplayName(@NotNull final String displayName) {
+        this.displayName = displayName;
     }
 
     /**
@@ -145,6 +197,42 @@ public class DeluxeTag {
         }
 
         this.category = category;
+    }
+
+    /**
+     * get the material used for this tag in the GUI
+     *
+     * @return tag GUI material, or null to use the configured fallback
+     */
+    public @Nullable Material getMaterial() {
+        return material;
+    }
+
+    /**
+     * set the material used for this tag in the GUI
+     *
+     * @param material material to display for this tag
+     */
+    public void setMaterial(@Nullable final Material material) {
+        this.material = material;
+    }
+
+    /**
+     * get the durability/data value used for this tag in the GUI
+     *
+     * @return tag GUI data value
+     */
+    public short getData() {
+        return data;
+    }
+
+    /**
+     * set the durability/data value used for this tag in the GUI
+     *
+     * @param data data value to display for this tag
+     */
+    public void setData(final short data) {
+        this.data = data;
     }
 
     /**
