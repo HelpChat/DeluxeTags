@@ -5,6 +5,8 @@ import java.util.*;
 import me.clip.deluxetags.DeluxeTags;
 import me.clip.deluxetags.config.Lang;
 import me.clip.deluxetags.tags.DeluxeTag;
+import me.clip.deluxetags.tags.DeluxeTagCategory;
+import me.clip.deluxetags.utils.ItemUtils;
 import me.clip.deluxetags.utils.MsgUtils;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -64,9 +66,16 @@ public class GUIHandler implements Listener {
                 p.closeInventory();
                 break;
             case NEXT_PAGE:
-                openMenu(p, gui.getPage()+1);
+                if (gui.isCategoryMenu()) {
+                    openCategoryMenu(p, gui.getPage()+1);
+                } else {
+                    openTagMenu(p, gui.getCategoryIdentifier(), gui.getPage()+1);
+                }
                 break;
             case DIVIDER_ITEM:
+                break;
+            case CATEGORY_BACK_ITEM:
+                openCategoryMenu(p, 1);
                 break;
             case HAS_TAG_ITEM:
                 final DeluxeTag currentTag = plugin.getTagsHandler().getPlayerActiveTag(p);
@@ -85,9 +94,40 @@ public class GUIHandler implements Listener {
                 p.updateInventory();
                 break;
             case PREVIOUS_PAGE:
-                openMenu(p, gui.getPage()-1);
+                if (gui.isCategoryMenu()) {
+                    openCategoryMenu(p, gui.getPage()-1);
+                } else {
+                    openTagMenu(p, gui.getCategoryIdentifier(), gui.getPage()-1);
+                }
                 break;
             case TAG_SELECT_ITEM:
+                if (gui.isCategoryMenu()) {
+                    Map<Integer, String> categories;
+                    try {
+                        categories = gui.getCategories();
+                    } catch (NullPointerException ex) {
+                        TagGUI.close(p);
+                        p.closeInventory();
+                        return;
+                    }
+
+                    if (categories.isEmpty()) {
+                        TagGUI.close(p);
+                        p.closeInventory();
+                        return;
+                    }
+
+                    String categoryId = categories.get(slot);
+                    if (categoryId == null || categoryId.isEmpty()) {
+                        TagGUI.close(p);
+                        p.closeInventory();
+                        return;
+                    }
+
+                    openTagMenu(p, categoryId, 1);
+                    break;
+                }
+
                 Map<Integer, String> tags;
                 try {
                     tags = gui.getTags();
@@ -159,7 +199,85 @@ public class GUIHandler implements Listener {
     }
 
     public boolean openMenu(Player p, int page) {
-        List<String> ids = plugin.getTagsHandler().getPlayerVisibleTagIdentifiers(p);
+        List<DeluxeTagCategory> visibleCategories = plugin.getTagsHandler().getPlayerVisibleCategories(p);
+        if (visibleCategories.isEmpty()) {
+            return false;
+        }
+
+        if (visibleCategories.size() == 1) {
+            return openTagMenu(p, visibleCategories.get(0).getIdentifier(), page);
+        }
+
+        return openCategoryMenu(p, page);
+    }
+
+    private boolean openCategoryMenu(Player p, int page) {
+        List<DeluxeTagCategory> categories = plugin.getTagsHandler().getPlayerSelectableCategories(p);
+        if (categories.isEmpty()) {
+            return false;
+        }
+
+        GUIOptions options = plugin.getGuiOptions();
+
+        List<Integer> tagSlots = options.getTagSlots();
+        if (tagSlots.isEmpty()) {
+            return false;
+        }
+
+        int pages = (int) Math.ceil(categories.size() / (double) tagSlots.size());
+        page = clampPage(page, pages);
+        boolean hasNextPage = page < pages;
+
+        String title = prepareTitle(p, options.getMenuName(), page, hasNextPage);
+        int menuSlots = options.getMenuSize();
+
+        TagGUI gui = new TagGUI(title, page).setSlots(menuSlots);
+        gui.setCategoryMenu(true);
+
+        List<DeluxeTagCategory> pageCategories = getPageItems(categories, page, tagSlots.size());
+        int categoryIndex = 0;
+        Map<Integer, String> categorySlots = new HashMap<>();
+        for (int tagSlot : tagSlots) {
+            if (categoryIndex >= pageCategories.size()) {
+                break;
+            }
+
+            DeluxeTagCategory category = pageCategories.get(categoryIndex);
+            categorySlots.put(tagSlot, category.getIdentifier());
+
+            DisplayItem categoryDisplayItem = new DisplayItem(
+                ItemType.TAG_SELECT_ITEM,
+                ItemUtils.createItem(category.getMaterial(), (short) 0, category.getName(), category.getLore()),
+                Collections.singletonList(tagSlot)
+            );
+            ItemMeta categoryItemMeta = categoryDisplayItem.getItemStack().getItemMeta();
+            if (categoryItemMeta != null) {
+                categoryItemMeta.setDisplayName(plugin.setPlaceholders(p, replacePageNumbers(categoryDisplayItem.getName(), page, hasNextPage), null));
+                categoryItemMeta.setLore(processLore(categoryDisplayItem.getLore(), p, null, page, hasNextPage));
+                categoryDisplayItem.getItemStack().setItemMeta(categoryItemMeta);
+            }
+            gui.addDisplayItem(categoryDisplayItem);
+
+            categoryIndex++;
+        }
+        gui.setCategories(categorySlots);
+
+        addStaticMenuItems(gui, p, page, hasNextPage);
+        gui.setPage(page);
+        gui.openInventory(p);
+        return true;
+    }
+
+    private boolean openTagMenu(Player p, String categoryIdentifier, int page) {
+        if (categoryIdentifier == null || categoryIdentifier.isEmpty()) {
+            categoryIdentifier = DeluxeTagCategory.ALL_IDENTIFIER;
+        }
+
+        if (!canOpenCategory(p, categoryIdentifier)) {
+            return false;
+        }
+
+        List<String> ids = plugin.getTagsHandler().getPlayerVisibleTagIdentifiers(p, categoryIdentifier);
         if (ids.isEmpty()) {
             return false;
         }
@@ -167,23 +285,23 @@ public class GUIHandler implements Listener {
         GUIOptions options = plugin.getGuiOptions();
 
         List<Integer> tagSlots = options.getTagSlots();
+        if (tagSlots.isEmpty()) {
+            return false;
+        }
 
         int pages = (int) Math.ceil(ids.size() / (double) tagSlots.size());
+        page = clampPage(page, pages);
         boolean hasNextPage = page < pages;
 
-        String title = options.getMenuName();
-        title = replacePageNumbers(plugin.setPlaceholders(p, title, null), page, hasNextPage);
-        if (title.length() > 32) {
-            title = title.substring(0, 31);
-        }
+        DeluxeTagCategory category = plugin.getTagsHandler().getCategoryByIdentifier(categoryIdentifier);
+        String title = prepareTitle(p, category != null ? category.getGuiName() : options.getMenuName(), page, hasNextPage);
 
         int menuSlots = options.getMenuSize();
 
         TagGUI gui = new TagGUI(title, page).setSlots(menuSlots);
+        gui.setCategoryIdentifier(categoryIdentifier);
 
-        if (page > 1 && page <= pages) {
-            ids = ids.subList((tagSlots.size() * page) - tagSlots.size(), ids.size());
-        }
+        ids = getPageItems(ids, page, tagSlots.size());
 
         int idIndex = 0;
         Map<Integer, String> tags = new HashMap<>();
@@ -214,6 +332,15 @@ public class GUIHandler implements Listener {
             idIndex++;
         }
         gui.setTags(tags);
+
+        addStaticMenuItems(gui, p, page, hasNextPage);
+        gui.setPage(page);
+        gui.openInventory(p);
+        return true;
+    }
+
+    private void addStaticMenuItems(TagGUI gui, Player p, int page, boolean hasNextPage) {
+        GUIOptions options = plugin.getGuiOptions();
 
         // Adds Divider Item to Menu
         DisplayItem dividerDisplayItem = new DisplayItem(options.getDividerItem());
@@ -255,6 +382,18 @@ public class GUIHandler implements Listener {
         }
         gui.addDisplayItem(exitDisplayItem);
 
+        boolean showCategoryBack = !gui.isCategoryMenu() && shouldShowCategorySelector(p);
+        if (showCategoryBack) {
+            DisplayItem categoryBackDisplayItem = new DisplayItem(options.getCategoryBackItem());
+            ItemMeta categoryBackItemMeta = categoryBackDisplayItem.getItemStack().getItemMeta();
+            if (categoryBackItemMeta != null) {
+                categoryBackItemMeta.setDisplayName(plugin.setPlaceholders(p, replacePageNumbers(categoryBackDisplayItem.getName(), page, hasNextPage), null));
+                categoryBackItemMeta.setLore(processLore(categoryBackDisplayItem.getLore(), p, null, page, hasNextPage));
+                categoryBackDisplayItem.getItemStack().setItemMeta(categoryBackItemMeta);
+            }
+            gui.addDisplayItem(categoryBackDisplayItem);
+        }
+
         if (page > 1) {
             // Adds Previous Page Item to Menu
             DisplayItem previousPageDisplayItem = new DisplayItem(options.getPreviousPageItem());
@@ -279,9 +418,59 @@ public class GUIHandler implements Listener {
             gui.addDisplayItem(nextPageDisplayItem);
         }
 
-        gui.setPage(page);
-        gui.openInventory(p);
-        return true;
+    }
+
+    private boolean canOpenCategory(Player player, String categoryIdentifier) {
+        if (categoryIdentifier.equalsIgnoreCase(DeluxeTagCategory.ALL_IDENTIFIER)) {
+            return plugin.getTagsHandler().getPlayerVisibleCategories(player).size() >= 2;
+        }
+
+        for (DeluxeTagCategory category : plugin.getTagsHandler().getPlayerVisibleCategories(player)) {
+            if (category.getIdentifier().equalsIgnoreCase(categoryIdentifier)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private boolean shouldShowCategorySelector(Player player) {
+        return plugin.getTagsHandler().getPlayerVisibleCategories(player).size() >= 2;
+    }
+
+    private int clampPage(int page, int pages) {
+        if (pages <= 0) {
+            return 1;
+        }
+
+        if (page < 1) {
+            return 1;
+        }
+
+        return Math.min(page, pages);
+    }
+
+    private String prepareTitle(Player player, String title, int page, boolean hasNextPage) {
+        if (title == null) {
+            title = "";
+        }
+
+        title = replacePageNumbers(plugin.setPlaceholders(player, title, null), page, hasNextPage);
+        if (title.length() > 32) {
+            title = title.substring(0, 31);
+        }
+
+        return title;
+    }
+
+    private <T> List<T> getPageItems(List<T> items, int page, int pageSize) {
+        int startIndex = (page * pageSize) - pageSize;
+        int endIndex = Math.min(startIndex + pageSize, items.size());
+        if (startIndex < 0 || startIndex >= items.size()) {
+            return Collections.emptyList();
+        }
+
+        return items.subList(startIndex, endIndex);
     }
 
     private String replacePageNumbers(String line, int page, boolean hasNextPage) {

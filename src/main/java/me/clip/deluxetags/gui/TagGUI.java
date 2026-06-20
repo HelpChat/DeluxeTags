@@ -14,10 +14,13 @@ public class TagGUI {
 	
 	private static HashMap<String, TagGUI> inGUI;
 	private Map<Integer, String> tags;
+	private Map<Integer, String> categories;
 
 	private Inventory inventory;
 	private final Map<Integer, DisplayItem> items;
 	private final String displayName;
+	private String categoryIdentifier;
+	private boolean categoryMenu;
 	private int slots;
 	private int page;
 	
@@ -26,6 +29,7 @@ public class TagGUI {
 		this.items = new HashMap<>();
 		this.page = page;
 		this.tags = new HashMap<>();
+		this.categories = new HashMap<>();
 	}
 	
 	public int getInventorySize(){
@@ -39,6 +43,9 @@ public class TagGUI {
 	public TagGUI clear() {
 		this.items.clear();
 		this.tags = null;
+		this.categories = null;
+		this.categoryIdentifier = null;
+		this.categoryMenu = false;
 		return this;
 	}
 	
@@ -106,7 +113,7 @@ public class TagGUI {
 	public ItemType getClickedItemType(int slot) {
 		DisplayItem clickedDisplayItem = this.items.get(slot);
 
-		return clickedDisplayItem != null ? clickedDisplayItem.getType() : null;
+		return clickedDisplayItem != null ? clickedDisplayItem.getType() : ItemType.UNKNOWN;
 	}
 
 	public int getPage() {
@@ -127,5 +134,29 @@ public class TagGUI {
 
 	public void setTags(Map<Integer, String> tags) {
 		this.tags = tags;
+	}
+
+	public Map<Integer, String> getCategories() {
+		return categories;
+	}
+
+	public void setCategories(Map<Integer, String> categories) {
+		this.categories = categories;
+	}
+
+	public String getCategoryIdentifier() {
+		return categoryIdentifier;
+	}
+
+	public void setCategoryIdentifier(String categoryIdentifier) {
+		this.categoryIdentifier = categoryIdentifier;
+	}
+
+	public boolean isCategoryMenu() {
+		return categoryMenu;
+	}
+
+	public void setCategoryMenu(boolean categoryMenu) {
+		this.categoryMenu = categoryMenu;
 	}
 }

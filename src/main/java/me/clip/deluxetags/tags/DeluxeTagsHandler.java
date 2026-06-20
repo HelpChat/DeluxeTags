@@ -21,6 +21,7 @@ public class DeluxeTagsHandler {
     private final DeluxeTags plugin;
 
     private final TreeMap<Integer, DeluxeTag> configTags = new TreeMap<>();
+    private final Map<String, DeluxeTagCategory> categories = new HashMap<>();
     private final Map<UUID, DeluxeTag> playerTags = new HashMap<>();
 
     private final List<UUID> playersUsingDefaultTag = new ArrayList<>();
@@ -132,6 +133,30 @@ public class DeluxeTagsHandler {
     // Tag functions
 
     /**
+     * load this category into the category list.
+     */
+    public void loadCategory(@NotNull final DeluxeTagCategory category) {
+        categories.put(category.getIdentifier(), category);
+    }
+
+    /**
+     * check if a category identifier has been loaded.
+     */
+    public boolean hasCategory(@NotNull final String identifier) {
+        return getCategoryByIdentifier(identifier) != null;
+    }
+
+    /**
+     * get a DeluxeTagCategory by its identifier.
+     */
+    public @Nullable DeluxeTagCategory getCategoryByIdentifier(@NotNull final String identifier) {
+        return categories.values().stream()
+                .filter(category -> category.getIdentifier().equalsIgnoreCase(identifier))
+                .findFirst()
+                .orElse(null);
+    }
+
+    /**
      * load this tag into the tag list. if a tag with the same priority already exists, it will be overwritten
      */
     public void loadTag(@NotNull final DeluxeTag tag) {
@@ -218,6 +243,24 @@ public class DeluxeTagsHandler {
     }
 
     /**
+     * get list containing all loaded categories in configured order.
+     */
+    public @NotNull List<@NotNull DeluxeTagCategory> getAllCategories() {
+        return categories.values().stream()
+                .sorted(Comparator.comparingInt(DeluxeTagCategory::getOrder).thenComparing(DeluxeTagCategory::getIdentifier))
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * get list containing all real categories, excluding the synthetic all-tags category.
+     */
+    public @NotNull List<@NotNull DeluxeTagCategory> getRealCategories() {
+        return getAllCategories().stream()
+                .filter(category -> !category.isAllCategory())
+                .collect(Collectors.toList());
+    }
+
+    /**
      * get a list of all available tag identifiers that have been loaded in increasing order of priority
      * @return empty list if no tags are loaded
      */
@@ -242,6 +285,25 @@ public class DeluxeTagsHandler {
     }
 
     /**
+     * get a list of all available tag identifiers a player has permission for in a category.
+     * @param player Player to get tag identifiers for
+     * @param categoryIdentifier Category identifier to filter by
+     * @return empty list if player doesn't have permission to any tags in that category
+     */
+    public @NotNull List<@NotNull String> getPlayerAvailableTagIdentifiers(@NotNull final Player player, @NotNull final String categoryIdentifier) {
+        if (categoryIdentifier.equalsIgnoreCase(DeluxeTagCategory.ALL_IDENTIFIER)) {
+            return getPlayerAvailableTagIdentifiers(player);
+        }
+
+        return getAllTags().stream()
+                .filter(tag -> tag.getCategory().equalsIgnoreCase(categoryIdentifier))
+                .filter(tag -> tag.hasPermissionToUse(player))
+                .sorted(Comparator.comparingInt(DeluxeTag::getPriority))
+                .map(DeluxeTag::getIdentifier)
+                .collect(Collectors.toList());
+    }
+
+    /**
      * get a list of all tag identifiers that a player can see or use (players can see tags they have permission to use) in increasing order of priority
      * @param player Player to get tag identifiers for
      * @return empty list if player can't see any tags or no tags are loaded
@@ -251,6 +313,53 @@ public class DeluxeTagsHandler {
                 .filter(tag -> tag.hasPermissionToSee(player) || tag.hasPermissionToUse(player))
                 .sorted(Comparator.comparingInt(DeluxeTag::getPriority))
                 .map(DeluxeTag::getIdentifier)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * get a list of all visible tag identifiers in a category.
+     * @param player Player to get tag identifiers for
+     * @param categoryIdentifier Category identifier to filter by
+     * @return empty list if player can't see any tags in that category
+     */
+    public @NotNull List<@NotNull String> getPlayerVisibleTagIdentifiers(@NotNull final Player player, @NotNull final String categoryIdentifier) {
+        if (categoryIdentifier.equalsIgnoreCase(DeluxeTagCategory.ALL_IDENTIFIER)) {
+            return getPlayerVisibleTagIdentifiers(player);
+        }
+
+        return getAllTags().stream()
+                .filter(tag -> tag.getCategory().equalsIgnoreCase(categoryIdentifier))
+                .filter(tag -> tag.hasPermissionToSee(player) || tag.hasPermissionToUse(player))
+                .sorted(Comparator.comparingInt(DeluxeTag::getPriority))
+                .map(DeluxeTag::getIdentifier)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * get all real categories a player can open and that contain at least one visible tag.
+     */
+    public @NotNull List<@NotNull DeluxeTagCategory> getPlayerVisibleCategories(@NotNull final Player player) {
+        return getRealCategories().stream()
+                .filter(category -> !getPlayerVisibleTagIdentifiers(player, category.getIdentifier()).isEmpty())
+                .sorted(Comparator.comparingInt(DeluxeTagCategory::getOrder).thenComparing(DeluxeTagCategory::getIdentifier))
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * get categories to show in the selector, including the synthetic all-tags category when useful.
+     */
+    public @NotNull List<@NotNull DeluxeTagCategory> getPlayerSelectableCategories(@NotNull final Player player) {
+        final List<DeluxeTagCategory> visibleCategories = new ArrayList<>(getPlayerVisibleCategories(player));
+
+        if (visibleCategories.size() >= 2) {
+            final DeluxeTagCategory allCategory = getCategoryByIdentifier(DeluxeTagCategory.ALL_IDENTIFIER);
+            if (allCategory != null) {
+                visibleCategories.add(allCategory);
+            }
+        }
+
+        return visibleCategories.stream()
+                .sorted(Comparator.comparingInt(DeluxeTagCategory::getOrder).thenComparing(DeluxeTagCategory::getIdentifier))
                 .collect(Collectors.toList());
     }
 
@@ -304,6 +413,7 @@ public class DeluxeTagsHandler {
      */
     public void unloadData() {
         configTags.clear();
+        categories.clear();
         playerTags.clear();
 
         playersUsingDefaultTag.clear();

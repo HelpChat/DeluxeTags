@@ -15,6 +15,7 @@ public class GUIOptions {
 	private DisplayItem hasTagItem;
 	private DisplayItem noTagItem;
 	private DisplayItem exitItem;
+	private DisplayItem categoryBackItem;
 	private DisplayItem nextPageItem;
 	private DisplayItem previousPageItem;
 
@@ -50,6 +51,9 @@ public class GUIOptions {
 				case EXIT_ITEM:
 					this.exitItem = config.loadGuiItem(type);
 					break;
+				case CATEGORY_BACK_ITEM:
+					this.categoryBackItem = config.loadGuiItem(type);
+					break;
 				case NEXT_PAGE:
 					this.nextPageItem = config.loadGuiItem(type);
 					break;
@@ -78,6 +82,10 @@ public class GUIOptions {
 
 	public DisplayItem getExitItem() {
 		return exitItem;
+	}
+
+	public DisplayItem getCategoryBackItem() {
+		return categoryBackItem;
 	}
 
 	public DisplayItem getNextPageItem() {
