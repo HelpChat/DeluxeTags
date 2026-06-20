@@ -658,6 +658,7 @@ public class TagCommand implements CommandExecutor {
       plugin.getCfg().reload();
 
       plugin.getTagsHandler().unloadData();
+      plugin.getCfg().loadCategories();
       int loaded = plugin.getCfg().loadTags();
 
       plugin.reloadFormattingOptions();

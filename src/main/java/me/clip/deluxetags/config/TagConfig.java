@@ -11,6 +11,7 @@ import me.clip.deluxetags.gui.DisplayItem;
 import me.clip.deluxetags.gui.ItemType;
 import me.clip.deluxetags.gui.options.CustomModelDataComponent;
 import me.clip.deluxetags.tags.DeluxeTag;
+import me.clip.deluxetags.tags.DeluxeTagCategory;
 import me.clip.deluxetags.utils.ItemUtils;
 import me.clip.deluxetags.utils.StringUtils;
 import me.clip.deluxetags.utils.VersionHelper;
@@ -55,22 +56,29 @@ public class TagConfig {
             + "\ndeluxetags:"
             + "\n  VIP: "
             + "\n    order: 1"
+            + "\n    category: general"
             + "\n    tag: '&7[&eVIP&7]'"
             + "\n    description: 'This tag is awarded by getting VIP'"
             + "\n"
-            + "\nPlaceholders for your chat plugin that supports PlaceholderAPI (Including DeluxeChat)"
+            + "\nCreate your categories using the following format:"
+            + "\n"
+            + "\ncategories:"
+            + "\n  general:"
+            + "\n    order: 1"
+            + "\n    item: NAME_TAG"
+            + "\n    name: '&6General'"
+            + "\n    lore:"
+            + "\n      - '&7Click to view general tags'"
+            + "\n    gui_name: '&6General tags'"
+            + "\n"
+            + "\nThe reserved 'all' category configures the automatic all-tags selector item."
+            + "\n"
+            + "\nPlaceholders for your chat plugin that supports PlaceholderAPI"
             + "\n"
             + "\n%deluxetags_identifier% - display the players active tag identifier"
             + "\n%deluxetags_tag% - display the players active tag"
             + "\n%deluxetags_description% - display the players active tag description"
-            + "\n%deluxetags_amount% - display the amount of tags a player has access to"
-            + "\n"
-            + "\nPlaceholders for your essentials/chat handling formats config:"
-            + "\n"
-            + "\n{deluxetags_identifier} - display the players active tag identifier"
-            + "\n{deluxetags_tag} - display the players active tag"
-            + "\n{deluxetags_description} - display the players active tag description"
-            + "\n{deluxetags_amount} - display the amount of tags a player has access to");
+            + "\n%deluxetags_amount% - display the amount of tags a player has access to");
 
     config.addDefault("force_tags", false);
     config.addDefault("check_updates", true);
@@ -135,6 +143,14 @@ public class TagConfig {
         Collections.singletonList("&7Exit the tags menu"));
     addDefaultUnlessAlternativePathExists("gui.exit_item.slots", Arrays.asList(48, 50), "gui.exit_item.slot");
 
+    // Category Back item
+    config.addDefault("gui.category_back_item.material", "ARROW");
+    config.addDefault("gui.category_back_item.data", 0);
+    config.addDefault("gui.category_back_item.displayname", "&6Back to categories");
+    config.addDefault("gui.category_back_item.lore",
+        Collections.singletonList("&7Return to category selection"));
+    addDefaultUnlessAlternativePathExists("gui.category_back_item.slot", 47, "gui.category_back_item.slots");
+
     // Next Page item
     config.addDefault("gui.next_page.material", "PAPER");
     config.addDefault("gui.next_page.data", 0);
@@ -151,12 +167,30 @@ public class TagConfig {
         Collections.singletonList("&7Move to the previous page"));
     addDefaultUnlessAlternativePathExists("gui.previous_page.slot", 45, "gui.previous_page.slots");
 
+    // Category properties
+    config.addDefault("categories.all.order", 0);
+    config.addDefault("categories.all.item", "BOOK");
+    config.addDefault("categories.all.name", "&6All Tags");
+    config.addDefault("categories.all.lore",
+        Collections.singletonList("&7Click to view all available tags"));
+    config.addDefault("categories.all.gui_name", "&6All Tags");
+
+    config.addDefault("categories.general.order", 1);
+    config.addDefault("categories.general.item", "NAME_TAG");
+    config.addDefault("categories.general.name", "&6General");
+    config.addDefault("categories.general.lore",
+        Collections.singletonList("&7Click to view general tags"));
+    config.addDefault("categories.general.gui_name", "&6General tags");
+
     if (!config.contains("deluxetags")) {
       config.set("deluxetags.example.order", 1);
+      config.set("deluxetags.example.category", DeluxeTagCategory.GENERAL_IDENTIFIER);
       config.set("deluxetags.example.tag", "&8[&bDeluxeTags&8]");
       config.set("deluxetags.example.description", "&cAwarded for using DeluxeTags!");
       config.set("deluxetags.example.permission", "deluxetags.tag.example");
     }
+
+    migrateTagCategories();
 
     config.options().copyDefaults(true);
     plugin.saveConfig();
@@ -173,6 +207,21 @@ public class TagConfig {
   private void addDefaultUnlessAlternativePathExists(String path, Object value, String alternativePath) {
     if (!config.contains(alternativePath)) {
       config.addDefault(path, value);
+    }
+  }
+
+  private void migrateTagCategories() {
+    ConfigurationSection deluxetags = config.getConfigurationSection("deluxetags");
+    if (deluxetags == null) {
+      return;
+    }
+
+    for (String identifier : deluxetags.getKeys(false)) {
+      String categoryPath = "deluxetags." + identifier + ".category";
+      String category = config.getString(categoryPath);
+      if (category == null || category.trim().isEmpty() || category.equalsIgnoreCase(DeluxeTagCategory.ALL_IDENTIFIER)) {
+        config.set(categoryPath, DeluxeTagCategory.GENERAL_IDENTIFIER);
+      }
     }
   }
 
@@ -284,6 +333,68 @@ public class TagConfig {
     return material == null ? null : new DisplayItem(type, itemStack, slots);
   }
 
+  public int loadCategories() {
+    int loaded = 0;
+    boolean loadedAllCategory = false;
+    boolean loadedRealCategory = false;
+
+    ConfigurationSection categories = config.getConfigurationSection("categories");
+    Set<String> keys = categories != null ? categories.getKeys(false) : Collections.emptySet();
+
+    for (String identifier : keys) {
+      if (identifier.trim().isEmpty()) {
+        continue;
+      }
+
+      String basePath = "categories." + identifier;
+      boolean allCategory = identifier.equalsIgnoreCase(DeluxeTagCategory.ALL_IDENTIFIER);
+
+      Material fallback = allCategory ? XMaterial.BOOK.parseMaterial() : XMaterial.NAME_TAG.parseMaterial();
+      Material material = loadCategoryMaterial(config.getString(basePath + ".item"), fallback);
+      String defaultName = allCategory ? "&6All Tags" : "&6" + identifier;
+      String name = config.getString(basePath + ".name", defaultName);
+      List<String> lore = config.getStringList(basePath + ".lore");
+      String guiName = config.getString(basePath + ".gui_name", name);
+      int order = config.getInt(basePath + ".order", allCategory ? 0 : loaded + 1);
+
+      plugin.getTagsHandler().loadCategory(new DeluxeTagCategory(identifier, order, material, name, lore, guiName, allCategory));
+      if (allCategory) {
+        loadedAllCategory = true;
+      } else {
+        loadedRealCategory = true;
+      }
+      loaded++;
+    }
+
+    if (!loadedAllCategory) {
+      plugin.getTagsHandler().loadCategory(new DeluxeTagCategory(
+          DeluxeTagCategory.ALL_IDENTIFIER,
+          0,
+          XMaterial.BOOK.parseMaterial(),
+          "&6All Tags",
+          Collections.singletonList("&7Click to view all available tags"),
+          "&6All Tags",
+          true
+      ));
+      loaded++;
+    }
+
+    if (!loadedRealCategory) {
+      plugin.getTagsHandler().loadCategory(new DeluxeTagCategory(
+          DeluxeTagCategory.GENERAL_IDENTIFIER,
+          1,
+          XMaterial.NAME_TAG.parseMaterial(),
+          "&6General",
+          Collections.singletonList("&7Click to view general tags"),
+          "&6General tags",
+          false
+      ));
+      loaded++;
+    }
+
+    return loaded;
+  }
+
   public int loadTags() {
     int loaded = 0;
 
@@ -317,7 +428,13 @@ public class TagConfig {
       }
       int priority = config.getInt("deluxetags." + identifier + ".order");
 
-      DeluxeTag t = new DeluxeTag(priority, identifier, tag, description);
+      String category = normalizeTagCategory(config.getString("deluxetags." + identifier + ".category", DeluxeTagCategory.GENERAL_IDENTIFIER));
+      if (!category.equalsIgnoreCase(DeluxeTagCategory.GENERAL_IDENTIFIER) && !plugin.getTagsHandler().hasCategory(category)) {
+        plugin.getLogger().log(Level.INFO, "Could not find category: " + category + " for tag: " + identifier + ". Using general instead.");
+        category = DeluxeTagCategory.GENERAL_IDENTIFIER;
+      }
+
+      DeluxeTag t = new DeluxeTag(priority, identifier, tag, description, category);
       t.setPermission(config.getString("deluxetags." + identifier + ".permission", "deluxetags.tag." + identifier));
       plugin.getTagsHandler().loadTag(t);
       loaded++;
@@ -327,11 +444,16 @@ public class TagConfig {
   }
 
   public void saveTag(DeluxeTag tag) {
-    saveTag(tag.getPriority(), tag.getIdentifier(), tag.getDisplayTag(), tag.getDescription(), tag.getPermission());
+    saveTag(tag.getPriority(), tag.getIdentifier(), tag.getDisplayTag(), tag.getDescription(), tag.getPermission(), tag.getCategory());
   }
 
   public void saveTag(int priority, String identifier, String tag, String description, String permission) {
+    saveTag(priority, identifier, tag, description, permission, getSavedCategory(identifier));
+  }
+
+  public void saveTag(int priority, String identifier, String tag, String description, String permission, String category) {
     config.set("deluxetags." + identifier + ".order", priority);
+    config.set("deluxetags." + identifier + ".category", normalizeTagCategory(category));
     config.set("deluxetags." + identifier + ".tag", tag);
     if (description == null) {
       description = "&fDescription for tag " + identifier;
@@ -344,6 +466,35 @@ public class TagConfig {
   public void removeTag(String identifier) {
     config.set("deluxetags." + identifier, null);
     plugin.saveConfig();
+  }
+
+  private Material loadCategoryMaterial(String materialName, Material fallback) {
+    if (fallback == null) {
+      fallback = Material.NAME_TAG;
+    }
+
+    if (materialName == null || materialName.trim().isEmpty()) {
+      return fallback;
+    }
+
+    try {
+      Material material = XMaterial.matchXMaterial(materialName.toUpperCase(Locale.ROOT)).get().parseMaterial();
+      return material == null ? fallback : material;
+    } catch (Exception e) {
+      return fallback;
+    }
+  }
+
+  private String normalizeTagCategory(String category) {
+    if (category == null || category.trim().isEmpty() || category.equalsIgnoreCase(DeluxeTagCategory.ALL_IDENTIFIER)) {
+      return DeluxeTagCategory.GENERAL_IDENTIFIER;
+    }
+
+    return category;
+  }
+
+  private String getSavedCategory(String identifier) {
+    return normalizeTagCategory(config.getString("deluxetags." + identifier + ".category", DeluxeTagCategory.GENERAL_IDENTIFIER));
   }
 
   private List<Integer> loadSlots(String slotsPath, String slotPath) {

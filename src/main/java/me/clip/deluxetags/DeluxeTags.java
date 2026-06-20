@@ -56,6 +56,7 @@ public class DeluxeTags extends JavaPlugin {
 
 		reloadFormattingOptions();
 
+		cfg.loadCategories();
 		int loaded = cfg.loadTags();
 		if (loaded == 1) {
 			getLogger().info("1 tag loaded");

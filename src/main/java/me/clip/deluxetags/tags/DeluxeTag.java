@@ -19,6 +19,7 @@ public class DeluxeTag {
     private String displayTag;
     private String description;
     private String permission;
+    private String category;
     private int priority;
 
     /**
@@ -30,10 +31,15 @@ public class DeluxeTag {
      * @param description String value representing the description of this tag
      */
     public DeluxeTag(final int priority, @NotNull final String identifier, @NotNull final String displayTag, @NotNull String description) {
+        this(priority, identifier, displayTag, description, DeluxeTagCategory.GENERAL_IDENTIFIER);
+    }
+
+    public DeluxeTag(final int priority, @NotNull final String identifier, @NotNull final String displayTag, @NotNull String description, @NotNull final String category) {
         this.priority = priority;
         this.identifier = identifier;
         this.displayTag = displayTag;
         this.description = description;
+        setCategory(category);
     }
 
     /**
@@ -116,6 +122,29 @@ public class DeluxeTag {
      */
     public void setPriority(final int priority) {
         this.priority = priority;
+    }
+
+    /**
+     * get the category associated with this tag
+     *
+     * @return category identifier String
+     */
+    public @NotNull String getCategory() {
+        return category == null ? DeluxeTagCategory.GENERAL_IDENTIFIER : category;
+    }
+
+    /**
+     * set the category associated with this tag
+     *
+     * @param category category identifier to set for this tag
+     */
+    public void setCategory(@NotNull final String category) {
+        if (category.trim().isEmpty() || category.equalsIgnoreCase(DeluxeTagCategory.ALL_IDENTIFIER)) {
+            this.category = DeluxeTagCategory.GENERAL_IDENTIFIER;
+            return;
+        }
+
+        this.category = category;
     }
 
     /**

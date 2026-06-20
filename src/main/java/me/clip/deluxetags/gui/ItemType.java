@@ -12,6 +12,7 @@ public enum ItemType {
     HAS_TAG_ITEM(XMaterial.PLAYER_HEAD.parseMaterial()),
     NO_TAG_ITEM(XMaterial.PLAYER_HEAD.parseMaterial()),
     EXIT_ITEM(XMaterial.IRON_DOOR.parseMaterial()),
+    CATEGORY_BACK_ITEM(XMaterial.ARROW.parseMaterial()),
     NEXT_PAGE(XMaterial.PAPER.parseMaterial()),
     PREVIOUS_PAGE(XMaterial.PAPER.parseMaterial()),
     UNKNOWN(null);
