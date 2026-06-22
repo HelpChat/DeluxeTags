@@ -89,7 +89,7 @@ public class TagConfig {
             + "\n    name: '&6General'"
             + "\n    lore:"
             + "\n      - '&7Click to view general tags'"
-            + "\n    gui_name: '&6General tags'"
+            + "\n    gui_name: '&6General tags &7- &8%deluxetags_category_amount% available'"
             + "\n"
             + "\nThe reserved 'all' category configures the automatic all-tags selector item."
             + "\n"
@@ -206,7 +206,7 @@ public class TagConfig {
     addDefault("categories.general.name", "&6General");
     addDefault("categories.general.lore",
         Collections.singletonList("&7Click to view general tags"));
-    addDefault("categories.general.gui_name", "&6General tags");
+    addDefault("categories.general.gui_name", "&6General tags &7- &8%deluxetags_category_amount% available'");
 
     if (!config.contains("deluxetags")) {
       config.set("deluxetags.example.order", 1);
@@ -569,7 +569,7 @@ public class TagConfig {
           XMaterial.NAME_TAG.parseMaterial(),
           "&6General",
           Collections.singletonList("&7Click to view general tags"),
-          "&6General tags",
+          "&6General tags &7- &8%deluxetags_category_amount% available'",
           false
       ));
       loaded++;

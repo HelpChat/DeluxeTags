@@ -406,8 +406,8 @@ public class GUIHandler implements Listener {
             DisplayItem previousPageDisplayItem = new DisplayItem(options.getPreviousPageItem());
             ItemMeta previousPageItemMeta = previousPageDisplayItem.getItemStack().getItemMeta();
             if (previousPageItemMeta != null) {
-                previousPageItemMeta.setDisplayName(plugin.setPlaceholders(p, replacePageNumbers(previousPageDisplayItem.getName(), page, hasNextPage), null, categoryIdentifier));
-                previousPageItemMeta.setLore(processLore(previousPageDisplayItem.getLore(), p, null, page, hasNextPage, categoryIdentifier));
+                previousPageItemMeta.setDisplayName(plugin.setPlaceholders(p, replacePageNumbers(previousPageDisplayItem.getName(), page, hasNextPage, page - 1), null, categoryIdentifier));
+                previousPageItemMeta.setLore(processLore(previousPageDisplayItem.getLore(), p, null, page, hasNextPage, categoryIdentifier, page - 1));
                 previousPageDisplayItem.getItemStack().setItemMeta(previousPageItemMeta);
             }
             gui.addDisplayItem(previousPageDisplayItem);
@@ -418,8 +418,8 @@ public class GUIHandler implements Listener {
             DisplayItem nextPageDisplayItem = new DisplayItem(options.getNextPageItem());
             ItemMeta nextPageItemMeta = nextPageDisplayItem.getItemStack().getItemMeta();
             if (nextPageItemMeta != null) {
-                nextPageItemMeta.setDisplayName(plugin.setPlaceholders(p, replacePageNumbers(nextPageDisplayItem.getName(), page, hasNextPage), null, categoryIdentifier));
-                nextPageItemMeta.setLore(processLore(nextPageDisplayItem.getLore(), p, null, page, hasNextPage, categoryIdentifier));
+                nextPageItemMeta.setDisplayName(plugin.setPlaceholders(p, replacePageNumbers(nextPageDisplayItem.getName(), page, hasNextPage, page + 1), null, categoryIdentifier));
+                nextPageItemMeta.setLore(processLore(nextPageDisplayItem.getLore(), p, null, page, hasNextPage, categoryIdentifier, page + 1));
                 nextPageDisplayItem.getItemStack().setItemMeta(nextPageItemMeta);
             }
             gui.addDisplayItem(nextPageDisplayItem);
@@ -526,7 +526,11 @@ public class GUIHandler implements Listener {
         return items.subList(startIndex, endIndex);
     }
 
-    private String replacePageNumbers(String line, int page, boolean hasNextPage) {
+    static String replacePageNumbers(String line, int page, boolean hasNextPage) {
+        return replacePageNumbers(line, page, hasNextPage, null);
+    }
+
+    static String replacePageNumbers(String line, int page, boolean hasNextPage, Integer legacyPage) {
         if (page <= 0) {
             return line;
         }
@@ -539,16 +543,26 @@ public class GUIHandler implements Listener {
             .replace("%next_page%", hasNextPage ? Integer.toString(page + 1) : "")
             .replace("{next_page}", hasNextPage ? Integer.toString(page + 1) : "");
 
+        if (legacyPage != null) {
+            line = line
+                .replace("%page%", Integer.toString(legacyPage))
+                .replace("{page}", Integer.toString(legacyPage));
+        }
+
         return line;
     }
 
     private List<String> processLore(List<String> originalLore, Player player, DeluxeTag tag, int page, boolean hasNextPage, String categoryIdentifier) {
+        return processLore(originalLore, player, tag, page, hasNextPage, categoryIdentifier, null);
+    }
+
+    private List<String> processLore(List<String> originalLore, Player player, DeluxeTag tag, int page, boolean hasNextPage, String categoryIdentifier, Integer legacyPage) {
         List<String> processedLore = null;
 
         if (originalLore != null && !originalLore.isEmpty()) {
             processedLore = new ArrayList<>();
             for (String line : originalLore) {
-                line = replacePageNumbers(plugin.setPlaceholders(player, line, tag, categoryIdentifier), page, hasNextPage);
+                line = replacePageNumbers(plugin.setPlaceholders(player, line, tag, categoryIdentifier), page, hasNextPage, legacyPage);
                 if (line.contains("\n")) {
                     processedLore.addAll(Arrays.asList(line.split("\n")));
                 } else {
