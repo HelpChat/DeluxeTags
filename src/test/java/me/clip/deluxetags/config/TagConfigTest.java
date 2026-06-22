@@ -102,6 +102,12 @@ public class TagConfigTest {
   }
 
   @Test
+  public void defaultGeneralCategoryGuiNameDoesNotHaveATrailingQuote() {
+    assertEquals("&6General tags &8%deluxetags_category_amount% available",
+        TagConfig.DEFAULT_GENERAL_CATEGORY_GUI_NAME);
+  }
+
+  @Test
   public void addsSectionCommentsToSavedConfig() {
     YamlConfiguration config = new YamlConfiguration();
     config.set("use_minimessage", false);

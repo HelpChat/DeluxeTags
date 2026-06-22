@@ -29,6 +29,7 @@ public class TagConfig {
 
   private static final String LEGACY_TAG_AVAILABILITY_PLACEHOLDER_PATH = "tag_availability_placeholder";
   private static final String TAG_AVAILABILITY_PLACEHOLDER_PATH = "gui.tag_availability_placeholder";
+  static final String DEFAULT_GENERAL_CATEGORY_GUI_NAME = "&6General tags &8%deluxetags_category_amount% available";
   private static final List<String> TOP_LEVEL_CONFIG_ORDER = Collections.unmodifiableList(Arrays.asList(
       "use_minimessage",
       "force_tags",
@@ -99,7 +100,7 @@ public class TagConfig {
             + "\n    name: '&6General'"
             + "\n    lore:"
             + "\n      - '&7Click to view general tags'"
-            + "\n    gui_name: '&6General tags &8%deluxetags_category_amount% available'"
+            + "\n    gui_name: '" + DEFAULT_GENERAL_CATEGORY_GUI_NAME + "'"
             + "\n  epic:"
             + "\n    order: 2"
             + "\n    item: BLAZE_POWDER"
@@ -223,7 +224,7 @@ public class TagConfig {
     addDefault("categories.general.name", "&6General");
     addDefault("categories.general.lore",
         Collections.singletonList("&7Click to view general tags"));
-    addDefault("categories.general.gui_name", "&6General tags &8%deluxetags_category_amount% available'");
+    addDefault("categories.general.gui_name", DEFAULT_GENERAL_CATEGORY_GUI_NAME);
 
     addDefault("categories.epic.order", 2);
     addDefault("categories.epic.item", "BLAZE_POWDER");
@@ -602,7 +603,7 @@ public class TagConfig {
           XMaterial.NAME_TAG.parseMaterial(),
           "&6General",
           Collections.singletonList("&7Click to view general tags"),
-          "&6General tags &8%deluxetags_category_amount% available",
+          DEFAULT_GENERAL_CATEGORY_GUI_NAME,
           false
       ));
       loaded++;
