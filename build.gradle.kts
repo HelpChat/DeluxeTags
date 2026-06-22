@@ -27,6 +27,10 @@ dependencies {
     implementation("com.github.cryptomorin:XSeries:13.7.0")
     implementation("net.kyori:adventure-text-minimessage:4.17.0")
     implementation("net.kyori:adventure-text-serializer-legacy:4.17.0")
+    implementation("com.zaxxer:HikariCP:4.0.3")
+    implementation("com.mysql:mysql-connector-j:9.7.0") {
+        exclude(group = "com.google.protobuf", module = "protobuf-java")
+    }
 
     testImplementation("junit:junit:4.13.2")
 }

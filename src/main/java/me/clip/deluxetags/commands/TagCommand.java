@@ -4,7 +4,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 import java.util.stream.Collectors;
 import me.clip.deluxetags.DeluxeTags;
 import me.clip.deluxetags.config.Lang;
@@ -401,10 +400,8 @@ public class TagCommand implements CommandExecutor {
         return true;
       }
 
-      List<UUID> remove = plugin.getTagsHandler().removeActivePlayers(tag);
-      if (remove != null && !remove.isEmpty()) {
-        plugin.removeSavedTags(remove);
-      }
+      plugin.getTagsHandler().removeActivePlayers(tag);
+      plugin.clearSavedTagIdentifier(tag.getIdentifier());
 
       if (plugin.getTagsHandler().unloadTag(tag)) {
         plugin.getCfg().removeTag(identifier);
@@ -663,8 +660,7 @@ public class TagCommand implements CommandExecutor {
 
       plugin.reloadFormattingOptions();
 
-      plugin.getPlayerFile().reloadConfig();
-      plugin.getPlayerFile().saveConfig();
+      plugin.reloadSavedTagStorage();
 
       plugin.getLangFile().reloadConfig();
       plugin.getLangFile().saveConfig();
@@ -672,22 +668,7 @@ public class TagCommand implements CommandExecutor {
 
       plugin.reloadGUIOptions();
 
-      for (Player online : Bukkit.getServer().getOnlinePlayers()) {
-        if (plugin.getTagsHandler().playerHasActiveTag(online)) {
-          continue;
-        }
-        String identifier = plugin.getSavedTagIdentifier(online.getUniqueId().toString());
-        if (identifier == null) {
-          plugin.getTagsHandler().setPlayerTag(online, plugin.getDummyTag());
-          continue;
-        }
-        DeluxeTag loadedTag = plugin.getTagsHandler().getTagByIdentifier(identifier);
-        if (loadedTag != null && loadedTag.hasPermissionToUse(online)) {
-          plugin.getTagsHandler().setPlayerTag(online, loadedTag);
-        } else {
-          plugin.getTagsHandler(). setPlayerTag(online, plugin.getDummyTag());
-        }
-      }
+      plugin.refreshSavedTagsForOnlinePlayers();
 
       MsgUtils.msg(sender, Lang.CMD_ADMIN_RELOAD.getConfigValue(new String[]{
           String.valueOf(loaded)

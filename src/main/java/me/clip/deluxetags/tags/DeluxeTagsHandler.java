@@ -103,6 +103,15 @@ public class DeluxeTagsHandler {
      * @param player Player to update the tag for
      */
     public void updateTagForPlayer(@NotNull final Player player) {
+        updateTagForPlayer(player, false);
+    }
+
+    /**
+     * trigger a tag update for a player, optionally preferring freshly loaded saved storage over current memory.
+     * @param player Player to update the tag for
+     * @param preferSavedTag true after join/reload storage refreshes
+     */
+    public void updateTagForPlayer(@NotNull final Player player, boolean preferSavedTag) {
         // Forced tags take priority over all other tags
         if (plugin.getCfg().forceTags() && setForcedTag(player)) {
             return;
@@ -110,7 +119,7 @@ public class DeluxeTagsHandler {
 
         // If player has an active tag, and permissions to use it, keep that tag
         final DeluxeTag currentTag = getPlayerActiveTag(player);
-        if (currentTag != null && currentTag != plugin.getDummyTag() && currentTag.hasPermissionToUse(player)) {
+        if (!preferSavedTag && currentTag != null && currentTag != plugin.getDummyTag() && currentTag.hasPermissionToUse(player)) {
             return;
         }
 

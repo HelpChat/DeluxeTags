@@ -59,6 +59,10 @@ public class ConfigWrapper {
 			return;
 		}
 		try {
+			File parent = configFile.getParentFile();
+			if (parent != null && !parent.exists()) {
+				parent.mkdirs();
+			}
 			getConfig().save(configFile);
 		} catch (final IOException ex) {
 			plugin.getLogger().log(Level.SEVERE, "Could not save config to " + configFile, ex);

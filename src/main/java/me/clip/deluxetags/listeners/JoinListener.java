@@ -16,6 +16,6 @@ public class JoinListener implements Listener {
 
 	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
 	public void onChat(final PlayerJoinEvent event) {
-		plugin.getTagsHandler().updateTagForPlayer(event.getPlayer());
+		plugin.loadSavedTagForPlayer(event.getPlayer());
 	}
 }
