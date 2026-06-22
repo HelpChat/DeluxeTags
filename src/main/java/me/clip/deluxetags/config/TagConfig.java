@@ -79,6 +79,16 @@ public class TagConfig {
             + "\n      - '%deluxetags_available%'"
             + "\n    item: NAME_TAG"
             + "\n    data: 0"
+            + "\n  epic:"
+            + "\n    order: 2"
+            + "\n    category: epic"
+            + "\n    tag: '&8[&3Epic&8]'"
+            + "\n    displayname: '&6Tag&f: &6%deluxetags_identifier%'"
+            + "\n    description:"
+            + "\n      - '&9Awarded for using categories'"
+            + "\n      - '%deluxetags_available%'"
+            + "\n    item: BLAZE_POWDER"
+            + "\n    data: 0"
             + "\n"
             + "\nCreate your categories using the following format:"
             + "\n"
@@ -89,7 +99,14 @@ public class TagConfig {
             + "\n    name: '&6General'"
             + "\n    lore:"
             + "\n      - '&7Click to view general tags'"
-            + "\n    gui_name: '&6General tags &7- &8%deluxetags_category_amount% available'"
+            + "\n    gui_name: '&6General tags &8%deluxetags_category_amount% available'"
+            + "\n  epic:"
+            + "\n    order: 2"
+            + "\n    item: BLAZE_POWDER"
+            + "\n    name: '&3Epic Tags'"
+            + "\n    lore:"
+            + "\n      - '&9Click to view epic tags'"
+            + "\n    gui_name: '&3Epic Tags &8%deluxetags_category_amount% available'"
             + "\n"
             + "\nThe reserved 'all' category configures the automatic all-tags selector item."
             + "\n"
@@ -140,7 +157,7 @@ public class TagConfig {
     // Divider item
     addDefault("gui.divider_item.material", "BLACK_STAINED_GLASS_PANE");
     addDefault("gui.divider_item.data", 0);
-    addDefault("gui.divider_item.displayname", "");
+    addDefault("gui.divider_item.displayname", "&0");
     addDefault("gui.divider_item.lore",
         Collections.emptyList());
     addDefaultUnlessAlternativePathExists("gui.divider_item.slots", Collections.singletonList("36-44"), "gui.divider_item.slot");
@@ -199,14 +216,21 @@ public class TagConfig {
     addDefault("categories.all.name", "&3All Tags");
     addDefault("categories.all.lore",
         Collections.singletonList("&7Click to view all available tags"));
-    addDefault("categories.all.gui_name", "&3All Tags &7- &8%deluxetags_category_amount% available");
+    addDefault("categories.all.gui_name", "&3All Tags &8%deluxetags_category_amount% available");
 
     addDefault("categories.general.order", 1);
     addDefault("categories.general.item", "NAME_TAG");
     addDefault("categories.general.name", "&6General");
     addDefault("categories.general.lore",
         Collections.singletonList("&7Click to view general tags"));
-    addDefault("categories.general.gui_name", "&6General tags &7- &8%deluxetags_category_amount% available'");
+    addDefault("categories.general.gui_name", "&6General tags &8%deluxetags_category_amount% available'");
+
+    addDefault("categories.epic.order", 2);
+    addDefault("categories.epic.item", "BLAZE_POWDER");
+    addDefault("categories.epic.name", "&3Epic Tags");
+    addDefault("categories.epic.lore",
+        Collections.singletonList("&9Click to view epic tags"));
+    addDefault("categories.epic.gui_name", "&3Epic Tags &8%deluxetags_category_amount% available");
 
     if (!config.contains("deluxetags")) {
       config.set("deluxetags.example.order", 1);
@@ -217,6 +241,15 @@ public class TagConfig {
       config.set("deluxetags.example.item", "NAME_TAG");
       config.set("deluxetags.example.data", 0);
       config.set("deluxetags.example.permission", "deluxetags.tag.example");
+
+      config.set("deluxetags.epic.order", 2);
+      config.set("deluxetags.epic.category", "epic");
+      config.set("deluxetags.epic.tag", "&8[&3Epic&8]");
+      config.set("deluxetags.epic.displayname", DeluxeTag.DEFAULT_DISPLAY_NAME);
+      config.set("deluxetags.epic.description", Arrays.asList("&9Awarded for using categories", "%deluxetags_available%"));
+      config.set("deluxetags.epic.item", "BLAZE_POWDER");
+      config.set("deluxetags.epic.data", 0);
+      config.set("deluxetags.epic.permission", "deluxetags.tag.epic");
     }
 
     migrateTags(config);
@@ -569,7 +602,7 @@ public class TagConfig {
           XMaterial.NAME_TAG.parseMaterial(),
           "&6General",
           Collections.singletonList("&7Click to view general tags"),
-          "&6General tags &7- &8%deluxetags_category_amount% available'",
+          "&6General tags &8%deluxetags_category_amount% available",
           false
       ));
       loaded++;
