@@ -196,10 +196,10 @@ public class TagConfig {
     // Category properties
     addDefault("categories.all.order", 0);
     addDefault("categories.all.item", "BOOK");
-    addDefault("categories.all.name", "&6All Tags");
+    addDefault("categories.all.name", "&3All Tags");
     addDefault("categories.all.lore",
         Collections.singletonList("&7Click to view all available tags"));
-    addDefault("categories.all.gui_name", "&6All Tags");
+    addDefault("categories.all.gui_name", "&3All Tags &7- &8%deluxetags_category_amount% available");
 
     addDefault("categories.general.order", 1);
     addDefault("categories.general.item", "NAME_TAG");
