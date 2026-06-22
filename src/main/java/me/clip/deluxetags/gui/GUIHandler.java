@@ -8,6 +8,7 @@ import me.clip.deluxetags.tags.DeluxeTag;
 import me.clip.deluxetags.tags.DeluxeTagCategory;
 import me.clip.deluxetags.utils.ItemUtils;
 import me.clip.deluxetags.utils.MsgUtils;
+import me.clip.deluxetags.utils.VersionHelper;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
@@ -18,6 +19,7 @@ import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.SkullMeta;
 
 public class GUIHandler implements Listener {
 
@@ -377,6 +379,7 @@ public class GUIHandler implements Listener {
             infoItemMeta.setLore(processLore(infoDisplayItem.getLore(), p, null, page, hasNextPage, categoryIdentifier));
             infoDisplayItem.getItemStack().setItemMeta(infoItemMeta);
         }
+        applyPlayerHeadOwner(infoDisplayItem, p);
         gui.addDisplayItem(infoDisplayItem);
 
         // Adds Exit Item to Menu
@@ -489,6 +492,32 @@ public class GUIHandler implements Listener {
         } catch (IllegalArgumentException ignored) {
         }
         itemStack.setItemMeta(itemMeta);
+    }
+
+    private void applyPlayerHeadOwner(DisplayItem displayItem, Player player) {
+        ItemStack itemStack = displayItem.getItemStack();
+        if (!isPlayerHead(itemStack.getType())) {
+            return;
+        }
+
+        ItemMeta itemMeta = itemStack.getItemMeta();
+        if (!(itemMeta instanceof SkullMeta)) {
+            return;
+        }
+
+        SkullMeta skullMeta = (SkullMeta) itemMeta;
+        if (VersionHelper.IS_SKULL_OWNER_LEGACY) {
+            skullMeta.setOwner(player.getName());
+        } else {
+            skullMeta.setOwningPlayer(player);
+        }
+
+        itemStack.setItemMeta(skullMeta);
+    }
+
+    private boolean isPlayerHead(Material material) {
+        String materialName = material.name();
+        return materialName.equals("PLAYER_HEAD") || materialName.equals("SKULL_ITEM");
     }
 
     private int clampPage(int page, int pages) {
