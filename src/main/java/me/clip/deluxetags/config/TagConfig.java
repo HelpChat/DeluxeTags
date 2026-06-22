@@ -146,7 +146,7 @@ public class TagConfig {
     // GUI properties
     addDefault("gui.tag_availability_placeholder.has_permission", "&aTag unlocked! Click to select");
     addDefault("gui.tag_availability_placeholder.no_permission", "&cTag locked ");
-    addDefault("gui.name", "&6Available tags&f: &6%deluxetags_amount%");
+    addDefault("gui.name", "&3Select a category:");
     addDefault("gui.size", 54);
     addDefault("gui.tag_slots", Collections.singletonList("0-35"));
 
