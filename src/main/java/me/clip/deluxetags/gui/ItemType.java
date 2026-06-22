@@ -6,8 +6,9 @@ import java.util.HashMap;
 import org.bukkit.Material;
 
 public enum ItemType {
-    TAG_SELECT_ITEM(XMaterial.NAME_TAG.parseMaterial()),
-    TAG_VISIBLE_ITEM(XMaterial.NAME_TAG.parseMaterial()),
+    CATEGORY_ITEM(null),
+    TAG_ITEM(null),
+    TAG_VISIBLE_ITEM(XMaterial.BARRIER.parseMaterial()),
     DIVIDER_ITEM(XMaterial.WHITE_STAINED_GLASS_PANE.parseMaterial()),
     HAS_TAG_ITEM(XMaterial.PLAYER_HEAD.parseMaterial()),
     NO_TAG_ITEM(XMaterial.PLAYER_HEAD.parseMaterial()),

@@ -9,12 +9,14 @@ import me.clip.deluxetags.tags.DeluxeTagCategory;
 import me.clip.deluxetags.utils.ItemUtils;
 import me.clip.deluxetags.utils.MsgUtils;
 import org.bukkit.Material;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.meta.ItemMeta;
 
 public class GUIHandler implements Listener {
@@ -100,7 +102,7 @@ public class GUIHandler implements Listener {
                     openTagMenu(p, gui.getCategoryIdentifier(), gui.getPage()-1);
                 }
                 break;
-            case TAG_SELECT_ITEM:
+            case CATEGORY_ITEM:
                 if (gui.isCategoryMenu()) {
                     Map<Integer, String> categories;
                     try {
@@ -127,7 +129,8 @@ public class GUIHandler implements Listener {
                     openTagMenu(p, categoryId, 1);
                     break;
                 }
-
+                break;
+            case TAG_ITEM:
                 Map<Integer, String> tags;
                 try {
                     tags = gui.getTags();
@@ -228,7 +231,7 @@ public class GUIHandler implements Listener {
         page = clampPage(page, pages);
         boolean hasNextPage = page < pages;
 
-        String title = prepareTitle(p, options.getMenuName(), page, hasNextPage);
+        String title = prepareTitle(p, options.getMenuName(), page, hasNextPage, DeluxeTagCategory.ALL_IDENTIFIER);
         int menuSlots = options.getMenuSize();
 
         TagGUI gui = new TagGUI(title, page).setSlots(menuSlots);
@@ -246,14 +249,14 @@ public class GUIHandler implements Listener {
             categorySlots.put(tagSlot, category.getIdentifier());
 
             DisplayItem categoryDisplayItem = new DisplayItem(
-                ItemType.TAG_SELECT_ITEM,
+                ItemType.CATEGORY_ITEM,
                 ItemUtils.createItem(category.getMaterial(), (short) 0, category.getName(), category.getLore()),
                 Collections.singletonList(tagSlot)
             );
             ItemMeta categoryItemMeta = categoryDisplayItem.getItemStack().getItemMeta();
             if (categoryItemMeta != null) {
-                categoryItemMeta.setDisplayName(plugin.setPlaceholders(p, replacePageNumbers(categoryDisplayItem.getName(), page, hasNextPage), null));
-                categoryItemMeta.setLore(processLore(categoryDisplayItem.getLore(), p, null, page, hasNextPage));
+                categoryItemMeta.setDisplayName(plugin.setPlaceholders(p, replacePageNumbers(categoryDisplayItem.getName(), page, hasNextPage), null, category.getIdentifier()));
+                categoryItemMeta.setLore(processLore(categoryDisplayItem.getLore(), p, null, page, hasNextPage, category.getIdentifier()));
                 categoryDisplayItem.getItemStack().setItemMeta(categoryItemMeta);
             }
             gui.addDisplayItem(categoryDisplayItem);
@@ -262,7 +265,7 @@ public class GUIHandler implements Listener {
         }
         gui.setCategories(categorySlots);
 
-        addStaticMenuItems(gui, p, page, hasNextPage);
+        addStaticMenuItems(gui, p, page, hasNextPage, DeluxeTagCategory.ALL_IDENTIFIER);
         gui.setPage(page);
         gui.openInventory(p);
         return true;
@@ -294,7 +297,7 @@ public class GUIHandler implements Listener {
         boolean hasNextPage = page < pages;
 
         DeluxeTagCategory category = plugin.getTagsHandler().getCategoryByIdentifier(categoryIdentifier);
-        String title = prepareTitle(p, category != null ? category.getGuiName() : options.getMenuName(), page, hasNextPage);
+        String title = prepareTitle(p, category != null ? category.getGuiName() : options.getMenuName(), page, hasNextPage, categoryIdentifier);
 
         int menuSlots = options.getMenuSize();
 
@@ -303,6 +306,7 @@ public class GUIHandler implements Listener {
 
         ids = getPageItems(ids, page, tagSlots.size());
 
+        DeluxeTag currentTag = plugin.getTagsHandler().getPlayerActiveTag(p);
         int idIndex = 0;
         Map<Integer, String> tags = new HashMap<>();
         for (int tagSlot: tagSlots) {
@@ -319,12 +323,15 @@ public class GUIHandler implements Listener {
             }
 
             // Adds Tag Item to Menu
-            DisplayItem tagDisplayItem = new DisplayItem(tag.hasPermissionToUse(p) ? options.getTagSelectItem() : options.getTagVisibleItem());
+            DisplayItem tagDisplayItem = createTagDisplayItem(p, options, tag, tagSlot);
             ItemMeta tagItemMeta = tagDisplayItem.getItemStack().getItemMeta();
             if (tagItemMeta != null) {
-                tagItemMeta.setDisplayName(plugin.setPlaceholders(p, replacePageNumbers(tagDisplayItem.getName(), page, hasNextPage), tag));
-                tagItemMeta.setLore(processLore(tagDisplayItem.getLore(), p, tag, page, hasNextPage));
+                tagItemMeta.setDisplayName(plugin.setPlaceholders(p, replacePageNumbers(tagDisplayItem.getName(), page, hasNextPage), tag, categoryIdentifier));
+                tagItemMeta.setLore(processLore(tagDisplayItem.getLore(), p, tag, page, hasNextPage, categoryIdentifier));
                 tagDisplayItem.getItemStack().setItemMeta(tagItemMeta);
+            }
+            if (isSelectedTag(currentTag, tag)) {
+                applySelectedGlow(tagDisplayItem.getItemStack());
             }
             tagDisplayItem.setSlots(Collections.singletonList(tagSlot));
             gui.addDisplayItem(tagDisplayItem);
@@ -333,21 +340,21 @@ public class GUIHandler implements Listener {
         }
         gui.setTags(tags);
 
-        addStaticMenuItems(gui, p, page, hasNextPage);
+        addStaticMenuItems(gui, p, page, hasNextPage, categoryIdentifier);
         gui.setPage(page);
         gui.openInventory(p);
         return true;
     }
 
-    private void addStaticMenuItems(TagGUI gui, Player p, int page, boolean hasNextPage) {
+    private void addStaticMenuItems(TagGUI gui, Player p, int page, boolean hasNextPage, String categoryIdentifier) {
         GUIOptions options = plugin.getGuiOptions();
 
         // Adds Divider Item to Menu
         DisplayItem dividerDisplayItem = new DisplayItem(options.getDividerItem());
         ItemMeta dividerItemMeta = dividerDisplayItem.getItemStack().getItemMeta();
         if (dividerItemMeta != null) {
-            dividerItemMeta.setDisplayName(plugin.setPlaceholders(p, replacePageNumbers(dividerDisplayItem.getName(), page, hasNextPage), null));
-            dividerItemMeta.setLore(processLore(dividerDisplayItem.getLore(), p, null, page, hasNextPage));
+            dividerItemMeta.setDisplayName(plugin.setPlaceholders(p, replacePageNumbers(dividerDisplayItem.getName(), page, hasNextPage), null, categoryIdentifier));
+            dividerItemMeta.setLore(processLore(dividerDisplayItem.getLore(), p, null, page, hasNextPage, categoryIdentifier));
             dividerDisplayItem.getItemStack().setItemMeta(dividerItemMeta);
         }
         gui.addDisplayItem(dividerDisplayItem);
@@ -366,8 +373,8 @@ public class GUIHandler implements Listener {
         DisplayItem infoDisplayItem = new DisplayItem(currentTagItem);
         ItemMeta infoItemMeta = infoDisplayItem.getItemStack().getItemMeta();
         if (infoItemMeta != null) {
-            infoItemMeta.setDisplayName(plugin.setPlaceholders(p, replacePageNumbers(infoDisplayItem.getName(), page, hasNextPage), null));
-            infoItemMeta.setLore(processLore(infoDisplayItem.getLore(), p, null, page, hasNextPage));
+            infoItemMeta.setDisplayName(plugin.setPlaceholders(p, replacePageNumbers(infoDisplayItem.getName(), page, hasNextPage), null, categoryIdentifier));
+            infoItemMeta.setLore(processLore(infoDisplayItem.getLore(), p, null, page, hasNextPage, categoryIdentifier));
             infoDisplayItem.getItemStack().setItemMeta(infoItemMeta);
         }
         gui.addDisplayItem(infoDisplayItem);
@@ -376,8 +383,8 @@ public class GUIHandler implements Listener {
         DisplayItem exitDisplayItem = new DisplayItem(options.getExitItem());
         ItemMeta exitItemMeta = exitDisplayItem.getItemStack().getItemMeta();
         if (exitItemMeta != null) {
-            exitItemMeta.setDisplayName(plugin.setPlaceholders(p, replacePageNumbers(exitDisplayItem.getName(), page, hasNextPage), null));
-            exitItemMeta.setLore(processLore(exitDisplayItem.getLore(), p, null, page, hasNextPage));
+            exitItemMeta.setDisplayName(plugin.setPlaceholders(p, replacePageNumbers(exitDisplayItem.getName(), page, hasNextPage), null, categoryIdentifier));
+            exitItemMeta.setLore(processLore(exitDisplayItem.getLore(), p, null, page, hasNextPage, categoryIdentifier));
             exitDisplayItem.getItemStack().setItemMeta(exitItemMeta);
         }
         gui.addDisplayItem(exitDisplayItem);
@@ -387,8 +394,8 @@ public class GUIHandler implements Listener {
             DisplayItem categoryBackDisplayItem = new DisplayItem(options.getCategoryBackItem());
             ItemMeta categoryBackItemMeta = categoryBackDisplayItem.getItemStack().getItemMeta();
             if (categoryBackItemMeta != null) {
-                categoryBackItemMeta.setDisplayName(plugin.setPlaceholders(p, replacePageNumbers(categoryBackDisplayItem.getName(), page, hasNextPage), null));
-                categoryBackItemMeta.setLore(processLore(categoryBackDisplayItem.getLore(), p, null, page, hasNextPage));
+                categoryBackItemMeta.setDisplayName(plugin.setPlaceholders(p, replacePageNumbers(categoryBackDisplayItem.getName(), page, hasNextPage), null, categoryIdentifier));
+                categoryBackItemMeta.setLore(processLore(categoryBackDisplayItem.getLore(), p, null, page, hasNextPage, categoryIdentifier));
                 categoryBackDisplayItem.getItemStack().setItemMeta(categoryBackItemMeta);
             }
             gui.addDisplayItem(categoryBackDisplayItem);
@@ -399,8 +406,8 @@ public class GUIHandler implements Listener {
             DisplayItem previousPageDisplayItem = new DisplayItem(options.getPreviousPageItem());
             ItemMeta previousPageItemMeta = previousPageDisplayItem.getItemStack().getItemMeta();
             if (previousPageItemMeta != null) {
-                previousPageItemMeta.setDisplayName(plugin.setPlaceholders(p, replacePageNumbers(previousPageDisplayItem.getName(), page, hasNextPage), null));
-                previousPageItemMeta.setLore(processLore(previousPageDisplayItem.getLore(), p, null, page, hasNextPage));
+                previousPageItemMeta.setDisplayName(plugin.setPlaceholders(p, replacePageNumbers(previousPageDisplayItem.getName(), page, hasNextPage), null, categoryIdentifier));
+                previousPageItemMeta.setLore(processLore(previousPageDisplayItem.getLore(), p, null, page, hasNextPage, categoryIdentifier));
                 previousPageDisplayItem.getItemStack().setItemMeta(previousPageItemMeta);
             }
             gui.addDisplayItem(previousPageDisplayItem);
@@ -411,8 +418,8 @@ public class GUIHandler implements Listener {
             DisplayItem nextPageDisplayItem = new DisplayItem(options.getNextPageItem());
             ItemMeta nextPageItemMeta = nextPageDisplayItem.getItemStack().getItemMeta();
             if (nextPageItemMeta != null) {
-                nextPageItemMeta.setDisplayName(plugin.setPlaceholders(p, replacePageNumbers(nextPageDisplayItem.getName(), page, hasNextPage), null));
-                nextPageItemMeta.setLore(processLore(nextPageDisplayItem.getLore(), p, null, page, hasNextPage));
+                nextPageItemMeta.setDisplayName(plugin.setPlaceholders(p, replacePageNumbers(nextPageDisplayItem.getName(), page, hasNextPage), null, categoryIdentifier));
+                nextPageItemMeta.setLore(processLore(nextPageDisplayItem.getLore(), p, null, page, hasNextPage, categoryIdentifier));
                 nextPageDisplayItem.getItemStack().setItemMeta(nextPageItemMeta);
             }
             gui.addDisplayItem(nextPageDisplayItem);
@@ -438,6 +445,52 @@ public class GUIHandler implements Listener {
         return plugin.getTagsHandler().getPlayerVisibleCategories(player).size() >= 2;
     }
 
+    private DisplayItem createTagDisplayItem(Player player, GUIOptions options, DeluxeTag tag, int slot) {
+        boolean canSelect = tag.hasPermissionToUse(player);
+        Material material = canSelect ? tag.getMaterial() : options.getTagVisibleMaterial();
+        short data = canSelect ? tag.getData() : options.getTagVisibleData();
+        if (material == null) {
+            material = Material.NAME_TAG;
+        }
+
+        return new DisplayItem(
+            canSelect ? ItemType.TAG_ITEM : ItemType.TAG_VISIBLE_ITEM,
+            ItemUtils.createItem(material, data, tag.getDisplayName(), splitLoreLines(tag.getDescription())),
+            Collections.singletonList(slot)
+        );
+    }
+
+    private List<String> splitLoreLines(String lore) {
+        return Arrays.asList(lore.replace("\r\n", "\n").replace("\r", "\n").split("\n", -1));
+    }
+
+    private boolean isSelectedTag(DeluxeTag currentTag, DeluxeTag displayedTag) {
+        return currentTag != null && currentTag.getIdentifier().equalsIgnoreCase(displayedTag.getIdentifier());
+    }
+
+    private void applySelectedGlow(ItemStack itemStack) {
+        ItemMeta itemMeta = itemStack.getItemMeta();
+        if (itemMeta == null) {
+            return;
+        }
+
+        Enchantment enchantment = Enchantment.getByName("DURABILITY");
+        if (enchantment == null) {
+            enchantment = Enchantment.getByName("UNBREAKING");
+        }
+
+        if (enchantment == null) {
+            return;
+        }
+
+        itemMeta.addEnchant(enchantment, 1, true);
+        try {
+            itemMeta.addItemFlags(ItemFlag.valueOf("HIDE_ENCHANTS"));
+        } catch (IllegalArgumentException ignored) {
+        }
+        itemStack.setItemMeta(itemMeta);
+    }
+
     private int clampPage(int page, int pages) {
         if (pages <= 0) {
             return 1;
@@ -450,12 +503,12 @@ public class GUIHandler implements Listener {
         return Math.min(page, pages);
     }
 
-    private String prepareTitle(Player player, String title, int page, boolean hasNextPage) {
+    private String prepareTitle(Player player, String title, int page, boolean hasNextPage, String categoryIdentifier) {
         if (title == null) {
             title = "";
         }
 
-        title = replacePageNumbers(plugin.setPlaceholders(player, title, null), page, hasNextPage);
+        title = replacePageNumbers(plugin.setPlaceholders(player, title, null, categoryIdentifier), page, hasNextPage);
         if (title.length() > 32) {
             title = title.substring(0, 31);
         }
@@ -489,13 +542,13 @@ public class GUIHandler implements Listener {
         return line;
     }
 
-    private List<String> processLore(List<String> originalLore, Player player, DeluxeTag tag, int page, boolean hasNextPage) {
+    private List<String> processLore(List<String> originalLore, Player player, DeluxeTag tag, int page, boolean hasNextPage, String categoryIdentifier) {
         List<String> processedLore = null;
 
         if (originalLore != null && !originalLore.isEmpty()) {
             processedLore = new ArrayList<>();
             for (String line : originalLore) {
-                line = replacePageNumbers(plugin.setPlaceholders(player, line, tag), page, hasNextPage);
+                line = replacePageNumbers(plugin.setPlaceholders(player, line, tag, categoryIdentifier), page, hasNextPage);
                 if (line.contains("\n")) {
                     processedLore.addAll(Arrays.asList(line.split("\n")));
                 } else {

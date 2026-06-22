@@ -2,6 +2,7 @@ package me.clip.deluxetags.gui;
 
 import me.clip.deluxetags.DeluxeTags;
 import me.clip.deluxetags.config.TagConfig;
+import org.bukkit.Material;
 
 import java.util.List;
 
@@ -9,8 +10,8 @@ public class GUIOptions {
 	private final String menuName;
 	private int menuSize;
 	private List<Integer> tagSlots;
-	private DisplayItem tagSelectItem;
-	private DisplayItem tagVisibleItem;
+	private Material tagVisibleMaterial;
+	private short tagVisibleData;
 	private DisplayItem dividerItem;
 	private DisplayItem hasTagItem;
 	private DisplayItem noTagItem;
@@ -30,15 +31,11 @@ public class GUIOptions {
 		}
 
 		tagSlots = config.getTagSlots();
+		tagVisibleMaterial = config.getTagVisibleMaterial();
+		tagVisibleData = config.getTagVisibleData();
 
 		for (ItemType type : ItemType.getCached()) {
 			switch (type) {
-				case TAG_SELECT_ITEM:
-					this.tagSelectItem = config.loadGuiItem(type);
-					break;
-				case TAG_VISIBLE_ITEM:
-					this.tagVisibleItem = config.loadGuiItem(type);
-					break;
 				case DIVIDER_ITEM:
 					this.dividerItem = config.loadGuiItem(type);
 					break;
@@ -64,12 +61,16 @@ public class GUIOptions {
 		}
 	}
 
-	public DisplayItem getTagSelectItem() {
-		return tagSelectItem;
-	}
-
 	public DisplayItem getDividerItem() {
 		return dividerItem;
+	}
+
+	public Material getTagVisibleMaterial() {
+		return tagVisibleMaterial;
+	}
+
+	public short getTagVisibleData() {
+		return tagVisibleData;
 	}
 
 	public DisplayItem getHasTagItem() {
@@ -94,10 +95,6 @@ public class GUIOptions {
 
 	public DisplayItem getPreviousPageItem() {
 		return previousPageItem;
-	}
-
-	public DisplayItem getTagVisibleItem() {
-		return tagVisibleItem;
 	}
 
 	public String getMenuName() {
