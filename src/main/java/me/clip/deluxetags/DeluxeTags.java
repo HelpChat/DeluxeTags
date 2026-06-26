@@ -113,30 +113,7 @@ public class DeluxeTags extends JavaPlugin {
 		}
 		
 		if (cfg.checkUpdates()) {
-			UpdateChecker updater = new UpdateChecker(this);
-			updater.fetch();
-		
-			if (updater.hasUpdateAvailable()) {
-				getLogger().info("----------------------------");
-				getLogger().info("     DeluxeTags Updater");
-				getLogger().info(" ");
-				getLogger().info("An update for DeluxeThat has been found!");
-				getLogger().info("DeluxeTags " + updater.getSpigotVersion());
-				getLogger().info("You are running " + getDescription().getVersion());
-				getLogger().info(" ");
-				getLogger().info("Download at https://www.spigotmc.org/resources/deluxetags.4390/");
-				getLogger().info("----------------------------");
-
-			} else {
-				getLogger().info("----------------------------");
-				getLogger().info("     DeluxeTags Updater");
-				getLogger().info(" ");
-				getLogger().info("You are running " + getDescription().getVersion());
-				getLogger().info("The latest version");
-				getLogger().info("of DeluxeTags!");
-				getLogger().info(" ");
-				getLogger().info("----------------------------");
-			}				
+			new UpdateChecker(this).fetch();
 		}
 	}
 	
