@@ -25,6 +25,8 @@ dependencies {
     compileOnly("me.clip:placeholderapi:2.11.6")
 
     implementation("com.github.cryptomorin:XSeries:13.7.0")
+    implementation("com.zaxxer:HikariCP:4.0.3")
+    implementation("com.mysql:mysql-connector-j:8.0.33")
     implementation("net.kyori:adventure-text-minimessage:4.17.0")
     implementation("net.kyori:adventure-text-serializer-legacy:4.17.0")
 
@@ -51,6 +53,7 @@ tasks {
 
     withType<ShadowJar> {
         relocate("com.cryptomorin.xseries", "me.clip.deluxetags.libs.xseries")
+        relocate("com.zaxxer.hikari", "me.clip.deluxetags.libs.hikari")
         relocate("net.kyori", "me.clip.deluxetags.libs.kyori")
         archiveFileName.set("DeluxeTags-${project.version}.jar")
     }

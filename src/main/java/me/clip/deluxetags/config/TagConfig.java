@@ -38,6 +38,7 @@ public class TagConfig {
       "papi_chat",
       "format_chat",
       "load_tag_on_join",
+      "storage",
       "gui",
       "categories",
       "deluxetags"
@@ -141,6 +142,15 @@ public class TagConfig {
       config.set("force_tag_on_join", null);
     }
     addDefault("load_tag_on_join", true);
+    addDefault("storage.mysql.enabled", false);
+    addDefault("storage.mysql.host", "localhost");
+    addDefault("storage.mysql.port", 3306);
+    addDefault("storage.mysql.database", "deluxetags");
+    addDefault("storage.mysql.username", "root");
+    addDefault("storage.mysql.password", "password");
+    addDefault("storage.mysql.table_prefix", "deluxetags_");
+    addDefault("storage.mysql.use_ssl", false);
+    addDefault("storage.mysql.pool_size", 10);
 
     migrateTagAvailabilityPlaceholder(config);
 
@@ -283,10 +293,15 @@ public class TagConfig {
   }
 
   static void applySectionComments(FileConfiguration config) {
-    config.setComments("use_minimessage", Collections.singletonList("Main Options"));
-    config.setComments("gui", Arrays.asList(null, "GUI layout and buttons"));
-    config.setComments("categories", Arrays.asList(null, "Tag category menus"));
-    config.setComments("deluxetags", Arrays.asList(null, "Tags"));
+    try {
+      java.lang.reflect.Method setComments = config.getClass().getMethod("setComments", String.class, List.class);
+      setComments.invoke(config, "use_minimessage", Collections.singletonList("Main Options"));
+      setComments.invoke(config, "gui", Arrays.asList(null, "GUI layout and buttons"));
+      setComments.invoke(config, "categories", Arrays.asList(null, "Tag category menus"));
+      setComments.invoke(config, "deluxetags", Arrays.asList(null, "Tags"));
+    } catch (ReflectiveOperationException ignored) {
+      // Configuration comments are unavailable on legacy Bukkit versions.
+    }
   }
 
   static void migrateTagAvailabilityPlaceholder(FileConfiguration config) {
@@ -446,6 +461,10 @@ public class TagConfig {
 
   public boolean loadTagOnJoin() {
     return config.getBoolean("load_tag_on_join");
+  }
+
+  public boolean mysqlStorageEnabled() {
+    return config.getBoolean("storage.mysql.enabled", false);
   }
 
   public boolean forceTags() {
