@@ -1,6 +1,7 @@
 package me.clip.deluxetags.gui;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 import me.clip.deluxetags.utils.MsgUtils;
 import org.bukkit.Bukkit;
@@ -12,7 +13,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 public class TagGUI {
 	
-	private static HashMap<String, TagGUI> inGUI;
+	private static final Map<UUID, TagGUI> inGUI = new ConcurrentHashMap<>();
 	private Map<Integer, String> tags;
 	private Map<Integer, String> categories;
 
@@ -77,19 +78,11 @@ public class TagGUI {
 		}
 		player.openInventory(this.inventory);
 		
-		if (inGUI == null) {
-			inGUI = new HashMap<>();
-		}
-		
-		inGUI.put(player.getName(), this);
+		inGUI.put(player.getUniqueId(), this);
 	}
 	
 	public static boolean hasGUI(Player p) {
-		if (inGUI == null) {
-			return false;
-		}
-		
-		return inGUI.containsKey(p.getName()) && inGUI.get(p.getName()) != null;
+		return inGUI.containsKey(p.getUniqueId());
 	}
 
 	public static TagGUI getGUI(Player p) {
@@ -97,7 +90,7 @@ public class TagGUI {
 			return null;
 		}
 
-		return inGUI.get(p.getName());
+		return inGUI.get(p.getUniqueId());
 	}
 	
 	public static boolean close(Player p) {
@@ -106,7 +99,7 @@ public class TagGUI {
 		}
 		
 		getGUI(p).clear();
-		inGUI.remove(p.getName());
+		inGUI.remove(p.getUniqueId());
 		return true;
 	}
 
@@ -125,7 +118,7 @@ public class TagGUI {
 	}
 	
 	public static void unload() {
-		inGUI = null;
+		inGUI.clear();
 	}
 
 	public Map<Integer, String> getTags() {

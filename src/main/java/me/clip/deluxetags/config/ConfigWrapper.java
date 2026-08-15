@@ -30,20 +30,20 @@ public class ConfigWrapper {
 		}
 	}
 
-	public FileConfiguration getConfig() {
+	public synchronized FileConfiguration getConfig() {
 		if (config == null) {
 			reloadConfig();
 		}
 		return config;
 	}
 
-	public void loadConfig(final String header) {
+	public synchronized void loadConfig(final String header) {
 		config.options().header(header);
 		config.options().copyDefaults(true);
 		saveConfig();
 	}
 
-	public void reloadConfig() {
+	public synchronized void reloadConfig() {
 		if (configFile == null) {
 			if (folderName != null && !folderName.isEmpty()) {
 				configFile = new File(plugin.getDataFolder() + File.separator + folderName, fileName);
@@ -54,7 +54,7 @@ public class ConfigWrapper {
 		config = YamlConfiguration.loadConfiguration(configFile);
 	}
 
-	public void saveConfig() {
+	public synchronized void saveConfig() {
 		if (config == null || configFile == null) {
 			return;
 		}

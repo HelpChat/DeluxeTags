@@ -13,7 +13,8 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.plugin.Plugin;
+import me.clip.deluxetags.DeluxeTags;
+import me.clip.deluxetags.utils.Scheduler;
 
 public class UpdateChecker implements Listener {
 
@@ -21,12 +22,12 @@ public class UpdateChecker implements Listener {
       "https://api.modrinth.com/v2/project/wtpLgugo/version?include_changelog=false";
   private static final String MODRINTH_PAGE = "https://modrinth.com/plugin/deluxetags";
 
-  private final Plugin plugin;
+  private final DeluxeTags plugin;
   private final String pluginVersion;
   private String modrinthVersion;
   private boolean updateAvailable;
 
-  public UpdateChecker(Plugin instance) {
+  public UpdateChecker(DeluxeTags instance) {
     plugin = instance;
     pluginVersion = instance.getDescription().getVersion();
   }
@@ -40,7 +41,7 @@ public class UpdateChecker implements Listener {
   }
 
   public void fetch() {
-    Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+    Scheduler.runAsync(plugin, () -> {
       try {
         HttpsURLConnection con = (HttpsURLConnection) new URL(MODRINTH_URL).openConnection();
         con.setRequestMethod("GET");
@@ -67,7 +68,7 @@ public class UpdateChecker implements Listener {
 
       updateAvailable = modrinthIsNewer();
 
-      Bukkit.getScheduler().runTask(plugin, () -> {
+      Scheduler.runGlobal(plugin, () -> {
         logUpdateStatus();
 
         if (updateAvailable) {

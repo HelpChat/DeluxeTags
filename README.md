@@ -36,7 +36,7 @@ This serves as an excellent "extra prefix" solution as it does not require a pla
 
 ## Setup
 
-DeluxeTags supports Spigot and Paper from Minecraft 1.8.8 onward.
+DeluxeTags supports Spigot and Paper from Minecraft 1.8.8 onward, as well as Folia.
 
 To configure DeluxeTags with your preferred chat management plugin, please refer to the documentation.
 

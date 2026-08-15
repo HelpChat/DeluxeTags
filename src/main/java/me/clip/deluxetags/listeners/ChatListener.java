@@ -5,6 +5,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
+import me.clip.deluxetags.utils.Scheduler;
 
 public class ChatListener implements Listener {
 	
@@ -18,8 +19,9 @@ public class ChatListener implements Listener {
 	
 	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
 	public void onChat(AsyncPlayerChatEvent event) {
-		String format = event.getFormat();
-		format = plugin.setPlaceholders(event.getPlayer(), format, null);
+		String original = event.getFormat();
+		String format = Scheduler.callAtEntity(plugin, event.getPlayer(),
+				() -> plugin.setPlaceholders(event.getPlayer(), original, null), original);
 		event.setFormat(format);
 	}
 }

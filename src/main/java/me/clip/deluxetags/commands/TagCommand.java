@@ -10,6 +10,7 @@ import me.clip.deluxetags.DeluxeTags;
 import me.clip.deluxetags.config.Lang;
 import me.clip.deluxetags.tags.DeluxeTag;
 import me.clip.deluxetags.utils.MsgUtils;
+import me.clip.deluxetags.utils.Scheduler;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -32,6 +33,15 @@ public class TagCommand implements CommandExecutor {
                            final String[] args) {
 
     final Player player = sender instanceof Player ? (Player) sender : null;
+
+    // Paper normally invokes player commands in the owning region. This defensive
+    // dispatch also covers command frameworks which call executors globally.
+    if (player != null && !Scheduler.isOwnedByCurrentThread(player)) {
+      final String[] copiedArgs = args.clone();
+      Scheduler.runAtEntity(plugin, player,
+          () -> onCommand(sender, command, label, copiedArgs));
+      return true;
+    }
 
     if (args.length == 0) {
       if (player == null) {
@@ -673,20 +683,22 @@ public class TagCommand implements CommandExecutor {
       plugin.reloadGUIOptions();
 
       for (Player online : Bukkit.getServer().getOnlinePlayers()) {
-        if (plugin.getTagsHandler().playerHasActiveTag(online)) {
-          continue;
-        }
-        String identifier = plugin.getSavedTagIdentifier(online.getUniqueId().toString());
-        if (identifier == null) {
-          plugin.getTagsHandler().setPlayerTag(online, plugin.getDummyTag());
-          continue;
-        }
-        DeluxeTag loadedTag = plugin.getTagsHandler().getTagByIdentifier(identifier);
-        if (loadedTag != null && loadedTag.hasPermissionToUse(online)) {
-          plugin.getTagsHandler().setPlayerTag(online, loadedTag);
-        } else {
-          plugin.getTagsHandler(). setPlayerTag(online, plugin.getDummyTag());
-        }
+        Scheduler.runAtEntity(plugin, online, () -> {
+          if (plugin.getTagsHandler().playerHasActiveTag(online)) {
+            return;
+          }
+          String identifier = plugin.getSavedTagIdentifier(online.getUniqueId().toString());
+          if (identifier == null) {
+            plugin.getTagsHandler().setPlayerTag(online, plugin.getDummyTag());
+            return;
+          }
+          DeluxeTag loadedTag = plugin.getTagsHandler().getTagByIdentifier(identifier);
+          if (loadedTag != null && loadedTag.hasPermissionToUse(online)) {
+            plugin.getTagsHandler().setPlayerTag(online, loadedTag);
+          } else {
+            plugin.getTagsHandler().setPlayerTag(online, plugin.getDummyTag());
+          }
+        });
       }
 
       MsgUtils.msg(sender, Lang.CMD_ADMIN_RELOAD.getConfigValue(new String[]{

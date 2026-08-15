@@ -28,6 +28,7 @@ public class PluginDescriptorTest {
     InputStream textResource = getClass().getClassLoader().getResourceAsStream("plugin.yml");
     assertNotNull(textResource);
     boolean hasApiVersion = false;
+    boolean hasFoliaSupport = false;
     try (InputStream resource = textResource;
          BufferedReader reader = new BufferedReader(
         new InputStreamReader(resource, StandardCharsets.UTF_8)
@@ -37,8 +38,12 @@ public class PluginDescriptorTest {
         if (line.trim().equals("api-version: \"1.13\"")) {
           hasApiVersion = true;
         }
+        if (line.trim().equals("folia-supported: true")) {
+          hasFoliaSupport = true;
+        }
       }
     }
     assertTrue(hasApiVersion);
+    assertTrue(hasFoliaSupport);
   }
 }

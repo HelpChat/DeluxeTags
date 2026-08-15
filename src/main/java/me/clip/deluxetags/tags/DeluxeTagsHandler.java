@@ -8,11 +8,11 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -20,12 +20,12 @@ public class DeluxeTagsHandler {
 
     private final DeluxeTags plugin;
 
-    private final TreeMap<Integer, DeluxeTag> configTags = new TreeMap<>();
-    private final Map<String, DeluxeTagCategory> categories = new HashMap<>();
-    private final Map<UUID, DeluxeTag> playerTags = new HashMap<>();
+    private final Map<Integer, DeluxeTag> configTags = new ConcurrentSkipListMap<>();
+    private final Map<String, DeluxeTagCategory> categories = new ConcurrentHashMap<>();
+    private final Map<UUID, DeluxeTag> playerTags = new ConcurrentHashMap<>();
 
-    private final List<UUID> playersUsingDefaultTag = new ArrayList<>();
-    private final List<UUID> playersUsingForcedTag = new ArrayList<>();
+    private final Set<UUID> playersUsingDefaultTag = ConcurrentHashMap.newKeySet();
+    private final Set<UUID> playersUsingForcedTag = ConcurrentHashMap.newKeySet();
 
     public DeluxeTagsHandler(@NotNull final DeluxeTags plugin) {
         this.plugin = plugin;
@@ -239,7 +239,7 @@ public class DeluxeTagsHandler {
      * @return a non-null collection of all loaded tags
      */
     public @NotNull Collection<@NotNull DeluxeTag> getAllTags() {
-        return configTags.values();
+        return new ArrayList<>(configTags.values());
     }
 
     /**
@@ -383,7 +383,7 @@ public class DeluxeTagsHandler {
      * @return empty set if no tags are loaded
      */
     public @NotNull Set<@NotNull Integer> getLoadedPriorities() {
-        return configTags.keySet();
+        return new java.util.HashSet<>(configTags.keySet());
     }
 
     /**
@@ -391,7 +391,7 @@ public class DeluxeTagsHandler {
      * @return empty list if no players have tags active
      */
     public @NotNull Set<@NotNull UUID> getPlayersWithActiveTags() {
-        return playerTags.keySet();
+        return new java.util.HashSet<>(playerTags.keySet());
     }
 
     /**
@@ -456,7 +456,7 @@ public class DeluxeTagsHandler {
         }
 
         setPlayerTag(player, tag);
-        playersUsingForcedTag.add(player.getUniqueId());
+        playersUsingDefaultTag.add(player.getUniqueId());
         return true;
     }
 
