@@ -4,3 +4,7 @@ build/
 .settings/
 .project
 .classpath
+target/
+build/
+*.iml
+out/
