@@ -4,8 +4,8 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.URL;
 import javax.net.ssl.HttpsURLConnection;
-import me.clip.placeholderapi.util.Msg;
-import org.bukkit.Bukkit;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -33,7 +33,7 @@ public class UpdateChecker implements Listener {
   }
 
   public void fetch() {
-    Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+    plugin.getServer().getAsyncScheduler().runNow(plugin, task -> {
       try {
         HttpsURLConnection con = (HttpsURLConnection) new URL(
             "https://api.spigotmc.org/legacy/update.php?resource=" + RESOURCE_ID).openConnection();
@@ -54,20 +54,20 @@ public class UpdateChecker implements Listener {
         return;
       }
 
-      Bukkit.getScheduler().runTask(plugin, () -> {
+      plugin.getServer().getGlobalRegionScheduler().run(plugin, syncTask -> {
         plugin.getLogger()
             .info("An update for DeluxeTags (v" + getSpigotVersion() + ") is available at:");
         plugin.getLogger()
             .info("https://www.spigotmc.org/resources/deluxetags." + RESOURCE_ID + "/");
-        Bukkit.getPluginManager().registerEvents(this, plugin);
+        plugin.getServer().getPluginManager().registerEvents(this, plugin);
       });
     });
   }
 
   private boolean spigotIsNewer() {
-      if (spigotVersion == null || spigotVersion.isEmpty()) {
-          return false;
-      }
+    if (spigotVersion == null || spigotVersion.isEmpty()) {
+      return false;
+    }
     String plV = toReadable(pluginVersion);
     String spV = toReadable(spigotVersion);
     return plV.compareTo(spV) < 0;
@@ -83,11 +83,13 @@ public class UpdateChecker implements Listener {
   @EventHandler(priority = EventPriority.MONITOR)
   public void onJoin(PlayerJoinEvent e) {
     if (e.getPlayer().hasPermission("deluxetags.updates")) {
-      Msg.msg(e.getPlayer(),
-          "&bAn update for &5&lDeluxeTags &e(&5&lDeluxeTags &fv" + getSpigotVersion()
-              + "&e)"
-          , "&bis available at &ehttps://www.spigotmc.org/resources/deluxetags." + RESOURCE_ID
-              + "/");
+      Component message = MiniMessage.miniMessage().deserialize(
+          "<aqua>An update for <dark_purple><bold>DeluxeTags</bold></dark_purple> "
+              + "<yellow>(<dark_purple><bold>DeluxeTags</bold></dark_purple> <white>v"
+              + getSpigotVersion() + "</white><yellow>)</yellow> "
+              + "<aqua>is available at <yellow>https://www.spigotmc.org/resources/deluxetags."
+              + RESOURCE_ID + "/");
+      e.getPlayer().sendMessage(message);
     }
   }
 }

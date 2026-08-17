@@ -55,7 +55,11 @@ public class TagConfig {
             + "\n{deluxetags_identifier} - display the players active tag identifier"
             + "\n{deluxetags_tag} - display the players active tag"
             + "\n{deluxetags_description} - display the players active tag description"
-            + "\n{deluxetags_amount} - display the amount of tags a player has access to");
+            + "\n{deluxetags_amount} - display the amount of tags a player has access to"
+            + "\n"
+            + "\nGUI customization:"
+            + "\nEach gui item supports: material, data, displayname and lore."
+            + "\nTo hide/remove an item (for example the divider/filler), set its material to AIR or NONE.");
 
     config.addDefault("force_tags", false);
     config.addDefault("check_updates", true);
@@ -156,27 +160,38 @@ public class TagConfig {
   }
 
   public DisplayItem loadGuiItem(ItemType type) {
-    Material material;
-    String displayName;
-    List<String> lore;
-    short data;
+    String base = "gui." + type.name().toLowerCase();
+    String rawMaterial = config.getString(base + ".material");
 
-    try {
-      material = XMaterial.matchXMaterial(config.getString("gui." + type.name().toLowerCase() + ".material").toUpperCase()).get().parseMaterial();
-    } catch (Exception e) {
+    Material material;
+    if (rawMaterial == null || rawMaterial.trim().isEmpty()) {
+      // Material not configured at all: keep the built-in fallback so the GUI still works.
       material = type.getFallbackMaterial();
+    } else if (rawMaterial.equalsIgnoreCase("AIR") || rawMaterial.equalsIgnoreCase("NONE")) {
+      // Explicitly disabled item. Used to remove decorative items such as the divider/filler
+      // without crashing the menu. A null DisplayItem means "leave this slot empty".
+      return null;
+    } else {
+      material = XMaterial.matchXMaterial(rawMaterial.toUpperCase())
+          .map(XMaterial::parseMaterial)
+          .orElse(type.getFallbackMaterial());
     }
 
+    if (material == null || material == Material.AIR) {
+      return null;
+    }
+
+    short data;
     try {
-      data = Short.parseShort(config.getString("gui." + type.name().toLowerCase() + ".data", "0"));
+      data = Short.parseShort(config.getString(base + ".data", "0"));
     } catch (Exception e) {
       data = 0;
     }
 
-    displayName = config.getString("gui." + type.name().toLowerCase() + ".displayname");
-    lore = config.getStringList("gui." + type.name().toLowerCase() + ".lore");
+    String displayName = config.getString(base + ".displayname");
+    List<String> lore = config.getStringList(base + ".lore");
 
-    return material == null ? null : new DisplayItem(material, data, displayName, lore);
+    return new DisplayItem(material, data, displayName, lore);
   }
 
   public int loadTags() {

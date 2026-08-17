@@ -1,0 +1,50 @@
+plugins {
+    id 'java'
+    id 'com.gradleup.shadow' version '9.4.1'
+}
+
+def majorVersion = '1.8.3'
+def buildNumber = System.getenv('BUILD_NUMBER') ?: 'LOCAL'
+
+group = 'me.clip'
+version = "${majorVersion}-DEV-${buildNumber}"
+
+repositories {
+    mavenCentral()
+    maven { url 'https://repo.papermc.io/repository/maven-public/' }
+    maven { url 'https://hub.spigotmc.org/nexus/content/repositories/snapshots/' }
+    maven { url 'https://repo.extendedclip.com/releases/' }
+}
+
+dependencies {
+    compileOnly 'dev.folia:folia-api:26.1.2.build+'
+    compileOnly 'me.clip:placeholderapi:2.12.2'
+    implementation 'com.github.cryptomorin:XSeries:13.7.0'
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
+
+processResources {
+    filesMatching('plugin.yml') {
+        expand(version: project.version)
+    }
+}
+
+shadowJar {
+    relocate 'com.cryptomorin.xseries', 'me.clip.deluxetags.libs.xseries'
+    archiveFileName = "DeluxeTags-${project.version}.jar"
+}
+
+build.dependsOn shadowJar
+
+configurations {
+    testImplementation.extendsFrom compileOnly
+}

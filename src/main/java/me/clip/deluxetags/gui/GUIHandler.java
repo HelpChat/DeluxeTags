@@ -180,90 +180,69 @@ public class GUIHandler implements Listener {
                 tag = plugin.getDummyTag();
             }
 
-            if (tag.hasPermissionToUse(p)) {
-                gui.setItem(
-                    count,
-                    TagGUI.createItem(
-                        options.getTagSelectItem().getMaterial(),
-                        options.getTagSelectItem().getData(),
-                        1,
-                        plugin.setPlaceholders(p, replacePageNumbers(options.getTagSelectItem().getName(), page, hasNextPage), tag),
-                        processLore(options.getTagSelectItem().getLore(), p, tag, page, hasNextPage)
-                    )
-                );
-            } else {
-                gui.setItem(
-                    count,
-                    TagGUI.createItem(
-                        options.getTagVisibleItem().getMaterial(),
-                        options.getTagVisibleItem().getData(),
-                        1,
-                        plugin.setPlaceholders(p, replacePageNumbers(options.getTagVisibleItem().getName(), page, hasNextPage), tag),
-                        processLore(options.getTagVisibleItem().getLore(), p, tag, page, hasNextPage)
-                    )
+            DisplayItem tagItem = tag.hasPermissionToUse(p) ? options.getTagSelectItem() : options.getTagVisibleItem();
+            ItemStack tagStack = buildItem(tagItem, p, tag, page, hasNextPage);
+            if (tagStack == null) {
+                // tag_select_item / tag_visible_item is essential: fall back to a name tag so the
+                // menu always lists the available tags even if the item is misconfigured/disabled.
+                tagStack = TagGUI.createItem(
+                    ItemType.TAG_SELECT_ITEM.getFallbackMaterial(), (short) 0, 1,
+                    plugin.setPlaceholders(p, "&6%deluxetags_identifier%", tag), null
                 );
             }
+            gui.setItem(count, tagStack);
             count++;
         }
         gui.setTags(tags);
 
-        ItemStack divider = TagGUI.createItem(
-            options.getDividerItem().getMaterial(),
-            options.getDividerItem().getData(),
-            1,
-            plugin.setPlaceholders(p, replacePageNumbers(options.getDividerItem().getName(), page, hasNextPage), null),
-            processLore(options.getDividerItem().getLore(), p, null, page, hasNextPage)
-        );
-        for (int b = 36; b < 45; b++) {
-            gui.setItem(b, divider);
+        // The divider/filler row (slots 36-44) is optional. Set gui.divider_item.material to AIR
+        // or NONE (or remove the section) to leave it empty instead of crashing the menu.
+        ItemStack divider = buildItem(options.getDividerItem(), p, null, page, hasNextPage);
+        if (divider != null) {
+            for (int b = 36; b < 45; b++) {
+                gui.setItem(b, divider);
+            }
         }
 
         final DeluxeTag currentTag = plugin.getTagsHandler().getPlayerActiveTag(p);
-        DisplayItem currentTagItem;
+        DisplayItem currentTagItem =
+            (currentTag == null || currentTag.getIdentifier().isEmpty())
+                ? options.getNoTagItem()
+                : options.getHasTagItem();
 
-        if (currentTag == null || currentTag.getIdentifier().isEmpty()) {
-            currentTagItem = options.getNoTagItem();
-        } else {
-            currentTagItem = options.getHasTagItem();
+        ItemStack info = buildItem(currentTagItem, p, null, page, hasNextPage);
+        if (info != null) {
+            gui.setItem(49, info);
         }
 
-        ItemStack info = TagGUI.createItem(
-            currentTagItem.getMaterial(),
-            currentTagItem.getData(),
-            1,
-            plugin.setPlaceholders(p, replacePageNumbers(currentTagItem.getName(), page, hasNextPage), null),
-            processLore(currentTagItem.getLore(), p, null, page, hasNextPage)
-        );
-        gui.setItem(49, info);
+        ItemStack exit = buildItem(options.getExitItem(), p, null, page, hasNextPage);
+        if (exit != null) {
+            gui.setItem(48, exit);
+            gui.setItem(50, exit);
+        }
 
-        ItemStack exit = TagGUI.createItem(
-            options.getExitItem().getMaterial(),
-            options.getExitItem().getData(),
-            1,
-            plugin.setPlaceholders(p, replacePageNumbers(options.getExitItem().getName(), page, hasNextPage), null),
-            processLore(options.getExitItem().getLore(), p, null, page, hasNextPage)
-        );
-        gui.setItem(48, exit);
-        gui.setItem(50, exit);
-
-        if (page > 1) {
+        DisplayItem prevItem = options.getPreviousPageItem();
+        if (page > 1 && prevItem != null && prevItem.getMaterial() != null) {
+            String prevName = prevItem.getName() == null ? "" : prevItem.getName().replace("%page%", String.valueOf(page - 1));
             ItemStack previousPage = TagGUI.createItem(
-                options.getPreviousPageItem().getMaterial(),
-                options.getPreviousPageItem().getData(),
+                prevItem.getMaterial(),
+                prevItem.getData(),
                 1,
-                plugin.setPlaceholders(p, replacePageNumbers(options.getPreviousPageItem().getName().replace("%page%", String.valueOf(page-1)), page, hasNextPage), null),
-                processLore(options.getPreviousPageItem().getLore(), p, null, page, hasNextPage)
+                plugin.setPlaceholders(p, replacePageNumbers(prevName, page, hasNextPage), null),
+                processLore(prevItem.getLore(), p, null, page, hasNextPage)
             );
             gui.setItem(45, previousPage);
         }
 
-        if (hasNextPage) {
+        DisplayItem nextItem = options.getNextPageItem();
+        if (hasNextPage && nextItem != null && nextItem.getMaterial() != null) {
+            String nextName = nextItem.getName() == null ? "" : nextItem.getName().replace("%page%", String.valueOf(page + 1));
             ItemStack nextPage = TagGUI.createItem(
-                options.getNextPageItem().getMaterial(),
-                options.getNextPageItem().getData(),
+                nextItem.getMaterial(),
+                nextItem.getData(),
                 1,
-                plugin.setPlaceholders(p, replacePageNumbers(options.getNextPageItem().getName().replace("%page%", String.valueOf(page+1)), page, true), null),
-                processLore(options.getNextPageItem().getLore(), p, null, page, true)
+                plugin.setPlaceholders(p, replacePageNumbers(nextName, page, true), null),
+                processLore(nextItem.getLore(), p, null, page, true)
             );
             gui.setItem(53, nextPage);
         }
@@ -271,6 +250,26 @@ public class GUIHandler implements Listener {
         gui.setPage(page);
         gui.openInventory(p);
         return true;
+    }
+
+    /**
+     * Builds an {@link ItemStack} from a configurable {@link DisplayItem}, applying placeholders to
+     * the (configurable) display name and lore. Returns {@code null} when the item is disabled
+     * (material set to AIR/NONE or removed from config), in which case the caller leaves the slot empty.
+     */
+    private ItemStack buildItem(DisplayItem item, Player p, DeluxeTag tag, int page, boolean hasNextPage) {
+        if (item == null || item.getMaterial() == null) {
+            return null;
+        }
+
+        String name = item.getName() == null ? "" : item.getName();
+        return TagGUI.createItem(
+            item.getMaterial(),
+            item.getData(),
+            1,
+            plugin.setPlaceholders(p, replacePageNumbers(name, page, hasNextPage), tag),
+            processLore(item.getLore(), p, tag, page, hasNextPage)
+        );
     }
 
     private String replacePageNumbers(String line, int page, boolean hasNextPage) {

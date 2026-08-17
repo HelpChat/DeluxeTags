@@ -28,8 +28,8 @@ public class CleanupTask implements Runnable {
 
 		final List<UUID> toRemove = new ArrayList<>();
 
-		Bukkit.getScheduler().runTask(plugin, () -> {
-			for (final UUID uuid: playersWithActiveTags) {
+		plugin.getServer().getGlobalRegionScheduler().run(plugin, task -> {
+			for (final UUID uuid : playersWithActiveTags) {
 				final Player player = Bukkit.getPlayer(uuid);
 				if (player == null) {
 					toRemove.add(uuid);

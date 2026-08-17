@@ -1,8 +1,9 @@
 name: DeluxeTags
 main: me.clip.deluxetags.DeluxeTags
 version: ${version}
-api-version: "1.13"
-author: extended_clip
+api-version: 26.1
+folia-supported: true
+author: MYSTIC
 description: DeluxeChat add on to allow players to select a custom tag
 softdepend: [PlaceholderAPI]
 commands:
