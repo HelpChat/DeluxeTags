@@ -203,6 +203,14 @@ public class DeluxeTags extends JavaPlugin {
 		c.set(uuid, explicitNoTag ? NO_TAG_IDENTIFIER : null);
 		playerFile.saveConfig();
 	}
+
+	public void clearSavedTag(String uuid) {
+		FileConfiguration c = playerFile.getConfig();
+		if (c.contains(uuid)) {
+			c.set(uuid, null);
+			playerFile.saveConfig();
+		}
+	}
 	
 	public void removeSavedTags(List<UUID> uuids) {
 		boolean requiresSave = false;
