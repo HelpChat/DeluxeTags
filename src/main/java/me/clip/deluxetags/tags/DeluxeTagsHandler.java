@@ -103,8 +103,16 @@ public class DeluxeTagsHandler {
      * @param player Player to update the tag for
      */
     public void updateTagForPlayer(@NotNull final Player player) {
-        // Forced tags take priority over all other tags
+        // Forced tags take priority over all other tags when explicitly enabled.
         if (plugin.getCfg().forceTags() && setForcedTag(player)) {
+            return;
+        }
+
+        final String uuid = player.getUniqueId().toString();
+
+        // A player explicitly choosing no tag must take priority over default-tag permissions.
+        if (plugin.hasExplicitNoTag(uuid)) {
+            setPlayerTag(player, plugin.getDummyTag());
             return;
         }
 
@@ -124,9 +132,9 @@ public class DeluxeTagsHandler {
             return;
         }
 
-        // The player has no forced, active or default tag. Use the dummy tag TODO: NOT SURE WHY THE DUMMY TAG EXISTS?
+        // The player has no forced, active or default tag. Clear stale saved data and use the dummy tag.
+        plugin.clearSavedTag(uuid);
         setPlayerTag(player, plugin.getDummyTag());
-        plugin.removeSavedTag(player.getUniqueId().toString());
     }
 
 
@@ -222,7 +230,7 @@ public class DeluxeTagsHandler {
     /**
      * get a DeluxeTag that is set as the default tag for a player. if the player has multiple default tags, the one with the lowest priority will be returned
      * @param player Player to get the tag for
-     * @return null if the player has no default tag
+     * @return null if player has no default tag
      */
     public @Nullable DeluxeTag getDefaultTag(@NotNull final Player player) {
         return getAllTags().stream()
@@ -436,7 +444,7 @@ public class DeluxeTagsHandler {
 
     private boolean setSavedTag(@NotNull final Player player) {
         final String identifier = plugin.getSavedTagIdentifier(player.getUniqueId().toString());
-        if (identifier == null) {
+        if (identifier == null || plugin.hasExplicitNoTag(player.getUniqueId().toString())) {
             return false;
         }
 
@@ -456,7 +464,7 @@ public class DeluxeTagsHandler {
         }
 
         setPlayerTag(player, tag);
-        playersUsingForcedTag.add(player.getUniqueId());
+        playersUsingDefaultTag.add(player.getUniqueId());
         return true;
     }
 
