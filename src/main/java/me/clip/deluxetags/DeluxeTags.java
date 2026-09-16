@@ -38,6 +38,7 @@ import org.bukkit.scheduler.BukkitTask;
 public class DeluxeTags extends JavaPlugin {
 
 	private static final DeluxeTag DUMMY_TAG = new DeluxeTag(420691337, "", "", "");
+	private static final String NO_TAG_IDENTIFIER = "__deluxetags_no_tag__";
 
 	private DeluxeTagsHandler tagsHandler;
 	private TagConfig cfg;
@@ -171,6 +172,10 @@ public class DeluxeTags extends JavaPlugin {
 		}
 		return null;
 	}
+
+	public boolean hasExplicitNoTag(String uuid) {
+		return NO_TAG_IDENTIFIER.equals(getSavedTagIdentifier(uuid));
+	}
 	
 	public void saveTagIdentifier(String uuid, String tagIdentifier) {
 		FileConfiguration c = playerFile.getConfig();
@@ -180,10 +185,23 @@ public class DeluxeTags extends JavaPlugin {
 	
 	public void removeSavedTag(String uuid) {
 		FileConfiguration c = playerFile.getConfig();
-		if (c.contains(uuid)) {
-			c.set(uuid, null);
-			playerFile.saveConfig();
+		if (!c.contains(uuid)) {
+			return;
 		}
+
+		boolean explicitNoTag = false;
+		try {
+			UUID playerId = UUID.fromString(uuid);
+			Player player = Bukkit.getPlayer(playerId);
+			explicitNoTag = player != null
+					&& tagsHandler != null
+					&& tagsHandler.getPlayerActiveTag(playerId) == DUMMY_TAG;
+		} catch (IllegalArgumentException ignored) {
+			// Invalid UUIDs are treated as a normal saved-tag removal.
+		}
+
+		c.set(uuid, explicitNoTag ? NO_TAG_IDENTIFIER : null);
+		playerFile.saveConfig();
 	}
 	
 	public void removeSavedTags(List<UUID> uuids) {
