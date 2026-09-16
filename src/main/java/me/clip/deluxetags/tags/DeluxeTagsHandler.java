@@ -463,8 +463,8 @@ public class DeluxeTagsHandler {
             return false;
         }
 
+        // Default tags are fallbacks, not forced selections. Do not mark them as non-removable.
         setPlayerTag(player, tag);
-        playersUsingDefaultTag.add(player.getUniqueId());
         return true;
     }
 
