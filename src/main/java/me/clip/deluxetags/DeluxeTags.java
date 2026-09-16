@@ -185,9 +185,6 @@ public class DeluxeTags extends JavaPlugin {
 	
 	public void removeSavedTag(String uuid) {
 		FileConfiguration c = playerFile.getConfig();
-		if (!c.contains(uuid)) {
-			return;
-		}
 
 		boolean explicitNoTag = false;
 		try {
@@ -198,6 +195,10 @@ public class DeluxeTags extends JavaPlugin {
 					&& tagsHandler.getPlayerActiveTag(playerId) == DUMMY_TAG;
 		} catch (IllegalArgumentException ignored) {
 			// Invalid UUIDs are treated as a normal saved-tag removal.
+		}
+
+		if (!c.contains(uuid) && !explicitNoTag) {
+			return;
 		}
 
 		c.set(uuid, explicitNoTag ? NO_TAG_IDENTIFIER : null);
