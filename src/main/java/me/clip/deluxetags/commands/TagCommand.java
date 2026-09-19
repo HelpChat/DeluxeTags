@@ -7,6 +7,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import me.clip.deluxetags.DeluxeTags;
+import me.clip.deluxetags.storage.Selection;
 import me.clip.deluxetags.config.Lang;
 import me.clip.deluxetags.tags.DeluxeTag;
 import me.clip.deluxetags.utils.MsgUtils;
@@ -317,10 +318,10 @@ public class TagCommand implements CommandExecutor {
         if (tag == null) {
           continue;
         }
-        if (plugin.getTagsHandler().setPlayerTag(player, tag)) {
-          plugin.saveTagIdentifier(player.getUniqueId().toString(), tag.getIdentifier());
-          MsgUtils.msg(sender, Lang.CMD_TAG_SEL_SUCCESS.getConfigValue(new String[]{
-              tag.getIdentifier(), tag.getDisplayTag(player)}));
+        if (plugin.getTagsHandler().getPlayerActiveTag(player) != tag) {
+          plugin.selectTag(player, tag.getIdentifier(), sender, () ->
+              MsgUtils.msg(sender, Lang.CMD_TAG_SEL_SUCCESS.getConfigValue(new String[]{
+                  tag.getIdentifier(), tag.getDisplayTag(player)})));
         } else {
           MsgUtils.msg(sender, Lang.CMD_TAG_SEL_FAIL_SAMETAG.getConfigValue(new String[]{
               tag.getIdentifier(), tag.getDisplayTag(player)}));
@@ -403,12 +404,16 @@ public class TagCommand implements CommandExecutor {
       }
 
       List<UUID> remove = plugin.getTagsHandler().removeActivePlayers(tag);
-      if (remove != null && !remove.isEmpty()) {
-        plugin.removeSavedTags(remove);
-      }
 
       if (plugin.getTagsHandler().unloadTag(tag)) {
         plugin.getCfg().removeTag(identifier);
+        if (!plugin.isMySqlStorage()) plugin.removeSavedTags(remove);
+        if (remove != null) {
+          for (UUID uuid : remove) {
+            Player affected = Bukkit.getPlayer(uuid);
+            if (affected != null) plugin.getTagsHandler().updateTagForPlayer(affected);
+          }
+        }
         MsgUtils.msg(sender, Lang.CMD_ADMIN_DELETE_TAG_SUCCESS.getConfigValue(new String[]{
             identifier
         }));
@@ -579,16 +584,16 @@ public class TagCommand implements CommandExecutor {
         if (tag == null) {
           continue;
         }
-        plugin.getTagsHandler().setPlayerTag(target, tag);
-        plugin.saveTagIdentifier(target.getUniqueId().toString(), tag.getIdentifier());
-        MsgUtils.msg(sender, Lang.CMD_ADMIN_SET_SUCCESS.getConfigValue(new String[]{
-            target.getName(), tag.getIdentifier(), tag.getDisplayTag(target)
-        }));
-        if (target != sender) {
-          MsgUtils.msg(target, Lang.CMD_ADMIN_SET_SUCCESS_TARGET.getConfigValue(new String[]{
-              tag.getIdentifier(), tag.getDisplayTag(target), sender.getName()
+        plugin.selectTag(target, tag.getIdentifier(), sender, () -> {
+          MsgUtils.msg(sender, Lang.CMD_ADMIN_SET_SUCCESS.getConfigValue(new String[]{
+              target.getName(), tag.getIdentifier(), tag.getDisplayTag(target)
           }));
-        }
+          if (target != sender) {
+            MsgUtils.msg(target, Lang.CMD_ADMIN_SET_SUCCESS_TARGET.getConfigValue(new String[]{
+                tag.getIdentifier(), tag.getDisplayTag(target), sender.getName()
+            }));
+          }
+        });
         return true;
       }
 
@@ -631,18 +636,12 @@ public class TagCommand implements CommandExecutor {
         return true;
       }
 
-      plugin.getTagsHandler().setPlayerTag(target, plugin.getDummyTag());
-      plugin.removeSavedTag(target.getUniqueId().toString());
-
-      MsgUtils.msg(sender, Lang.CMD_ADMIN_CLEAR_SUCCESS.getConfigValue(new String[]{
-          target.getName()
-      }));
-
-      if (target != sender) {
-        MsgUtils.msg(target, Lang.CMD_ADMIN_CLEAR_SUCCESS_TARGET.getConfigValue(new String[]{
-            sender.getName()
-        }));
-      }
+      plugin.selectTag(target, Selection.NO_TAG, sender, () -> {
+        MsgUtils.msg(sender, Lang.CMD_ADMIN_CLEAR_SUCCESS.getConfigValue(new String[]{target.getName()}));
+        if (target != sender) {
+          MsgUtils.msg(target, Lang.CMD_ADMIN_CLEAR_SUCCESS_TARGET.getConfigValue(new String[]{sender.getName()}));
+        }
+      });
       return true;
 
     } else if (args[0].equalsIgnoreCase("reload")) {
@@ -664,31 +663,13 @@ public class TagCommand implements CommandExecutor {
 
       plugin.reloadFormattingOptions();
 
-      plugin.getPlayerFile().reloadConfig();
-      plugin.getPlayerFile().saveConfig();
-
       plugin.getLangFile().reloadConfig();
       plugin.getLangFile().saveConfig();
       plugin.loadMessages();
 
       plugin.reloadGUIOptions();
 
-      for (Player online : Bukkit.getServer().getOnlinePlayers()) {
-        if (plugin.getTagsHandler().playerHasActiveTag(online)) {
-          continue;
-        }
-        String identifier = plugin.getSavedTagIdentifier(online.getUniqueId().toString());
-        if (identifier == null) {
-          plugin.getTagsHandler().setPlayerTag(online, plugin.getDummyTag());
-          continue;
-        }
-        DeluxeTag loadedTag = plugin.getTagsHandler().getTagByIdentifier(identifier);
-        if (loadedTag != null && loadedTag.hasPermissionToUse(online)) {
-          plugin.getTagsHandler().setPlayerTag(online, loadedTag);
-        } else {
-          plugin.getTagsHandler(). setPlayerTag(online, plugin.getDummyTag());
-        }
-      }
+      plugin.reloadSelectionStorage(sender);
 
       MsgUtils.msg(sender, Lang.CMD_ADMIN_RELOAD.getConfigValue(new String[]{
           String.valueOf(loaded)

@@ -3,6 +3,7 @@ package me.clip.deluxetags.gui;
 import java.util.*;
 
 import me.clip.deluxetags.DeluxeTags;
+import me.clip.deluxetags.storage.Selection;
 import me.clip.deluxetags.config.Lang;
 import me.clip.deluxetags.tags.DeluxeTag;
 import me.clip.deluxetags.tags.DeluxeTagCategory;
@@ -91,11 +92,10 @@ public class GUIHandler implements Listener {
                 TagGUI.close(p);
                 p.closeInventory();
 
-                plugin.getTagsHandler().setPlayerTag(p, plugin.getDummyTag());
-                plugin.removeSavedTag(p.getUniqueId().toString());
-
-                sms(p, Lang.GUI_TAG_DISABLED.getConfigValue(null));
-                p.updateInventory();
+                plugin.selectTag(p, Selection.NO_TAG, p, () -> {
+                    sms(p, Lang.GUI_TAG_DISABLED.getConfigValue(null));
+                    p.updateInventory();
+                });
                 break;
             case PREVIOUS_PAGE:
                 if (gui.isCategoryMenu()) {
@@ -169,19 +169,12 @@ public class GUIHandler implements Listener {
                     return;
                 }
 
-                if (!plugin.getTagsHandler().setPlayerTag(p, selectedTag)) {
-                    return;
-                }
-
+                if (plugin.getTagsHandler().getPlayerActiveTag(p) == selectedTag) return;
                 TagGUI.close(p);
                 p.closeInventory();
-
-                selectedTag = plugin.getTagsHandler().getPlayerActiveTag(p);
-                final String displayName = selectedTag == null ? "" : selectedTag.getDisplayTag(p);
-
-                sms(p, Lang.GUI_TAG_SELECTED.getConfigValue(new String[]{id, displayName}));
-
-                plugin.saveTagIdentifier(p.getUniqueId().toString(), id);
+                final String displayName = selectedTag.getDisplayTag(p);
+                plugin.selectTag(p, id, p, () ->
+                    sms(p, Lang.GUI_TAG_SELECTED.getConfigValue(new String[]{id, displayName})));
                 break;
             case TAG_VISIBLE_ITEM:
                 break;
