@@ -5,7 +5,7 @@ plugins {
     id("com.gradleup.shadow") version "9.2.2"
 }
 
-val majorVersion = "1.9.1"
+val majorVersion = "1.10.0"
 val buildNumber = System.getenv("BUILD_NUMBER") ?: "LOCAL"
 val buildVersion = "DEV-$buildNumber"
 val release = "Release"
