@@ -8,24 +8,26 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import org.bukkit.Bukkit;
 
 public class DeluxeTagsHandler {
 
     private final DeluxeTags plugin;
 
-    private final TreeMap<Integer, DeluxeTag> configTags = new TreeMap<>();
-    private final Map<String, DeluxeTagCategory> categories = new HashMap<>();
-    private final Map<UUID, DeluxeTag> playerTags = new HashMap<>();
+    private final Map<Integer, DeluxeTag> configTags = new ConcurrentSkipListMap<>();
+    private final Map<String, DeluxeTagCategory> categories = new ConcurrentHashMap<>();
+    private final Map<UUID, DeluxeTag> playerTags = new ConcurrentHashMap<>();
 
-    private final List<UUID> playersUsingDefaultTag = new ArrayList<>();
-    private final List<UUID> playersUsingForcedTag = new ArrayList<>();
+    private final List<UUID> playersUsingDefaultTag = new CopyOnWriteArrayList<>();
+    private final List<UUID> playersUsingForcedTag = new CopyOnWriteArrayList<>();
 
     public DeluxeTagsHandler(@NotNull final DeluxeTags plugin) {
         this.plugin = plugin;
@@ -103,6 +105,13 @@ public class DeluxeTagsHandler {
      * @param player Player to update the tag for
      */
     public void updateTagForPlayer(@NotNull final Player player) {
+        if (!Bukkit.isPrimaryThread()) {
+            Bukkit.getScheduler().runTask(plugin, () -> {
+                if (player.isOnline() && Bukkit.getPlayer(player.getUniqueId()) == player) updateTagForPlayer(player);
+            });
+            return;
+        }
+        if (!plugin.isSelectionLoaded(player.getUniqueId())) return;
         // Forced tags take priority over all other tags when explicitly enabled.
         if (plugin.getCfg().forceTags() && setForcedTag(player)) {
             return;
@@ -133,7 +142,7 @@ public class DeluxeTagsHandler {
         }
 
         // The player has no forced, active or default tag. Clear stale saved data and use the dummy tag.
-        plugin.clearSavedTag(uuid);
+        if (!plugin.isMySqlStorage()) plugin.clearSavedTag(uuid);
         setPlayerTag(player, plugin.getDummyTag());
     }
 

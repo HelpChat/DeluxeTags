@@ -42,6 +42,7 @@ To configure DeluxeTags with your preferred chat management plugin, please refer
 
 * [DeluxeTags Setup Guide](https://wiki.helpch.at/helpchat-plugins/deluxetags#setup)
 
+
 ## Documentation
 
 For comprehensive listings of configuration options, localization, commands, and permission structures, please visit the wiki.

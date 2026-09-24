@@ -3,6 +3,11 @@ package me.clip.deluxetags.config;
 import org.bukkit.configuration.file.FileConfiguration;
 
 public enum Lang {
+    STORAGE_UNAVAILABLE("storage.unavailable", "&cTag storage is unavailable. Please try again shortly."),
+    STORAGE_LOADING("storage.loading", "&eYour tag selection is still loading. Please try again shortly."),
+    STORAGE_BUSY("storage.busy", "&eA tag change is already being saved. Please wait."),
+    STORAGE_RESTART("storage.restart_required", "&eStorage settings changed. Restart the server to apply them; the current storage remains active."),
+    STORAGE_CONFIG_ERROR("storage.config_error", "&cCould not load mysql.yml. Check its settings and file permissions; the current storage remains active."),
 	CMD_NO_PERMS("cmd.no_permission", "&cYou don't have &7{0} &cto do that!"),
 	CMD_TARGET_NOT_ONLINE("cmd.target_not_online", "&f{0} &cis not online!"),
 	CMD_NO_TAGS_LOADED("cmd.no_tags_loaded", "&cThere are no tags loaded!"),
