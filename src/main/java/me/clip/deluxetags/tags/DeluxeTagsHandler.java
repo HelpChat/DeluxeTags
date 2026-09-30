@@ -2,12 +2,16 @@ package me.clip.deluxetags.tags;
 
 import me.clip.deluxetags.DeluxeTags;
 import org.bukkit.entity.Player;
+import org.bukkit.permissions.Permission;
+import org.bukkit.permissions.PermissionDefault;
+import org.bukkit.plugin.PluginManager;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -25,6 +29,7 @@ public class DeluxeTagsHandler {
     private final Map<Integer, DeluxeTag> configTags = new ConcurrentSkipListMap<>();
     private final Map<String, DeluxeTagCategory> categories = new ConcurrentHashMap<>();
     private final Map<UUID, DeluxeTag> playerTags = new ConcurrentHashMap<>();
+    private final Set<Permission> registeredTagPermissions = new HashSet<>();
 
     private final List<UUID> playersUsingDefaultTag = new CopyOnWriteArrayList<>();
     private final List<UUID> playersUsingForcedTag = new CopyOnWriteArrayList<>();
@@ -177,7 +182,19 @@ public class DeluxeTagsHandler {
      * load this tag into the tag list. if a tag with the same priority already exists, it will be overwritten
      */
     public void loadTag(@NotNull final DeluxeTag tag) {
+        registerTagPermission("deluxetags.forcetag." + tag.getIdentifier());
+        registerTagPermission("deluxetags.defaulttag." + tag.getIdentifier());
         configTags.put(tag.getPriority(), tag);
+    }
+
+    private void registerTagPermission(String node) {
+        PluginManager manager = Bukkit.getPluginManager();
+        if (manager.getPermission(node) != null) return;
+
+        // Unregistered Bukkit permissions default to op. These nodes must be opt-in.
+        Permission permission = new Permission(node, PermissionDefault.FALSE);
+        manager.addPermission(permission);
+        registeredTagPermissions.add(permission);
     }
 
     /**
@@ -432,6 +449,12 @@ public class DeluxeTagsHandler {
         configTags.clear();
         categories.clear();
         playerTags.clear();
+
+        PluginManager manager = Bukkit.getPluginManager();
+        for (Permission permission : registeredTagPermissions) {
+            if (manager.getPermission(permission.getName()) == permission) manager.removePermission(permission);
+        }
+        registeredTagPermissions.clear();
 
         playersUsingDefaultTag.clear();
         playersUsingForcedTag.clear();
