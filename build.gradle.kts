@@ -11,7 +11,7 @@ val buildVersion = "DEV-$buildNumber"
 val release = "Release"
 
 group = "me.clip"
-version = "$majorVersion-$buildVersion"
+version = "$majorVersion-$release"
 
 repositories {
     mavenCentral()
@@ -54,6 +54,10 @@ tasks {
 
     build {
         dependsOn("shadowJar")
+    }
+
+    jar {
+        archiveClassifier.set("plain")
     }
 
     java {
