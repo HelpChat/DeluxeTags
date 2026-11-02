@@ -29,6 +29,7 @@ public class TagConfig {
 
   private static final String LEGACY_TAG_AVAILABILITY_PLACEHOLDER_PATH = "tag_availability_placeholder";
   private static final String TAG_AVAILABILITY_PLACEHOLDER_PATH = "gui.tag_availability_placeholder";
+  private static final List<String> DEFAULT_LORE = Collections.singletonList("%deluxetags_available%");
   static final String DEFAULT_GENERAL_CATEGORY_GUI_NAME = "&6General tags &8%deluxetags_category_amount% available";
   private static final List<String> TOP_LEVEL_CONFIG_ORDER = Collections.unmodifiableList(Arrays.asList(
       "use_minimessage",
@@ -68,6 +69,8 @@ public class TagConfig {
       + "\nMiniMessage example tag: '<gradient:#ff0000:#ffaa00><bold>[VIP]</bold></gradient>'"
         + "\n"
             + "\nCreate your tags using the following format:"
+            + "\nGUI items show the description followed by lore. The description placeholder only shows the description."
+            + "\nTags without lore inherit gui.default_lore. Set lore: [] to append nothing."
             + "\n"
             + "\ndeluxetags:"
             + "\n  VIP: "
@@ -77,7 +80,6 @@ public class TagConfig {
             + "\n    displayname: '&6Tag&f: &6%deluxetags_identifier%'"
             + "\n    description:"
             + "\n      - 'This tag is awarded by getting VIP'"
-            + "\n      - '%deluxetags_available%'"
             + "\n    item: NAME_TAG"
             + "\n    data: 0"
             + "\n  epic:"
@@ -87,6 +89,8 @@ public class TagConfig {
             + "\n    displayname: '&6Tag&f: &6%deluxetags_identifier%'"
             + "\n    description:"
             + "\n      - '&9Awarded for using categories'"
+            + "\n    lore:"
+            + "\n      - 'Custom GUI information'"
             + "\n      - '%deluxetags_available%'"
             + "\n    item: BLAZE_POWDER"
             + "\n    data: 0"
@@ -116,6 +120,7 @@ public class TagConfig {
             + "\n%deluxetags_identifier% - display the players active tag identifier"
             + "\n%deluxetags_tag% - display the players active tag"
             + "\n%deluxetags_description% - display the players active tag description"
+            + "\n%deluxetags_lore% - display the players active tag lore without the description"
             + "\n%deluxetags_amount% - display the amount of tags a player has access to"
             + "\n"
             + "\nPlaceholders for the tags GUI:"
@@ -126,6 +131,8 @@ public class TagConfig {
             + "\nTag availability placeholder text:"
             + "\n"
             + "\ngui:"
+            + "\n  default_lore:"
+            + "\n    - '%deluxetags_available%'"
             + "\n  tag_availability_placeholder:"
             + "\n    has_permission: '&aTag unlocked! Click to select'"
             + "\n    no_permission: '&cTag locked '");
@@ -143,8 +150,10 @@ public class TagConfig {
     addDefault("load_tag_on_join", true);
 
     migrateTagAvailabilityPlaceholder(config);
+    migrateDefaultLore(config);
 
     // GUI properties
+    addDefault("gui.default_lore", DEFAULT_LORE);
     addDefault("gui.tag_availability_placeholder.has_permission", "&aTag unlocked! Click to select");
     addDefault("gui.tag_availability_placeholder.no_permission", "&cTag locked ");
     addDefault("gui.name", "&3Select a category:");
@@ -238,7 +247,7 @@ public class TagConfig {
       config.set("deluxetags.example.category", DeluxeTagCategory.GENERAL_IDENTIFIER);
       config.set("deluxetags.example.tag", "&8[&bDeluxeTags&8]");
       config.set("deluxetags.example.displayname", DeluxeTag.DEFAULT_DISPLAY_NAME);
-      config.set("deluxetags.example.description", Arrays.asList("&cAwarded for using DeluxeTags!", "%deluxetags_available%"));
+      config.set("deluxetags.example.description", Collections.singletonList("&cAwarded for using DeluxeTags!"));
       config.set("deluxetags.example.item", "NAME_TAG");
       config.set("deluxetags.example.data", 0);
       config.set("deluxetags.example.permission", "deluxetags.tag.example");
@@ -247,7 +256,7 @@ public class TagConfig {
       config.set("deluxetags.epic.category", "epic");
       config.set("deluxetags.epic.tag", "&8[&3Epic&8]");
       config.set("deluxetags.epic.displayname", DeluxeTag.DEFAULT_DISPLAY_NAME);
-      config.set("deluxetags.epic.description", Arrays.asList("&9Awarded for using categories", "%deluxetags_available%"));
+      config.set("deluxetags.epic.description", Collections.singletonList("&9Awarded for using categories"));
       config.set("deluxetags.epic.item", "BLAZE_POWDER");
       config.set("deluxetags.epic.data", 0);
       config.set("deluxetags.epic.permission", "deluxetags.tag.epic");
@@ -286,6 +295,8 @@ public class TagConfig {
     BukkitCompat.setComments(config, "use_minimessage", Collections.singletonList("Main Options"));
     BukkitCompat.setComments(config, "gui", Arrays.asList(null, "GUI layout and buttons"));
     BukkitCompat.setComments(config, "categories", Arrays.asList(null, "Tag category menus"));
+    BukkitCompat.setComments(config, "gui.default_lore", Arrays.asList(null,
+        "GUI lore appended after each tag's description unless the tag defines its own lore."));
     BukkitCompat.setComments(config, "deluxetags", Arrays.asList(null, "Tags"));
   }
 
@@ -306,6 +317,15 @@ public class TagConfig {
     }
 
     config.set(LEGACY_TAG_AVAILABILITY_PLACEHOLDER_PATH, null);
+  }
+
+  static void migrateDefaultLore(FileConfiguration config) {
+    if (config.isSet("default_lore")) {
+      if (!config.isSet("gui.default_lore")) {
+        config.set("gui.default_lore", copyConfigValue(config.get("default_lore")));
+      }
+      config.set("default_lore", null);
+    }
   }
 
   static void normalizeTopLevelOrder(FileConfiguration config) {
@@ -392,6 +412,7 @@ public class TagConfig {
       if (!config.isList(descriptionPath) || !legacyLore.isEmpty()) {
         config.set(descriptionPath, description);
       }
+      migrateTagDescriptionLore(config, basePath, description);
 
       if (!config.contains(basePath + ".displayname")) {
         config.set(basePath + ".displayname", legacyDisplayName);
@@ -404,9 +425,63 @@ public class TagConfig {
       if (!config.contains(basePath + ".data")) {
         config.set(basePath + ".data", (int) legacyData);
       }
+      normalizeTagOrder(config.getConfigurationSection(basePath));
     }
 
     removeLegacyTagItemDefaults(config);
+  }
+
+  private static void migrateTagDescriptionLore(FileConfiguration config, String basePath, List<String> description) {
+    List<String> descriptionLines = new ArrayList<>();
+    List<String> movedLore = new ArrayList<>();
+    for (String entry : description) {
+      for (String line : serializeDescription(entry)) {
+        if (hasAvailabilityPlaceholder(line)) {
+          if (!movedLore.contains(line)) {
+            movedLore.add(line);
+          }
+        } else {
+          descriptionLines.add(line);
+        }
+      }
+    }
+
+    if (movedLore.isEmpty()) {
+      return;
+    }
+
+    List<String> lore = new ArrayList<>(config.getStringList(basePath + ".lore"));
+    for (String line : movedLore) {
+      if (!lore.contains(line)) {
+        lore.add(line);
+      }
+    }
+    config.set(basePath + ".description", descriptionLines);
+    config.set(basePath + ".lore", lore);
+  }
+
+  private static boolean hasAvailabilityPlaceholder(String line) {
+    return line.contains("%deluxetags_available%") || line.contains("{deluxetags_available}");
+  }
+
+  private static void normalizeTagOrder(ConfigurationSection tag) {
+    if (tag == null || !tag.isSet("description") || !tag.isSet("lore")) {
+      return;
+    }
+
+    Map<String, Object> values = copyConfigSection(tag);
+    for (String key : values.keySet()) {
+      tag.set(key, null);
+    }
+    for (Map.Entry<String, Object> entry : values.entrySet()) {
+      if (entry.getKey().equals("lore")) {
+        continue;
+      }
+      restoreConfigValue(tag, entry.getKey(), entry.getValue());
+      if (entry.getKey().equals("description")) {
+        restoreConfigValue(tag, "lore", values.get("lore"));
+      }
+    }
   }
 
   private static void removeLegacyTagItemDefaults(FileConfiguration config) {
@@ -457,6 +532,10 @@ public class TagConfig {
     String legacyPath = LEGACY_TAG_AVAILABILITY_PLACEHOLDER_PATH + (hasPermission ? ".has_permission" : ".no_permission");
     String fallback = hasPermission ? "&aTag unlocked! Click to select" : "&cTag locked ";
     return config.getString(path, config.getString(legacyPath, fallback));
+  }
+
+  public List<String> getDefaultLore() {
+    return config.isSet("gui.default_lore") ? config.getStringList("gui.default_lore") : DEFAULT_LORE;
   }
 
   public List<Integer> getTagSlots() {
@@ -648,6 +727,7 @@ public class TagConfig {
       short data = loadData(basePath + ".data", (short) 0);
 
       DeluxeTag t = new DeluxeTag(priority, identifier, tag, description, category, displayName, material, data);
+      t.setLore(config.isSet(basePath + ".lore") ? config.getStringList(basePath + ".lore") : null);
       t.setPermission(config.getString(basePath + ".permission", "deluxetags.tag." + identifier));
       plugin.getTagsHandler().loadTag(t);
       loaded++;
@@ -657,6 +737,7 @@ public class TagConfig {
   }
 
   public void saveTag(DeluxeTag tag) {
+    config.set("deluxetags." + tag.getIdentifier() + ".lore", tag.getLore());
     saveTag(tag.getPriority(), tag.getIdentifier(), tag.getDisplayTag(), tag.getDescription(), tag.getPermission(), tag.getCategory(), tag.getDisplayName(), tag.getMaterial(), tag.getData());
   }
 
@@ -683,6 +764,7 @@ public class TagConfig {
     config.set("deluxetags." + identifier + ".item", material == null ? "NAME_TAG" : material.name());
     config.set("deluxetags." + identifier + ".data", (int) data);
     config.set("deluxetags." + identifier + ".permission", permission);
+    normalizeTagOrder(config.getConfigurationSection("deluxetags." + identifier));
     plugin.saveConfig();
   }
 

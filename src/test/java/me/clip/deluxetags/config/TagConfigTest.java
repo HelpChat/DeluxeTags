@@ -22,6 +22,7 @@ public class TagConfigTest {
     config.set("categories.general.order", 1);
     config.set("gui.name", "&6Tags");
     config.set("load_tag_on_join", true);
+    config.set("default_lore", Collections.singletonList("%deluxetags_available%"));
     config.set("format_chat.enabled", false);
     config.set("format_chat.format", "{deluxetags_tag} <%1$s> %2$s");
     config.set("papi_chat", true);
@@ -34,6 +35,7 @@ public class TagConfigTest {
     config.set("custom_section.enabled", true);
 
     TagConfig.migrateTagAvailabilityPlaceholder(config);
+    TagConfig.migrateDefaultLore(config);
     TagConfig.normalizeTopLevelOrder(config);
 
     assertEquals(Arrays.asList(
@@ -50,6 +52,8 @@ public class TagConfigTest {
         "custom_section"
     ), new ArrayList<>(config.getKeys(false)));
     assertFalse(config.isSet("tag_availability_placeholder"));
+    assertFalse(config.isSet("default_lore"));
+    assertEquals(Collections.singletonList("%deluxetags_available%"), config.getStringList("gui.default_lore"));
     assertEquals("&aAllowed", config.getString("gui.tag_availability_placeholder.has_permission"));
     assertEquals("&cNope", config.getString("gui.tag_availability_placeholder.no_permission"));
   }
@@ -64,6 +68,41 @@ public class TagConfigTest {
 
     assertEquals("&aCurrent", config.getString("gui.tag_availability_placeholder.has_permission"));
     assertFalse(config.isSet("tag_availability_placeholder"));
+  }
+
+  @Test
+  public void movesCustomDefaultLoreIntoTheGuiSection() {
+    YamlConfiguration config = new YamlConfiguration();
+    List<String> lore = Arrays.asList("Custom default information", "%deluxetags_available%");
+    config.set("default_lore", lore);
+
+    TagConfig.migrateDefaultLore(config);
+
+    assertEquals(lore, config.getStringList("gui.default_lore"));
+    assertFalse(config.isSet("default_lore"));
+  }
+
+  @Test
+  public void keepsExistingGuiDefaultLoreWhenMigratingTheOldLocation() {
+    YamlConfiguration config = new YamlConfiguration();
+    config.set("default_lore", Collections.singletonList("Old default"));
+    config.set("gui.default_lore", Collections.emptyList());
+
+    TagConfig.migrateDefaultLore(config);
+
+    assertEquals(Collections.emptyList(), config.get("gui.default_lore"));
+    assertFalse(config.isSet("default_lore"));
+  }
+
+  @Test
+  public void preservesAnEmptyLegacyDefaultLoreOverride() {
+    YamlConfiguration config = new YamlConfiguration();
+    config.set("default_lore", Collections.emptyList());
+
+    TagConfig.migrateDefaultLore(config);
+
+    assertEquals(Collections.emptyList(), config.get("gui.default_lore"));
+    assertFalse(config.isSet("default_lore"));
   }
 
   @Test
@@ -105,6 +144,157 @@ public class TagConfigTest {
   }
 
   @Test
+  public void movesAvailabilityLinesFromDescriptionToLoreWithoutInheritingDuplicates() {
+    YamlConfiguration config = new YamlConfiguration();
+    config.set("gui.default_lore", Arrays.asList("Default GUI information", "%deluxetags_available%"));
+    config.set("deluxetags.vip.description", Arrays.asList(
+        "This tag is awarded by getting VIP", "", "&7Status: %deluxetags_available%"));
+
+    TagConfig.migrateTags(config);
+
+    assertEquals(Arrays.asList("This tag is awarded by getting VIP", ""),
+        config.getStringList("deluxetags.vip.description"));
+    assertEquals(Collections.singletonList("&7Status: %deluxetags_available%"),
+        config.getStringList("deluxetags.vip.lore"));
+    assertEquals(Arrays.asList("Default GUI information", "%deluxetags_available%"),
+        config.getStringList("gui.default_lore"));
+  }
+
+  @Test
+  public void migratesScalarDescriptionsAndLegacyBracePlaceholders() {
+    YamlConfiguration config = new YamlConfiguration();
+    config.set("deluxetags.vip.description", "VIP description\r\n&7{deluxetags_available}\rExtra detail");
+
+    TagConfig.migrateTags(config);
+
+    assertEquals(Arrays.asList("VIP description", "Extra detail"),
+        config.getStringList("deluxetags.vip.description"));
+    assertEquals(Collections.singletonList("&7{deluxetags_available}"),
+        config.getStringList("deluxetags.vip.lore"));
+  }
+
+  @Test
+  public void preservesDescriptionLinesWithinMultilineListEntries() {
+    YamlConfiguration config = new YamlConfiguration();
+    config.set("deluxetags.vip.description", Collections.singletonList(
+        "VIP description\n%deluxetags_available%\nExtra detail"));
+
+    TagConfig.migrateTags(config);
+
+    assertEquals(Arrays.asList("VIP description", "Extra detail"),
+        config.getStringList("deluxetags.vip.description"));
+    assertEquals(Collections.singletonList("%deluxetags_available%"),
+        config.getStringList("deluxetags.vip.lore"));
+  }
+
+  @Test
+  public void preservesExistingLoreAndAppendsMigratedAvailability() {
+    YamlConfiguration config = new YamlConfiguration();
+    config.set("deluxetags.vip.description", Arrays.asList("VIP description", "%deluxetags_available%"));
+    config.set("deluxetags.vip.lore", Collections.singletonList("Custom GUI information"));
+
+    TagConfig.migrateTags(config);
+
+    assertEquals(Collections.singletonList("VIP description"), config.getStringList("deluxetags.vip.description"));
+    assertEquals(Arrays.asList("Custom GUI information", "%deluxetags_available%"),
+        config.getStringList("deluxetags.vip.lore"));
+  }
+
+  @Test
+  public void keepsExistingAvailabilityLoreWithoutAddingIdenticalLines() {
+    YamlConfiguration config = new YamlConfiguration();
+    config.set("deluxetags.vip.description", Arrays.asList("VIP description", "%deluxetags_available%"));
+    List<String> lore = Arrays.asList("Custom GUI information", "%deluxetags_available%");
+    config.set("deluxetags.vip.lore", lore);
+
+    TagConfig.migrateTags(config);
+
+    assertEquals(Collections.singletonList("VIP description"), config.getStringList("deluxetags.vip.description"));
+    assertEquals(lore, config.getStringList("deluxetags.vip.lore"));
+  }
+
+  @Test
+  public void preservesDistinctAvailabilityLinesDuringMigration() {
+    YamlConfiguration config = new YamlConfiguration();
+    config.set("deluxetags.vip.description", Arrays.asList("VIP description", "&7Status: %deluxetags_available%"));
+    config.set("deluxetags.vip.lore", Collections.singletonList("Custom GUI info: {deluxetags_available}"));
+
+    TagConfig.migrateTags(config);
+
+    assertEquals(Collections.singletonList("VIP description"), config.getStringList("deluxetags.vip.description"));
+    assertEquals(Arrays.asList("Custom GUI info: {deluxetags_available}", "&7Status: %deluxetags_available%"),
+        config.getStringList("deluxetags.vip.lore"));
+  }
+
+  @Test
+  public void leavesLoreInheritanceAndExplicitEmptyOverridesIntact() {
+    YamlConfiguration config = new YamlConfiguration();
+    config.set("deluxetags.vip.description", Collections.singletonList("VIP description"));
+    config.set("deluxetags.mvp.description", Collections.singletonList("MVP description"));
+    config.set("deluxetags.mvp.lore", Collections.emptyList());
+
+    TagConfig.migrateTags(config);
+
+    assertFalse(config.isSet("deluxetags.vip.lore"));
+    assertEquals(Collections.singletonList("VIP description"), config.getStringList("deluxetags.vip.description"));
+    assertEquals(Collections.emptyList(), config.get("deluxetags.mvp.lore"));
+  }
+
+  @Test
+  public void placesLoreImmediatelyAfterDescriptionWhilePreservingOtherTagSettings() {
+    YamlConfiguration config = new YamlConfiguration();
+    config.set("deluxetags.vip.lore", Collections.singletonList("Custom GUI information"));
+    config.set("deluxetags.vip.order", 1);
+    config.set("deluxetags.vip.description", Collections.singletonList("VIP description"));
+    config.set("deluxetags.vip.item", "DIAMOND");
+    config.set("deluxetags.vip.permission", "custom.vip");
+    config.set("deluxetags.vip.model_data_component.strings", Collections.singletonList("vip_model"));
+
+    TagConfig.migrateTags(config);
+
+    List<String> keys = new ArrayList<>(config.getConfigurationSection("deluxetags.vip").getKeys(false));
+    assertEquals(keys.indexOf("description") + 1, keys.indexOf("lore"));
+    assertEquals(Collections.singletonList("Custom GUI information"), config.getStringList("deluxetags.vip.lore"));
+    assertEquals("DIAMOND", config.getString("deluxetags.vip.item"));
+    assertEquals("custom.vip", config.getString("deluxetags.vip.permission"));
+    assertEquals(Collections.singletonList("vip_model"),
+        config.getStringList("deluxetags.vip.model_data_component.strings"));
+  }
+
+  @Test
+  public void separatesAvailabilityFromLegacyGuiLoreDuringMigration() {
+    YamlConfiguration config = new YamlConfiguration();
+    config.set("gui.tag_select_item.lore", Arrays.asList("%deluxetags_description%", "%deluxetags_available%"));
+    config.set("deluxetags.vip.description", "VIP description");
+
+    TagConfig.migrateTags(config);
+
+    assertEquals(Collections.singletonList("VIP description"), config.getStringList("deluxetags.vip.description"));
+    assertEquals(Collections.singletonList("%deluxetags_available%"), config.getStringList("deluxetags.vip.lore"));
+  }
+
+  @Test
+  public void persistsLoreMigrationWithoutRepeatingItAfterReload() throws Exception {
+    YamlConfiguration config = new YamlConfiguration();
+    config.set("deluxetags.vip.description", Collections.singletonList("%deluxetags_available%"));
+    config.set("default_lore", Collections.singletonList("Custom default"));
+
+    TagConfig.migrateDefaultLore(config);
+    TagConfig.migrateTags(config);
+    String migrated = config.saveToString();
+    YamlConfiguration reloaded = new YamlConfiguration();
+    reloaded.loadFromString(migrated);
+    TagConfig.migrateDefaultLore(reloaded);
+    TagConfig.migrateTags(reloaded);
+
+    assertEquals(Collections.emptyList(), reloaded.getStringList("deluxetags.vip.description"));
+    assertEquals(Collections.singletonList("%deluxetags_available%"), reloaded.getStringList("deluxetags.vip.lore"));
+    assertEquals(Collections.singletonList("Custom default"), reloaded.getStringList("gui.default_lore"));
+    assertFalse(reloaded.isSet("default_lore"));
+    assertEquals(migrated, reloaded.saveToString());
+  }
+
+  @Test
   public void defaultGeneralCategoryGuiNameDoesNotHaveATrailingQuote() {
     assertEquals("&6General tags &8%deluxetags_category_amount% available",
         TagConfig.DEFAULT_GENERAL_CATEGORY_GUI_NAME);
@@ -115,6 +305,7 @@ public class TagConfigTest {
     CommentCapableConfiguration config = new CommentCapableConfiguration();
     config.set("use_minimessage", false);
     config.set("gui.name", "&6Tags");
+    config.set("gui.default_lore", Collections.singletonList("%deluxetags_available%"));
     config.set("categories.general.order", 1);
     config.set("deluxetags.vip.order", 1);
 
@@ -122,6 +313,9 @@ public class TagConfigTest {
 
     assertEquals(Collections.singletonList("Main Options"), config.comments.get("use_minimessage"));
     assertEquals(Arrays.asList(null, "GUI layout and buttons"), config.comments.get("gui"));
+    assertEquals(Arrays.asList(null,
+        "GUI lore appended after each tag's description unless the tag defines its own lore."),
+        config.comments.get("gui.default_lore"));
     assertEquals(Arrays.asList(null, "Tag category menus"), config.comments.get("categories"));
     assertEquals(Arrays.asList(null, "Tags"), config.comments.get("deluxetags"));
   }

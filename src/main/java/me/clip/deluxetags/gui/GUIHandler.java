@@ -451,13 +451,18 @@ public class GUIHandler implements Listener {
 
         return new DisplayItem(
             canSelect ? ItemType.TAG_ITEM : ItemType.TAG_VISIBLE_ITEM,
-            ItemUtils.createItem(material, data, tag.getDisplayName(), splitLoreLines(tag.getDescription())),
+            ItemUtils.createItem(material, data, tag.getDisplayName(), createTagLore(tag, plugin.getCfg().getDefaultLore())),
             Collections.singletonList(slot)
         );
     }
 
-    private List<String> splitLoreLines(String lore) {
-        return Arrays.asList(lore.replace("\r\n", "\n").replace("\r", "\n").split("\n", -1));
+    static List<String> createTagLore(DeluxeTag tag, List<String> defaultLore) {
+        List<String> lore = new ArrayList<>();
+        if (!tag.getDescription().isEmpty()) {
+            lore.addAll(Arrays.asList(tag.getDescription().replace("\r\n", "\n").replace("\r", "\n").split("\n", -1)));
+        }
+        lore.addAll(tag.getLore() == null ? defaultLore : tag.getLore());
+        return lore;
     }
 
     private boolean isSelectedTag(DeluxeTag currentTag, DeluxeTag displayedTag) {

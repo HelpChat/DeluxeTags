@@ -1,5 +1,6 @@
 package me.clip.deluxetags.placeholders;
 
+import java.util.function.Supplier;
 import me.clip.deluxetags.DeluxeTags;
 import me.clip.deluxetags.tags.DeluxeTag;
 import me.clip.deluxetags.utils.MsgUtils;
@@ -11,6 +12,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class TagPlaceholders extends PlaceholderExpansion {
     DeluxeTags plugin;
+    private final ThreadLocal<Boolean> expandingLore = new ThreadLocal<>();
 
     public TagPlaceholders(DeluxeTags plugin) {
         this.plugin = plugin;
@@ -34,6 +36,18 @@ public class TagPlaceholders extends PlaceholderExpansion {
     @Override
     public boolean persist() {
         return true;
+    }
+
+    String expandLore(Supplier<String> expansion) {
+        if (Boolean.TRUE.equals(expandingLore.get())) {
+            return "";
+        }
+        expandingLore.set(true);
+        try {
+            return expansion.get();
+        } finally {
+            expandingLore.remove();
+        }
     }
 
     @Override
@@ -94,6 +108,8 @@ public class TagPlaceholders extends PlaceholderExpansion {
                     return "";
                 }
                 return MsgUtils.color(tag.getDescription(player));
+            case "lore":
+                return tag == null ? "" : expandLore(() -> plugin.setPlaceholders(player, "%deluxetags_lore%", tag));
             case "identifier":
                 if (tag == null) {
                     return "";

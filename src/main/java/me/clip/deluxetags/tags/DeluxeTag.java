@@ -1,5 +1,8 @@
 package me.clip.deluxetags.tags;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import me.clip.deluxetags.DeluxeTags;
 import me.clip.placeholderapi.PlaceholderAPI;
 import org.bukkit.Material;
@@ -22,6 +25,7 @@ public class DeluxeTag {
     private String displayTag;
     private String displayName;
     private String description;
+    private List<String> lore;
     private String permission;
     private String category;
     private Material material;
@@ -156,6 +160,20 @@ public class DeluxeTag {
      */
     public @NotNull String getDescription(final @Nullable OfflinePlayer player) {
         return DeluxeTags.papi() ? PlaceholderAPI.setPlaceholders(player, description) : description;
+    }
+
+    /**
+     * @return GUI lore appended to the description, or null to inherit gui.default_lore
+     */
+    public @Nullable List<String> getLore() {
+        return lore;
+    }
+
+    /**
+     * @param lore GUI lore, an empty list to append nothing, or null to inherit gui.default_lore
+     */
+    public void setLore(@Nullable final List<String> lore) {
+        this.lore = lore == null ? null : Collections.unmodifiableList(new ArrayList<>(lore));
     }
 
     /**

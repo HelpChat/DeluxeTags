@@ -35,6 +35,7 @@ import me.clip.deluxetags.tags.DeluxeTagsHandler;
 import me.clip.deluxetags.tasks.CleanupTask;
 import me.clip.deluxetags.updater.UpdateChecker;
 import me.clip.deluxetags.utils.MsgUtils;
+import me.clip.deluxetags.utils.StringUtils;
 import me.clip.placeholderapi.PlaceholderAPI;
 import org.bukkit.Bukkit;
 import org.bukkit.command.PluginCommand;
@@ -387,7 +388,7 @@ public class DeluxeTags extends JavaPlugin {
 		}
 		String availability = cfg.getTagAvailabilityPlaceholder(tag.hasPermissionToUse(p));
 
-		s = s
+		s = StringUtils.replaceLore(s, tag == DUMMY_TAG ? null : tag, cfg.getDefaultLore())
 			.replace("%player%", p.getName())
 			.replace("{player}", p.getName())
 			.replace("%displayname%", p.getDisplayName())
