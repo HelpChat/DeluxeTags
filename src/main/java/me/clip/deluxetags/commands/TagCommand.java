@@ -502,8 +502,8 @@ public class TagCommand implements CommandExecutor {
           args[2], args[1]
       }));
       return true;
-    } else if (args[0].equalsIgnoreCase(Permissions.SET_DISPLAY)) {
-      if (!sender.hasPermission("deluxetags.setdisplay")) {
+    } else if (args[0].equalsIgnoreCase("setdisplay")) {
+      if (!sender.hasPermission(Permissions.SET_DISPLAY)) {
         MsgUtils.msg(sender, Lang.CMD_NO_PERMS.getConfigValue(new String[]{
             Permissions.SET_DISPLAY
         }));

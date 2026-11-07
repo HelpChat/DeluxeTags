@@ -2,7 +2,7 @@ name: DeluxeTags
 main: me.clip.deluxetags.DeluxeTags
 version: ${version}
 api-version: "1.13"
-author: extended_clip
+author: HelpChat
 description: DeluxeChat add on to allow players to select a custom tag
 softdepend: [PlaceholderAPI]
 commands:
@@ -39,6 +39,9 @@ permissions:
     deluxetags.setdescription:
         description: ability to set a tags description by command
         default: op
+    deluxetags.setorder:
+        description: ability to change a tag's order by command
+        default: op
     deluxetags.setdisplay:
         description: ability to change a tag's display
         default: op
@@ -50,4 +53,7 @@ permissions:
         default: op
     deluxetags.updates:
         description: will alert you when an update is available
+        default: op
+    deluxetags.version:
+        description: ability to view the plugin version and author
         default: op
